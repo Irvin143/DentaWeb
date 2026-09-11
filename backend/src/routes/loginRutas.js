@@ -43,4 +43,13 @@ router.post('/logout', (_req, res) => {
     res.send({ success: true });
 });
 
+router.get('/get/', async (req, res) => {
+    const resultado = await loginService.obtenerClientes();
+    if (!resultado.success) {
+        res.status(500).send({ success: false, error: resultado.error });
+        return;
+    }
+    res.send({ success: true, clientes: resultado.clientes });
+});
+
 export default router;
