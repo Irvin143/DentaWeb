@@ -209,7 +209,7 @@ return (
         <header className="space-y-6">
         <div className="flex items-center gap-2">
             <div className="bg-[color:white ] text-white p-2 rounded-xl shadow-md flex items-center justify-center">
-            <img src="public/dentalweb.png" alt="Logo DentalWeb" className="w-6 h-6" />
+            <img src="/dentalweb.png" alt="Logo DentalWeb" className="w-6 h-6" />
             </div>
             <div>
             <span className="font-bold text-lg text-slate-900 tracking-tight block leading-none">DentalWeb</span>
