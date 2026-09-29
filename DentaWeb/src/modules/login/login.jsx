@@ -137,9 +137,9 @@ const DentalWebLogin = () => {
                 Recordar mis datos
               </span>
             </label>
-            <a href="#" className="text-sm font-medium text-login-active transition-colors hover:text-primary-container">
+            <Link to="/recuperar-contrasena" className="text-sm font-medium text-login-active transition-colors hover:text-primary-container">
               ¿Olvidaste tu contraseña?
-            </a>
+            </Link>
           </div>
 
           {/* Submit Button */}

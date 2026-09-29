@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "../modules/login/login.jsx";
 import Register from "../modules/login/register.jsx";
 import InstitutionalAccess from "../modules/login/institutionalAccess.jsx";
+import ForgotPassword from "../modules/login/forgotPassword.jsx";
 
 export default function App() {
   return (
@@ -11,6 +12,7 @@ export default function App() {
         <Route path="/" element={<Login />} />
         <Route path="/registro" element={<Register />} />
         <Route path="/solicitar-acceso" element={<InstitutionalAccess />} />
+        <Route path="/recuperar-contrasena" element={<ForgotPassword />} />
 
         {/* <Route path="/administracion" element={<Panel />}>
           <Route index element={<PanelCitas/>}/>
