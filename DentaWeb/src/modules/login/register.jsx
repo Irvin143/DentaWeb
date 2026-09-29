@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Lock, Mail, Shield, Smartphone, UserRound } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Lock, Mail, Smartphone, UserRound } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 const Register = () => {
@@ -170,7 +170,7 @@ const Register = () => {
               {acceptTerms && <Check className="text-on-primary" size={13} strokeWidth={3} />}
             </span>
             <span>
-              Acepto los términos y condiciones de ClinicWare.
+              Acepto los <Link to="/legal/terminos" className="font-semibold text-primary-container hover:text-login-active">términos de servicio</Link> y la <Link to="/legal/privacidad" className="font-semibold text-primary-container hover:text-login-active">política de privacidad</Link>.
             </span>
           </label>
 
@@ -196,16 +196,12 @@ const Register = () => {
       </div>
 
       <div className="relative mt-8 flex w-full max-w-120 flex-col items-center gap-3">
-        <div className="flex flex-wrap items-center justify-center gap-6">
-          <div className="flex items-center gap-1.5">
-            <Shield className="text-login-active" size={14} />
-            <span className="text-xs font-medium text-login-muted">Privacidad y seguridad HIPAA</span>
-          </div>
-          <div className="h-1.5 w-1.5 rounded-full bg-login-border" />
-          <Link to="/" className="text-xs font-medium text-login-muted transition-colors hover:text-login-active">
-            Términos de servicio
-          </Link>
-        </div>
+        <nav aria-label="Navegación legal" className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-medium text-login-muted">
+          <Link to="/legal/terminos" className="transition-colors hover:text-login-active">Términos de servicio</Link>
+          <Link to="/legal/privacidad" className="transition-colors hover:text-login-active">Privacidad</Link>
+          <Link to="/legal/cookies" className="transition-colors hover:text-login-active">Cookies</Link>
+          <Link to="/legal/seguridad" className="transition-colors hover:text-login-active">Seguridad</Link>
+        </nav>
         <div className="flex items-center gap-1.5">
           <Smartphone className="text-login-muted" size={14} />
           <span className="text-xs text-login-muted">Soporte clínico 24/7</span>

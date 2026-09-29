@@ -4,6 +4,10 @@ import Login from "../modules/login/login.jsx";
 import Register from "../modules/login/register.jsx";
 import InstitutionalAccess from "../modules/login/institutionalAccess.jsx";
 import ForgotPassword from "../modules/login/forgotPassword.jsx";
+import Terms from "../modules/legal/terminos.jsx";
+import Privacy from "../modules/legal/privacidad.jsx";
+import Cookies from "../modules/legal/cookies.jsx";
+import Security from "../modules/legal/seguridad.jsx";
 
 export default function App() {
   return (
@@ -13,6 +17,10 @@ export default function App() {
         <Route path="/registro" element={<Register />} />
         <Route path="/solicitar-acceso" element={<InstitutionalAccess />} />
         <Route path="/recuperar-contrasena" element={<ForgotPassword />} />
+        <Route path="/legal/terminos" element={<Terms />} />
+        <Route path="/legal/privacidad" element={<Privacy />} />
+        <Route path="/legal/cookies" element={<Cookies />} />
+        <Route path="/legal/seguridad" element={<Security />} />
 
         {/* <Route path="/administracion" element={<Panel />}>
           <Route index element={<PanelCitas/>}/>
