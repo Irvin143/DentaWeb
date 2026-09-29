@@ -28,6 +28,30 @@
 
   --color-outline: #6f797c;
   --color-outline-variant: #bec8cc;
+
+  --color-login-background: #f0f5f5;
+  --color-login-muted: #64748b;
+  --color-login-heading: #1e293b;
+  --color-login-input: #f1f4f3;
+  --color-login-active: #2a9d8f;
+  --color-login-active-hover: #238b7e;
+  --color-login-icon: #94a3b8;
+  --color-login-border: #cbd5e1;
+  --color-login-divider: #e2e8f0;
+  --color-login-social-hover: #e8eceb;
+  --color-login-social-border: #d1d9d8;
+  --color-login-google-blue: #4285f4;
+  --color-login-google-green: #34a853;
+  --color-login-google-yellow: #fbbc05;
+  --color-login-google-red: #ea4335;
+
+  --background-image-login-backdrop: radial-gradient(ellipse at 50% 0%, rgb(19 111 131 / 8%) 0%, transparent 60%), radial-gradient(ellipse at 80% 100%, rgb(56 178 172 / 6%) 0%, transparent 50%);
+
+  --shadow-login-card: 0 8px 24px -4px rgb(19 111 131 / 6%), 0 2px 6px -1px rgb(19 111 131 / 3%);
+  --shadow-login-tab: 0 2px 8px rgb(42 157 143 / 30%);
+  --shadow-login-input-focus: 0 0 0 3px rgb(42 157 143 / 12%);
+  --shadow-login-button: 0 4px 14px rgb(42 157 143 / 35%);
+  --shadow-login-button-hover: 0 6px 20px rgb(42 157 143 / 45%);
 }
 
 @layer base {
