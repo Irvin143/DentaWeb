@@ -1,12 +1,14 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "../modules/login/login.jsx";
+import Register from "../modules/login/register.jsx";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/registro" element={<Register />} />
 
         {/* <Route path="/administracion" element={<Panel />}>
           <Route index element={<PanelCitas/>}/>
