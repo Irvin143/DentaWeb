@@ -86,7 +86,7 @@ const DentalWebLogin = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="ejemplo@correo.com"
+                placeholder={activeTab === 'clinica' ? 'ejemplo@clinicware.tech' : 'ejemplo@correo.com'}
                 className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
             </div>
@@ -94,13 +94,10 @@ const DentalWebLogin = () => {
 
           {/* Password Field */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
+            <div className="mb-1.5">
               <label className="text-sm font-medium text-on-surface-variant">
                 Contraseña
               </label>
-              <span className="rounded-full bg-login-active/10 px-2.5 py-1 text-[11px] font-semibold text-login-active">
-                Acceso Paciente
-              </span>
             </div>
             <div className="relative">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -195,9 +192,9 @@ const DentalWebLogin = () => {
 
         {/* Register Link */}
         <p className="mt-8 text-center text-sm text-login-muted">
-          ¿Aún no tienes cuenta?{' '}
+          {activeTab === 'clinica' ? '¿Necesitas acceso? ' : '¿Aún no tienes cuenta? '}
           <a href="#" className="font-semibold text-primary-container transition-colors hover:text-login-active">
-            Regístrate aquí
+            {activeTab === 'clinica' ? 'Solicitar acceso institucional' : 'Regístrate aquí'}
           </a>
         </p>
       </div>
