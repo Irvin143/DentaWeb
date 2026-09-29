@@ -33,10 +33,7 @@ const DentalWebLogin = () => {
           <div className="flex items-center gap-3 mb-2">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: 'rgba(19,111,131,0.08)' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#136F83" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 5.5c-1.5-2-4-2.5-5.5-1.5S4 7.5 4.5 10c.5 2.5 2 5 3.5 7 .8 1.1 1.7 1.5 2.5 1.5s1.5-.5 1.5-1.5V5.5z" />
-                <path d="M12 5.5c1.5-2 4-2.5 5.5-1.5S20 7.5 19.5 10c-.5 2.5-2 5-3.5 7-.8 1.1-1.7 1.5-2.5 1.5s-1.5-.5-1.5-1.5V5.5z" />
-              </svg>
+              <img src="/logo.svg" alt="Logo DentalWeb" />
             </div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#136F83', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
