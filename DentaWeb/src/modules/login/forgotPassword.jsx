@@ -87,7 +87,7 @@ const ForgotPassword = () => {
               onClick={() => navigate('/')}
               className="mt-6 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-login-active px-6 text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover"
             >
-              Volver a iniciar sesión
+              Volver
               <ArrowRight size={18} />
             </button>
           </div>
@@ -101,7 +101,7 @@ const ForgotPassword = () => {
               className="inline-flex items-center gap-2 text-sm font-semibold text-primary-container transition-colors hover:text-login-active"
             >
               <ArrowLeft size={16} />
-              Volver a iniciar sesión
+              Volver
             </button>
           </div>
         )}
