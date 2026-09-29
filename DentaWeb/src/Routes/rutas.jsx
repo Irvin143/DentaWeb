@@ -28,8 +28,6 @@ export default function App() {
           <Route path="citas" element={<PanelCitas />} />
           <Route path="satori" element={<PanelSatori />} />
         </Route> */}
-
-
       </Routes>
     </BrowserRouter>
   );

@@ -1,28 +1,35 @@
-import { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, ArrowRight, Smartphone, Stethoscope, User } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useState } from "react";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  ArrowRight,
+  Smartphone,
+  Stethoscope,
+  User,
+} from "lucide-react";
+import { Link } from "react-router-dom";
 
 const DentalWebLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [activeTab, setActiveTab] = useState('paciente');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [activeTab, setActiveTab] = useState("paciente");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Login attempt:', { email, password, rememberMe, activeTab });
+    console.log("Login attempt:", { email, password, rememberMe, activeTab });
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-login-background px-4 py-8">
-
       {/* Background decorative gradient */}
       <div className="fixed inset-0 pointer-events-none bg-login-backdrop" />
 
       {/* Main Card */}
       <div className="relative w-full max-w-120 rounded-3xl bg-on-primary p-8 shadow-login-card sm:p-10">
-
         {/* Logo & Brand */}
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-3 mb-2">
@@ -30,7 +37,9 @@ const DentalWebLogin = () => {
               <img src="/logo.svg" alt="Logo DentalWeb" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-primary-container">ClinicWare</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-primary-container">
+                ClinicWare
+              </h1>
               <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary-container opacity-60">
                 Plataforma Odontológica
               </p>
@@ -42,7 +51,9 @@ const DentalWebLogin = () => {
         </div>
 
         <div className="mb-6 text-center">
-          <h2 className="text-xl font-bold text-login-heading sm:text-2xl">Bienvenid@ de nuevo</h2>
+          <h2 className="text-xl font-bold text-login-heading sm:text-2xl">
+            Bienvenid@ de nuevo
+          </h2>
           <p className="mt-1 text-sm text-login-muted">
             Ingresa a tu cuenta para gestionar tus citas y salud bucal
           </p>
@@ -51,16 +62,16 @@ const DentalWebLogin = () => {
         <div className="mb-6 flex rounded-full bg-login-input p-1">
           <button
             type="button"
-            onClick={() => setActiveTab('paciente')}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold transition-all duration-200 ${activeTab === 'paciente' ? 'bg-login-active text-on-primary shadow-login-tab' : 'text-login-muted'}`}
+            onClick={() => setActiveTab("paciente")}
+            className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full px-1 py-2.5 text-xs font-semibold leading-none transition-all duration-200 sm:gap-2 sm:px-2 sm:text-sm ${activeTab === "paciente" ? "bg-login-active text-on-primary shadow-login-tab" : "text-login-muted"}`}
           >
             <User size={16} />
             Paciente
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab('clinica')}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold transition-all duration-200 ${activeTab === 'clinica' ? 'bg-login-active text-on-primary shadow-login-tab' : 'text-login-muted'}`}
+            onClick={() => setActiveTab("clinica")}
+            className={`flex min-w-0 flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-full px-1 py-2.5 text-xs font-semibold leading-none transition-all duration-200 sm:gap-2 sm:px-2 sm:text-sm ${activeTab === "clinica" ? "bg-login-active text-on-primary shadow-login-tab" : "text-login-muted"}`}
           >
             <Stethoscope size={16} />
             Personal de clínica
@@ -69,7 +80,6 @@ const DentalWebLogin = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
-
           {/* Email Field */}
           <div>
             <label className="block text-sm font-medium mb-1.5 text-on-surface-variant">
@@ -83,7 +93,11 @@ const DentalWebLogin = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={activeTab === 'clinica' ? 'ejemplo@clinicware.tech' : 'ejemplo@correo.com'}
+                placeholder={
+                  activeTab === "clinica"
+                    ? "ejemplo@clinicware.tech"
+                    : "ejemplo@correo.com"
+                }
                 className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
             </div>
@@ -101,7 +115,7 @@ const DentalWebLogin = () => {
                 <Lock className="text-login-icon" size={18} />
               </div>
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
@@ -112,34 +126,51 @@ const DentalWebLogin = () => {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2"
               >
-                {showPassword
-                  ? <EyeOff className="text-login-icon" size={18} />
-                  : <Eye className="text-login-icon" size={18} />
-                }
+                {showPassword ? (
+                  <EyeOff className="text-login-icon" size={18} />
+                ) : (
+                  <Eye className="text-login-icon" size={18} />
+                )}
               </button>
             </div>
           </div>
 
           {/* Remember & Forgot */}
-          <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 cursor-pointer">
+          <div className="flex flex-nowrap items-center justify-between gap-2">
+            {" "}
+            <label className="flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap">
+              {" "}
               <div
                 onClick={() => setRememberMe(!rememberMe)}
-                className={`flex h-5 w-5 items-center justify-center rounded border transition-all duration-200 ${rememberMe ? 'border-login-active bg-login-active' : 'border-login-border bg-transparent'}`}
+                className={`flex h-5 w-5 items-center justify-center rounded border transition-all duration-200 ${rememberMe ? "border-login-active bg-login-active" : "border-login-border bg-transparent"}`}
               >
                 {rememberMe && (
-                  <svg className="text-on-primary" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    className="text-on-primary"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 )}
               </div>
-              <span className="text-sm text-login-muted">
+              <span className="whitespace-nowrap text-xs text-login-muted sm:text-sm">
+                {" "}
                 Recordar mis datos
               </span>
             </label>
-            <Link to="/recuperar-contrasena" className="text-sm font-medium text-login-active transition-colors hover:text-primary-container">
+            <Link
+              to="/recuperar-contrasena"
+              className="shrink-0 whitespace-nowrap text-xs font-medium text-login-active transition-colors hover:text-primary-container sm:text-sm"
+            >
               ¿Olvidaste tu contraseña?
-            </Link>
+            </Link>{" "}
           </div>
 
           {/* Submit Button */}
@@ -154,13 +185,21 @@ const DentalWebLogin = () => {
 
         {/* Register Link */}
         <p className="mt-6 text-center text-sm text-login-muted">
-          {activeTab === 'clinica' ? '¿Necesitas acceso? ' : '¿Aún no tienes cuenta? '}
-          {activeTab === 'clinica' ? (
-            <Link to="/solicitar-acceso" className="font-semibold text-primary-container transition-colors hover:text-login-active">
+          {activeTab === "clinica"
+            ? "¿Necesitas acceso? "
+            : "¿Aún no tienes cuenta? "}
+          {activeTab === "clinica" ? (
+            <Link
+              to="/solicitar-acceso"
+              className="font-semibold text-primary-container transition-colors hover:text-login-active"
+            >
               Solicitar acceso institucional
             </Link>
           ) : (
-            <Link to="/registro" className="font-semibold text-primary-container transition-colors hover:text-login-active">
+            <Link
+              to="/registro"
+              className="font-semibold text-primary-container transition-colors hover:text-login-active"
+            >
               Regístrate aquí
             </Link>
           )}
@@ -169,23 +208,43 @@ const DentalWebLogin = () => {
 
       {/* Footer */}
       <div className="relative mt-8 flex w-full max-w-120 flex-col items-center gap-3">
-        <nav aria-label="Navegación legal" className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-medium text-login-muted">
-          <Link to="/legal/terminos" className="transition-colors hover:text-login-active">Términos de servicio</Link>
-          <Link to="/legal/privacidad" className="transition-colors hover:text-login-active">Privacidad</Link>
-          <Link to="/legal/cookies" className="transition-colors hover:text-login-active">Cookies</Link>
-          <Link to="/legal/seguridad" className="transition-colors hover:text-login-active">Seguridad</Link>
+        <nav
+          aria-label="Navegación legal"
+          className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-medium text-login-muted"
+        >
+          <Link
+            to="/legal/terminos"
+            className="transition-colors hover:text-login-active"
+          >
+            Términos de servicio
+          </Link>
+          <Link
+            to="/legal/privacidad"
+            className="transition-colors hover:text-login-active"
+          >
+            Privacidad
+          </Link>
+          <Link
+            to="/legal/cookies"
+            className="transition-colors hover:text-login-active"
+          >
+            Cookies
+          </Link>
+          <Link
+            to="/legal/seguridad"
+            className="transition-colors hover:text-login-active"
+          >
+            Seguridad
+          </Link>
         </nav>
         <div className="flex items-center gap-1.5">
           <Smartphone className="text-login-muted" size={14} />
-          <span className="text-xs text-login-muted">
-            Soporte clínico 24/7
-          </span>
+          <span className="text-xs text-login-muted">Soporte clínico 24/7</span>
         </div>
         <p className="text-center text-[11px] text-login-icon">
           DentalWeb Medical Systems © 2026. Todos los derechos reservados.
         </p>
       </div>
-
     </div>
   );
 };

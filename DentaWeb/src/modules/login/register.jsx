@@ -1,20 +1,30 @@
-import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Lock, Mail, Smartphone, UserRound } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  Smartphone,
+  UserRound,
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 const Register = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    console.log('Registration attempt:', {
+    console.log("Registration attempt:", {
       fullName,
       email,
       password,
@@ -34,7 +44,9 @@ const Register = () => {
               <img src="/logo.svg" alt="Logo DentalWeb" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-primary-container">ClinicWare</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-primary-container">
+                ClinicWare
+              </h1>
               <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary-container opacity-60">
                 Plataforma Odontológica
               </p>
@@ -46,7 +58,9 @@ const Register = () => {
         </div>
 
         <div className="mb-6 text-center">
-          <h2 className="text-xl font-bold text-login-heading sm:text-2xl">Crear cuenta</h2>
+          <h2 className="text-xl font-bold text-login-heading sm:text-2xl">
+            Crear cuenta
+          </h2>
           <p className="mt-1 text-sm text-login-muted">
             Regístrate para gestionar tus citas y tu salud bucal.
           </p>
@@ -54,7 +68,10 @@ const Register = () => {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="full-name" className="mb-1.5 block text-sm font-medium text-on-surface-variant">
+            <label
+              htmlFor="full-name"
+              className="mb-1.5 block text-sm font-medium text-on-surface-variant"
+            >
               Nombre completo
             </label>
             <div className="relative">
@@ -75,7 +92,10 @@ const Register = () => {
           </div>
 
           <div>
-            <label htmlFor="register-email" className="mb-1.5 block text-sm font-medium text-on-surface-variant">
+            <label
+              htmlFor="register-email"
+              className="mb-1.5 block text-sm font-medium text-on-surface-variant"
+            >
               Correo electrónico
             </label>
             <div className="relative">
@@ -96,7 +116,10 @@ const Register = () => {
           </div>
 
           <div>
-            <label htmlFor="register-password" className="mb-1.5 block text-sm font-medium text-on-surface-variant">
+            <label
+              htmlFor="register-password"
+              className="mb-1.5 block text-sm font-medium text-on-surface-variant"
+            >
               Contraseña
             </label>
             <div className="relative">
@@ -105,7 +128,7 @@ const Register = () => {
               </div>
               <input
                 id="register-password"
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="Mínimo 8 caracteres"
@@ -117,16 +140,25 @@ const Register = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                aria-label={
+                  showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                }
                 className="absolute right-4 top-1/2 -translate-y-1/2"
               >
-                {showPassword ? <EyeOff className="text-login-icon" size={18} /> : <Eye className="text-login-icon" size={18} />}
+                {showPassword ? (
+                  <EyeOff className="text-login-icon" size={18} />
+                ) : (
+                  <Eye className="text-login-icon" size={18} />
+                )}
               </button>
             </div>
           </div>
 
           <div>
-            <label htmlFor="confirm-password" className="mb-1.5 block text-sm font-medium text-on-surface-variant">
+            <label
+              htmlFor="confirm-password"
+              className="mb-1.5 block text-sm font-medium text-on-surface-variant"
+            >
               Confirmar contraseña
             </label>
             <div className="relative">
@@ -135,7 +167,7 @@ const Register = () => {
               </div>
               <input
                 id="confirm-password"
-                type={showConfirmPassword ? 'text' : 'password'}
+                type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
                 placeholder="Repite tu contraseña"
@@ -147,10 +179,18 @@ const Register = () => {
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                aria-label={showConfirmPassword ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
+                aria-label={
+                  showConfirmPassword
+                    ? "Ocultar confirmación de contraseña"
+                    : "Mostrar confirmación de contraseña"
+                }
                 className="absolute right-4 top-1/2 -translate-y-1/2"
               >
-                {showConfirmPassword ? <EyeOff className="text-login-icon" size={18} /> : <Eye className="text-login-icon" size={18} />}
+                {showConfirmPassword ? (
+                  <EyeOff className="text-login-icon" size={18} />
+                ) : (
+                  <Eye className="text-login-icon" size={18} />
+                )}
               </button>
             </div>
           </div>
@@ -165,12 +205,28 @@ const Register = () => {
             />
             <span
               aria-hidden="true"
-              className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all duration-200 ${acceptTerms ? 'border-login-active bg-login-active' : 'border-login-border bg-transparent'}`}
+              className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all duration-200 ${acceptTerms ? "border-login-active bg-login-active" : "border-login-border bg-transparent"}`}
             >
-              {acceptTerms && <Check className="text-on-primary" size={13} strokeWidth={3} />}
+              {acceptTerms && (
+                <Check className="text-on-primary" size={13} strokeWidth={3} />
+              )}
             </span>
             <span>
-              Acepto los <Link to="/legal/terminos" className="font-semibold text-primary-container hover:text-login-active">términos de servicio</Link> y la <Link to="/legal/privacidad" className="font-semibold text-primary-container hover:text-login-active">política de privacidad</Link>.
+              Acepto los{" "}
+              <Link
+                to="/legal/terminos"
+                className="font-semibold text-primary-container hover:text-login-active"
+              >
+                términos de servicio
+              </Link>{" "}
+              y la{" "}
+              <Link
+                to="/legal/privacidad"
+                className="font-semibold text-primary-container hover:text-login-active"
+              >
+                política de privacidad
+              </Link>
+              .
             </span>
           </label>
 
@@ -186,7 +242,7 @@ const Register = () => {
         <div className="mt-6 text-center">
           <button
             type="button"
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="inline-flex items-center gap-2 text-sm font-semibold text-primary-container transition-colors hover:text-login-active"
           >
             <ArrowLeft size={16} />
@@ -196,17 +252,42 @@ const Register = () => {
       </div>
 
       <div className="relative mt-8 flex w-full max-w-120 flex-col items-center gap-3">
-        <nav aria-label="Navegación legal" className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-medium text-login-muted">
-          <Link to="/legal/terminos" className="transition-colors hover:text-login-active">Términos de servicio</Link>
-          <Link to="/legal/privacidad" className="transition-colors hover:text-login-active">Privacidad</Link>
-          <Link to="/legal/cookies" className="transition-colors hover:text-login-active">Cookies</Link>
-          <Link to="/legal/seguridad" className="transition-colors hover:text-login-active">Seguridad</Link>
+        <nav
+          aria-label="Navegación legal"
+          className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-medium text-login-muted"
+        >
+          <Link
+            to="/legal/terminos"
+            className="transition-colors hover:text-login-active"
+          >
+            Términos de servicio
+          </Link>
+          <Link
+            to="/legal/privacidad"
+            className="transition-colors hover:text-login-active"
+          >
+            Privacidad
+          </Link>
+          <Link
+            to="/legal/cookies"
+            className="transition-colors hover:text-login-active"
+          >
+            Cookies
+          </Link>
+          <Link
+            to="/legal/seguridad"
+            className="transition-colors hover:text-login-active"
+          >
+            Seguridad
+          </Link>
         </nav>
         <div className="flex items-center gap-1.5">
           <Smartphone className="text-login-muted" size={14} />
           <span className="text-xs text-login-muted">Soporte clínico 24/7</span>
         </div>
-        <p className="text-center text-[11px] text-login-icon">DentalWeb Medical Systems © 2026. Todos los derechos reservados.</p>
+        <p className="text-center text-[11px] text-login-icon">
+          DentalWeb Medical Systems © 2026. Todos los derechos reservados.
+        </p>
       </div>
     </div>
   );

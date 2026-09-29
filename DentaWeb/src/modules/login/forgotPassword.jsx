@@ -1,15 +1,21 @@
-import { useState } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle2, Mail, Smartphone } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Mail,
+  Smartphone,
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    console.log('Password recovery request:', { email });
+    console.log("Password recovery request:", { email });
     setSubmitted(true);
   };
 
@@ -24,7 +30,9 @@ const ForgotPassword = () => {
               <img src="/logo.svg" alt="Logo DentalWeb" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-primary-container">ClinicWare</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-primary-container">
+                ClinicWare
+              </h1>
               <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary-container opacity-60">
                 Plataforma Odontológica
               </p>
@@ -38,15 +46,21 @@ const ForgotPassword = () => {
         {!submitted ? (
           <>
             <div className="mb-6 text-center">
-              <h2 className="text-xl font-bold text-login-heading sm:text-2xl">¿Olvidaste tu contraseña?</h2>
+              <h2 className="text-xl font-bold text-login-heading sm:text-2xl">
+                ¿Olvidaste tu contraseña?
+              </h2>
               <p className="mt-1 text-sm text-login-muted">
-                Ingresa tu correo electrónico y te enviaremos instrucciones para restablecer tu contraseña.
+                Ingresa tu correo electrónico y te enviaremos instrucciones para
+                restablecer tu contraseña.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label htmlFor="recovery-email" className="mb-1.5 block text-sm font-medium text-on-surface-variant">
+                <label
+                  htmlFor="recovery-email"
+                  className="mb-1.5 block text-sm font-medium text-on-surface-variant"
+                >
                   Correo electrónico
                 </label>
                 <div className="relative">
@@ -77,14 +91,20 @@ const ForgotPassword = () => {
           </>
         ) : (
           <div className="text-center" aria-live="polite">
-            <CheckCircle2 className="mx-auto mb-4 text-login-active" size={42} />
-            <h2 className="text-xl font-bold text-login-heading sm:text-2xl">Revisa tu correo</h2>
+            <CheckCircle2
+              className="mx-auto mb-4 text-login-active"
+              size={42}
+            />
+            <h2 className="text-xl font-bold text-login-heading sm:text-2xl">
+              Revisa tu correo
+            </h2>
             <p className="mt-2 text-sm leading-relaxed text-login-muted">
-              Si existe una cuenta asociada a este correo, recibirás instrucciones para restablecer tu contraseña.
+              Si existe una cuenta asociada a este correo, recibirás
+              instrucciones para restablecer tu contraseña.
             </p>
             <button
               type="button"
-              onClick={() => navigate('/')}
+              onClick={() => navigate("/")}
               className="mt-6 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-login-active px-6 text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover"
             >
               Volver
@@ -97,7 +117,7 @@ const ForgotPassword = () => {
           <div className="mt-6 text-center">
             <button
               type="button"
-              onClick={() => navigate('/')}
+              onClick={() => navigate("/")}
               className="inline-flex items-center gap-2 text-sm font-semibold text-primary-container transition-colors hover:text-login-active"
             >
               <ArrowLeft size={16} />
@@ -108,17 +128,42 @@ const ForgotPassword = () => {
       </div>
 
       <div className="relative mt-8 flex w-full max-w-120 flex-col items-center gap-3">
-        <nav aria-label="Navegación legal" className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-medium text-login-muted">
-          <Link to="/legal/terminos" className="transition-colors hover:text-login-active">Términos de servicio</Link>
-          <Link to="/legal/privacidad" className="transition-colors hover:text-login-active">Privacidad</Link>
-          <Link to="/legal/cookies" className="transition-colors hover:text-login-active">Cookies</Link>
-          <Link to="/legal/seguridad" className="transition-colors hover:text-login-active">Seguridad</Link>
+        <nav
+          aria-label="Navegación legal"
+          className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-medium text-login-muted"
+        >
+          <Link
+            to="/legal/terminos"
+            className="transition-colors hover:text-login-active"
+          >
+            Términos de servicio
+          </Link>
+          <Link
+            to="/legal/privacidad"
+            className="transition-colors hover:text-login-active"
+          >
+            Privacidad
+          </Link>
+          <Link
+            to="/legal/cookies"
+            className="transition-colors hover:text-login-active"
+          >
+            Cookies
+          </Link>
+          <Link
+            to="/legal/seguridad"
+            className="transition-colors hover:text-login-active"
+          >
+            Seguridad
+          </Link>
         </nav>
         <div className="flex items-center gap-1.5">
           <Smartphone className="text-login-muted" size={14} />
           <span className="text-xs text-login-muted">Soporte clínico 24/7</span>
         </div>
-        <p className="text-center text-[11px] text-login-icon">DentalWeb Medical Systems © 2026. Todos los derechos reservados.</p>
+        <p className="text-center text-[11px] text-login-icon">
+          DentalWeb Medical Systems © 2026. Todos los derechos reservados.
+        </p>
       </div>
     </div>
   );
