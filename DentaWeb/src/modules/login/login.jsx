@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Shield, Smartphone, Stethoscope, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const DentalWebLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -154,9 +155,15 @@ const DentalWebLogin = () => {
         {/* Register Link */}
         <p className="mt-6 text-center text-sm text-login-muted">
           {activeTab === 'clinica' ? '¿Necesitas acceso? ' : '¿Aún no tienes cuenta? '}
-          <a href="#" className="font-semibold text-primary-container transition-colors hover:text-login-active">
-            {activeTab === 'clinica' ? 'Solicitar acceso institucional' : 'Regístrate aquí'}
-          </a>
+          {activeTab === 'clinica' ? (
+            <Link to="/solicitar-acceso" className="font-semibold text-primary-container transition-colors hover:text-login-active">
+              Solicitar acceso institucional
+            </Link>
+          ) : (
+            <Link to="/registro" className="font-semibold text-primary-container transition-colors hover:text-login-active">
+              Regístrate aquí
+            </Link>
+          )}
         </p>
       </div>
 
