@@ -5,24 +5,26 @@ import jwt from 'jsonwebtoken';
 const SALT_ROUNDS = 12;
 const DUMMY_HASH = bcrypt.hashSync('dummy-password', SALT_ROUNDS);
 
-export async function registrarPaciente({ correo, contrasena, nombre, ape_pat, ape_mat, telefono }) {
-    // 1. Encriptar la contraseña antes de mandarla a la BD
+export async function registrarPaciente({
+    correo, contrasena, nombre, ape_pat, ape_mat, telefono, id_odontologo = null,
+    }) {
     const hash = await bcrypt.hash(contrasena, SALT_ROUNDS);
 
     try {
-        // 2. Llamar a la función SQL
         const { rows } = await conexion.query(
-        'SELECT * FROM fn_registrar_paciente($1, $2, $3, $4, $5, $6)',
-        [correo, hash, nombre, ape_pat, ape_mat, telefono]
+        'SELECT * FROM fn_registrar_paciente($1, $2, $3, $4, $5, $6, $7)',
+        [correo, hash, nombre, ape_pat, ape_mat, telefono, id_odontologo]
         );
-
-        // { id_usuario, id_paciente, id_expediente, correo }
         return rows[0];
     } catch (err) {
-        // 3. Correo duplicado (código 23505 lanzado por la función SQL)
         if (err.code === '23505') {
         const error = new Error('El correo ya está registrado');
         error.status = 409;
+        throw error;
+        }
+        if (err.code === '23503') { // el odontólogo no existe
+        const error = new Error('El odontólogo indicado no existe');
+        error.status = 400;
         throw error;
         }
         throw err;
