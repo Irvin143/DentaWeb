@@ -10,16 +10,15 @@ import loginRutas from './routes/loginRutas.js';
 
 app.use("/api/login", loginRutas);
 
-app.get('/', (req, res) => {
-    res.send("¡Hola! Mi servidor está funcionando.");
+app.use((err, req, res, next) => {
+    if (err.status) {
+        return res.status(err.status).json({ error: err.message });
+    }
+    console.error(err);
+    res.status(500).json({ error: 'Error interno del servidor' });
 });
 
 const PUERTO = 3001;
-
-//Ruta de ejemplo
-// app.get('/',(_req,res) =>{
-//     res.send("Ruta raíz de la API");
-// })
 
 app.listen(PUERTO,() => {
     console.log(`Servidor en ejecución en el puerto ${PUERTO}`);

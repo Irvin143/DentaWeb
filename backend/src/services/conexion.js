@@ -9,9 +9,7 @@ const { Pool } = pg;
 
 const conexion = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
-    }
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 conexion.on("connect", () => {
@@ -19,9 +17,7 @@ conexion.on("connect", () => {
 });
 
 // Opcional pero recomendado: Manejo de errores de clientes ociosos
-conexion.on("error", (err, client) => {
+conexion.on("error", (err) => {
     console.error("Error inesperado en un cliente inactivo", err);
-    process.exit(-1);
 });
-
 export default conexion;
