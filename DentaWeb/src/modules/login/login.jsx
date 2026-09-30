@@ -178,11 +178,15 @@ const DentalWebLogin = () => {
 
           {/* Remember & Forgot */}
           <div className="flex flex-nowrap items-center justify-between gap-2">
-            {" "}
             <label className="flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap">
-              {" "}
-              <div
-                onClick={() => setRememberMe(!rememberMe)}
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(event) => setRememberMe(event.target.checked)}
+                className="sr-only"
+              />
+              <span
+                aria-hidden="true"
                 className={`flex h-5 w-5 items-center justify-center rounded border transition-all duration-200 ${rememberMe ? "border-login-active bg-login-active" : "border-login-border bg-transparent"}`}
               >
                 {rememberMe && (
@@ -200,9 +204,8 @@ const DentalWebLogin = () => {
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 )}
-              </div>
+              </span>
               <span className="whitespace-nowrap text-xs text-login-muted sm:text-sm">
-                {" "}
                 Recordar mis datos
               </span>
             </label>
@@ -230,7 +233,7 @@ const DentalWebLogin = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
           >
             {isSubmitting ? "Iniciando sesión..." : "Iniciar sesión"}
             {!isSubmitting && <ArrowRight size={18} />}
