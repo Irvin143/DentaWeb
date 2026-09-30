@@ -10,6 +10,7 @@ import {
   User,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { authApi } from "../../services/api.js";
 
 const DentalWebLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,10 +18,48 @@ const DentalWebLogin = () => {
   const [activeTab, setActiveTab] = useState("paciente");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Login attempt:", { email, password, rememberMe, activeTab });
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const normalizedEmail = email.trim();
+
+    if (!normalizedEmail || !password) {
+      setErrorMessage("El correo y la contraseña son obligatorios.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const payload = {
+        correo: normalizedEmail,
+        contrasena: password,
+      };
+      const response = await authApi.login(payload);
+
+      sessionStorage.setItem(
+        "clinicware_auth",
+        JSON.stringify({
+          token: response.token,
+          usuario: response.usuario,
+        }),
+      );
+      setSuccessMessage("Sesión iniciada correctamente.");
+    } catch (error) {
+      if (error?.status === 400 || error?.status === 401) {
+        setErrorMessage("El correo o la contraseña no son válidos.");
+      } else {
+        setErrorMessage("No fue posible iniciar sesión. Inténtalo de nuevo.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -93,6 +132,7 @@ const DentalWebLogin = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
                 placeholder={
                   activeTab === "clinica"
                     ? "ejemplo@clinicware.tech"
@@ -119,6 +159,7 @@ const DentalWebLogin = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
+                required
                 className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-12 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
               <button
@@ -173,13 +214,26 @@ const DentalWebLogin = () => {
             </Link>{" "}
           </div>
 
+          {errorMessage && (
+            <p className="rounded-xl bg-error-container px-4 py-3 text-sm text-on-error-container" role="alert">
+              {errorMessage}
+            </p>
+          )}
+
+          {successMessage && (
+            <p className="rounded-xl bg-secondary-container px-4 py-3 text-sm text-on-secondary-container" role="status" aria-live="polite">
+              {successMessage}
+            </p>
+          )}
+
           {/* Submit Button */}
           <button
             type="submit"
+            disabled={isSubmitting}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover"
           >
-            Iniciar sesión
-            <ArrowRight size={18} />
+            {isSubmitting ? "Iniciando sesión..." : "Iniciar sesión"}
+            {!isSubmitting && <ArrowRight size={18} />}
           </button>
         </form>
 
