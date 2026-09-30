@@ -16,7 +16,9 @@ const Register = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [fullName, setFullName] = useState("");
+  const [nombre, setNombre] = useState("");
+  const [apePat, setApePat] = useState("");
+  const [apeMat, setApeMat] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -24,13 +26,15 @@ const Register = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    console.log("Registration attempt:", {
-      fullName,
-      email,
-      password,
-      confirmPassword,
-      acceptTerms,
-    });
+    const payload = {
+      correo: email,
+      contrasena: password,
+      nombre,
+      ape_pat: apePat,
+      ape_mat: apeMat || null,
+    };
+
+    console.log("Registration payload:", payload);
   };
 
   return (
@@ -69,26 +73,64 @@ const Register = () => {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label
-              htmlFor="full-name"
+              htmlFor="register-name"
               className="mb-1.5 block text-sm font-medium text-on-surface-variant"
             >
-              Nombre completo
+              Nombre(s)
             </label>
             <div className="relative">
               <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2">
                 <UserRound className="text-login-icon" size={18} />
               </div>
               <input
-                id="full-name"
+                id="register-name"
                 type="text"
-                value={fullName}
-                onChange={(event) => setFullName(event.target.value)}
-                placeholder="Juan Pérez"
-                autoComplete="name"
+                value={nombre}
+                onChange={(event) => setNombre(event.target.value)}
+                placeholder="Ana"
+                autoComplete="given-name"
                 required
                 className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
             </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="register-last-name"
+              className="mb-1.5 block text-sm font-medium text-on-surface-variant"
+            >
+              Apellido paterno
+            </label>
+            <input
+              id="register-last-name"
+              type="text"
+              value={apePat}
+              onChange={(event) => setApePat(event.target.value)}
+              placeholder="Pérez"
+              autoComplete="family-name"
+              required
+              className="h-12 w-full rounded-xl border border-transparent bg-login-input px-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="register-second-last-name"
+              className="mb-1.5 block text-sm font-medium text-on-surface-variant"
+            >
+              Apellido materno{" "}
+              <span className="font-normal text-login-icon">(opcional)</span>
+            </label>
+            <input
+              id="register-second-last-name"
+              type="text"
+              value={apeMat}
+              onChange={(event) => setApeMat(event.target.value)}
+              placeholder="García"
+              autoComplete="additional-name"
+              className="h-12 w-full rounded-xl border border-transparent bg-login-input px-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+            />
           </div>
 
           <div>
