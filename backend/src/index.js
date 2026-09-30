@@ -10,6 +10,10 @@ import loginRutas from './routes/loginRutas.js';
 
 app.use("/api/login", loginRutas);
 
+import pacienteRutas from './routes/pacienteRutas.js';
+
+app.use("/api/pacientes", pacienteRutas);
+
 app.use((err, req, res, next) => {
     if (err.status) {
         return res.status(err.status).json({ error: err.message });

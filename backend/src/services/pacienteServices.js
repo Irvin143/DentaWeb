@@ -1,24 +1,22 @@
 import conexion from "./conexion.js"; // ajusta a como exportas tu conexión real
 
+export const obtenerPacientes = async ({ limite = 20, pagina = 1 } = {}) => {
+    const offset = (pagina - 1) * limite;
 
-import { conexion } from '../config/db.js';
-
-export const obtenerPacientes = async () => {
-  // Hacemos JOIN con Usuarios si necesitas traer el correo
     const query = `
-        SELECT 
-        p.idPaciente,
+        SELECT
+        p.idPaciente AS id_paciente,
         p.nombre,
         p.ape_pat,
         p.ape_mat,
         p.telefono,
         u.correo
         FROM Pacientes p
-        LEFT JOIN Usuarios u ON p.idUsuario = u.idUsuario;
+        LEFT JOIN Usuarios u ON p.idUsuario = u.idUsuario
+        ORDER BY p.ape_pat, p.nombre
+        LIMIT $1 OFFSET $2;
     `;
 
-    const resultado = await conexion.query(query);
-    
-    // Retorna directamente el arreglo de filas
-    return resultado.rows;
+    const { rows } = await conexion.query(query, [limite, offset]);
+    return rows;
 };
