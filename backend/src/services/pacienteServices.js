@@ -5,15 +5,19 @@ export const obtenerPacientes = async ({ limite = 20, pagina = 1 } = {}) => {
 
     const query = `
         SELECT
-        p.idPaciente AS id_paciente,
-        p.nombre,
-        p.ape_pat,
-        p.ape_mat,
-        p.telefono,
-        u.activo,
-        u.correo
+            p.idPaciente   AS id_paciente,
+            p.idUsuario    AS id_usuario,
+            p.nombre,
+            p.ape_pat,
+            p.ape_mat,
+            p.telefono,
+            u.activo,
+            u.correo,
+            p.idOdontologo as id_odontologo,
+            CONCAT_WS(' ', o.nombre, o.ape_pat, o.ape_mat) AS nombre_odontologo
         FROM Pacientes p
-        LEFT JOIN Usuarios u ON p.idUsuario = u.idUsuario
+        LEFT JOIN Usuarios u    ON p.idUsuario    = u.idUsuario
+        LEFT JOIN Odontologos o ON p.idOdontologo = o.idOdontologo
         ORDER BY p.ape_pat, p.nombre
         LIMIT $1 OFFSET $2;
     `;
@@ -21,6 +25,7 @@ export const obtenerPacientes = async ({ limite = 20, pagina = 1 } = {}) => {
     const { rows } = await conexion.query(query, [limite, offset]);
     return rows;
 };
+
 export const actualizarPaciente = async (id, { nombre, ape_pat, ape_mat, telefono }) => {
     const query = `
         UPDATE Pacientes
