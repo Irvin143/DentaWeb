@@ -27,6 +27,9 @@ app.use('/api/servicios', serviciosRoutes);
 import consultorioRoutes from './routes/consultorioRutas.js';
 app.use('/api/consultorios', consultorioRoutes);
 
+import rolRoutes from './routes/rolRutas.js';
+app.use('/api/roles', rolRoutes);
+
 app.use((err, req, res, next) => {
     if (err.status) {
         return res.status(err.status).json({ error: err.message });
