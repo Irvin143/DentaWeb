@@ -18,6 +18,10 @@ import especialidadesRoutes from './routes/especialidadesRutas.js';
 
 app.use('/api/especialidades', especialidadesRoutes);
 
+import estudiosRoutes from './routes/estudiosRutas.js';
+
+app.use('/api/estudios', estudiosRoutes);
+
 app.use((err, req, res, next) => {
     if (err.status) {
         return res.status(err.status).json({ error: err.message });

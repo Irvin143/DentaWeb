@@ -74,6 +74,9 @@ export const eliminarEspecialidad = async (id) => {
         throw error;
     }
 
-    await conexion.query('DELETE FROM Especialidades WHERE idEspecialidad = $1', [id]);
-    return true;
+            const { rowCount } = await conexion.query(
+            'UPDATE Especialidades SET activo = false WHERE idEspecialidad = $1 AND activo',
+            [id]
+    );
+    return rowCount > 0;
 };
