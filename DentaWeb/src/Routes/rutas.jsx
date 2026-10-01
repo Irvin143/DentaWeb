@@ -8,6 +8,7 @@ import Terms from "../modules/legal/terminos.jsx";
 import Privacy from "../modules/legal/privacidad.jsx";
 import Cookies from "../modules/legal/cookies.jsx";
 import Security from "../modules/legal/seguridad.jsx";
+import ClinicasPage from "../modules/clinicas/ClinicasPage.jsx";
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
         <Route path="/legal/privacidad" element={<Privacy />} />
         <Route path="/legal/cookies" element={<Cookies />} />
         <Route path="/legal/seguridad" element={<Security />} />
+        <Route path="/clinicas" element={<ClinicasPage />} />
 
         {/* <Route path="/administracion" element={<Panel />}>
           <Route index element={<PanelCitas/>}/>
