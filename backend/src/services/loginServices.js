@@ -45,7 +45,7 @@ export async function login({ correo, contrasena }) {
         error.status = 401;
         throw error;
     }
-
+    console.log("JWT_SECRET definido:", !!process.env.JWT_SECRET);
     // 4. Generar el token
     const token = jwt.sign(
         { sub: user.id_usuario, paquete: user.nombre_paquete, roles: user.roles },

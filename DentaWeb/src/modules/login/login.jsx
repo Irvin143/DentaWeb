@@ -52,6 +52,7 @@ const DentalWebLogin = () => {
       );
       setSuccessMessage("Sesión iniciada correctamente.");
     } catch (error) {
+      console.error("Login falló:", error?.status, error?.message, error?.data);
       if (error?.status === 400 || error?.status === 401) {
         setErrorMessage("El correo o la contraseña no son válidos.");
       } else {
