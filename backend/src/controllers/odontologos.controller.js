@@ -7,6 +7,31 @@ const responderError = (res, err) => {
     console.error(err);
     return res.status(500).json({ error: 'Error interno del servidor' });
 };
+const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Valida la contraseña (bcrypt solo considera los primeros 72 bytes)
+const validarContrasena = (contrasena) => {
+    if (typeof contrasena !== 'string' || contrasena.length < 8) {
+        return 'La contraseña debe tener al menos 8 caracteres';
+    }
+    if (Buffer.byteLength(contrasena, 'utf8') > 72) {
+        return 'La contraseña no puede exceder 72 bytes';
+    }
+    return null;
+};
+
+// Credenciales de acceso (solo al crear)
+const validarCredenciales = (body = {}) => {
+    const correo = body.correo?.toString().trim().toLowerCase();
+    if (!correo) return { error: 'El correo es obligatorio' };
+    if (correo.length > 150) return { error: 'El correo no puede exceder 150 caracteres' };
+    if (!REGEX_CORREO.test(correo)) return { error: 'El correo no es válido' };
+
+    const errorContrasena = validarContrasena(body.contrasena);
+    if (errorContrasena) return { error: errorContrasena };
+
+    return { correo, contrasena: body.contrasena };
+};
 
 const idValido = (valor) => Number.isInteger(Number(valor)) && Number(valor) > 0;
 
@@ -87,14 +112,37 @@ export const obtenerPorId = async (req, res) => {
 export const crear = async (req, res) => {
     const { datos, error } = validarBody(req.body);
     if (error) return res.status(400).json({ error });
+
+    if (!req.body.correo || !req.body.contrasena) {
+        return res.status(400).json({ error: 'Correo y contraseña son obligatorios' });
+    }
+
+    if(datos.idclinica == null) {
+        return res.status(400).json({ error: 'No se proporciono id de clínica' });
+    }
+
+    const credenciales = validarCredenciales(req.body);
+    if (credenciales.error) return res.status(400).json({ error: credenciales.error });
+
     try {
-        const odontologo = await odontologoService.crearOdontologo(datos);
-        res.status(201).json(odontologo);
+        const creado = await odontologoService.crearOdontologo({
+            correo: credenciales.correo,
+            contrasena: credenciales.contrasena,
+            nombre: datos.nombre,
+            ape_pat: datos.ape_pat,
+            ape_mat: datos.ape_mat,
+            telefono: datos.telefono,
+            cedula: datos.cedula,
+            id_clinica: datos.idclinica,
+        });
+
+        // La función SQL devuelve solo ids; traemos el registro completo
+        const odontologo = await odontologoService.obtenerOdontologoPorId(creado.id_odontologo);
+        res.status(201).json(odontologo ?? creado);
     } catch (err) {
         responderError(res, err);
     }
 };
-
 export const actualizar = async (req, res) => {
     const { id } = req.params;
     if (!idValido(id)) return res.status(400).json({ error: 'ID inválido' });

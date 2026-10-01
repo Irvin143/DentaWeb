@@ -30,9 +30,8 @@ export async function registrarPaciente({
         throw err;
     }
 }
-
 export async function login({ correo, contrasena }) {
-    // 1. Buscar al usuario con sus roles
+    // 1. Buscar al usuario con su tipo, paquete y roles
     const { rows } = await conexion.query('SELECT * FROM fn_login_usuario($1)', [correo]);
     const user = rows[0];
 
@@ -45,10 +44,15 @@ export async function login({ correo, contrasena }) {
         error.status = 401;
         throw error;
     }
-    console.log("JWT_SECRET definido:", !!process.env.JWT_SECRET);
+
     // 4. Generar el token
     const token = jwt.sign(
-        { sub: user.id_usuario, paquete: user.nombre_paquete, roles: user.roles },
+        {
+            sub: user.id_usuario,
+            tipo: user.tipo,
+            paquete: user.nombre_paquete,
+            roles: user.roles,
+        },
         process.env.JWT_SECRET,
         { expiresIn: '1h' }
     );
@@ -56,10 +60,11 @@ export async function login({ correo, contrasena }) {
     return {
         token,
         usuario: {
-        id: user.id_usuario,
-        correo: user.correo,
-        paquete: user.nombre_paquete,
-        roles: user.roles,
+            id: user.id_usuario,
+            correo: user.correo,
+            tipo: user.tipo,
+            paquete: user.nombre_paquete,
+            roles: user.roles,
         },
     };
 }

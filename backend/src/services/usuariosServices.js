@@ -11,23 +11,38 @@ const errorHttp = (status, mensaje) => {
 
 const manejarErrorPg = (err) => {
     if (err.code === '23505') throw errorHttp(409, 'Ya existe un usuario con ese correo');
-    if (err.code === '23503') throw errorHttp(400, 'El paquete indicado no existe');
+    if (err.code === '23503') {
+        // Llave foránea: distinguimos cuál falló por el detalle del error
+        if (String(err.detail ?? '').includes('tipo_usuario')) {
+            throw errorHttp(400, 'El tipo de usuario indicado no existe');
+        }
+        throw errorHttp(400, 'El paquete indicado no existe');
+    }
+    if (err.code === '23502') throw errorHttp(400, 'Faltan datos obligatorios');
     throw err;
 };
 
 // Columnas que se devuelven siempre. NUNCA incluyas "contrasena" aquí.
-// "u" es el alias del usuario, "p" el del paquete.
+// "u" es el alias del usuario, "p" el del paquete y "t" el del tipo de usuario.
 const COLUMNAS = `
     u.idUsuario AS id_usuario,
     u.correo,
     u.activo,
     u.idPaquete AS id_paquete,
-    p.nombre AS nombre_paquete
+    p.nombre AS nombre_paquete,
+    u.idTipoUsuario AS id_tipo_usuario,
+    t.nombre AS tipo
+`;
+
+// Joins compartidos (también los usan los CTE de crear, actualizar y reactivar)
+const JOINS = `
+    LEFT JOIN paquetes_roles p ON p.idPaquete = u.idPaquete
+    LEFT JOIN tipo_usuario t ON t.idTipoUsuario = u.idTipoUsuario
 `;
 
 const FROM_JOIN = `
     FROM usuarios u
-    LEFT JOIN paquetes_roles p ON p.idPaquete = u.idPaquete
+    ${JOINS}
 `;
 
 // ---------- LISTAR ----------
@@ -56,19 +71,19 @@ export const obtenerUsuarioPorId = async (id) => {
 
 // ---------- CREAR ----------
 // Recibe la contraseña en texto plano y la guarda hasheada
-export const crearUsuario = async ({ correo, contrasena, idpaquete }) => {
+export const crearUsuario = async ({ correo, contrasena, idpaquete, idtipousuario }) => {
     try {
         const hash = await bcrypt.hash(contrasena, SALT_ROUNDS);
         const { rows } = await conexion.query(
             `WITH u AS (
-                INSERT INTO usuarios (correo, contrasena, idPaquete)
-                VALUES ($1, $2, $3)
+                INSERT INTO usuarios (correo, contrasena, idPaquete, idTipoUsuario)
+                VALUES ($1, $2, $3, $4)
                 RETURNING *
             )
             SELECT ${COLUMNAS}
             FROM u
-            LEFT JOIN paquetes_roles p ON p.idPaquete = u.idPaquete`,
-            [correo, hash, idpaquete]
+            ${JOINS}`,
+            [correo, hash, idpaquete, idtipousuario]
         );
         return rows[0];
     } catch (err) {
@@ -77,20 +92,20 @@ export const crearUsuario = async ({ correo, contrasena, idpaquete }) => {
 };
 
 // ---------- ACTUALIZAR (solo registros activos) ----------
-// Cambia correo y paquete. La contraseña se cambia con cambiarContrasena.
-export const actualizarUsuario = async (id, { correo, idpaquete }) => {
+// Cambia correo, paquete y tipo. La contraseña se cambia con cambiarContrasena.
+export const actualizarUsuario = async (id, { correo, idpaquete, idtipousuario }) => {
     try {
         const { rows } = await conexion.query(
             `WITH u AS (
                 UPDATE usuarios
-                SET correo = $2, idPaquete = $3
+                SET correo = $2, idPaquete = $3, idTipoUsuario = $4
                 WHERE idUsuario = $1 AND activo
                 RETURNING *
             )
             SELECT ${COLUMNAS}
             FROM u
-            LEFT JOIN paquetes_roles p ON p.idPaquete = u.idPaquete`,
-            [id, correo, idpaquete]
+            ${JOINS}`,
+            [id, correo, idpaquete, idtipousuario]
         );
         return rows[0] ?? null; // null = no existe o está desactivado
     } catch (err) {
@@ -128,7 +143,7 @@ export const reactivarUsuario = async (id) => {
         )
         SELECT ${COLUMNAS}
         FROM u
-        LEFT JOIN paquetes_roles p ON p.idPaquete = u.idPaquete`,
+        ${JOINS}`,
         [id]
     );
     return rows[0] ?? null; // null = no existe o ya estaba activo

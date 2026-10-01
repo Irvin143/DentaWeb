@@ -1,4 +1,7 @@
 import conexion from '../services/conexion.js'; // la misma ruta que usas en los demás services
+import bcrypt from 'bcrypt';
+
+const SALT_ROUNDS = 12;
 
 const errorHttp = (status, mensaje) => {
     const error = new Error(mensaje);
@@ -68,25 +71,35 @@ export const obtenerOdontologoPorId = async (id) => {
     return rows[0] ?? null;
 };
 
-// ---------- CREAR ----------
-export const crearOdontologo = async ({ nombre, ape_pat, ape_mat, telefono, cedula, idusuario, idclinica }) => {
+export async function crearOdontologo({
+    correo, contrasena, nombre, ape_pat, ape_mat, telefono,
+    cedula = null, id_clinica = null,
+}) {
+    const hash = await bcrypt.hash(contrasena, SALT_ROUNDS);
+
     try {
         const { rows } = await conexion.query(
-            `WITH o AS (
-                INSERT INTO odontologos (nombre, ape_pat, ape_mat, telefono, cedula, idUsuario, idClinica)
-                VALUES ($1, $2, $3, $4, $5, $6, $7)
-                RETURNING *
-            )
-            SELECT ${COLUMNAS}
-            FROM o
-            ${JOINS}`,
-            [nombre, ape_pat, ape_mat, telefono, cedula, idusuario, idclinica]
+            'SELECT * FROM fn_registrar_odontologo($1, $2, $3, $4, $5, $6, $7, $8)',
+            [correo, hash, nombre, ape_pat, ape_mat, telefono, cedula, id_clinica]
         );
         return rows[0];
     } catch (err) {
-        manejarErrorPg(err);
+        if (err.code === '23505') {
+            const duplicadaCedula = String(err.message).includes('cédula');
+            const error = new Error(
+                duplicadaCedula ? 'La cédula ya está registrada' : 'El correo ya está registrado'
+            );
+            error.status = 409;
+            throw error;
+        }
+        if (err.code === '23503') { // la clínica no existe
+            const error = new Error('La clínica indicada no existe');
+            error.status = 400;
+            throw error;
+        }
+        throw err;
     }
-};
+}
 
 // ---------- ACTUALIZAR (solo registros activos) ----------
 // Reemplaza todos los campos editables; los opcionales que vengan null se borran
