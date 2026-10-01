@@ -251,3 +251,18 @@ export const tiposCitaApi = {
     return apiRequest(`/api/tipos-cita/${id}`, { method: "DELETE" });
   },
 };
+
+export const tiposUsuarioApi = {
+  listar() {
+    return apiRequest("/api/tipos-usuario", { method: "GET" });
+  },
+  crear(payload) {
+    return apiRequest("/api/tipos-usuario", { method: "POST", body: payload });
+  },
+  actualizar(id, payload) {
+    return apiRequest(`/api/tipos-usuario/${id}`, { method: "PUT", body: payload });
+  },
+  eliminar(id) {
+    return apiRequest(`/api/tipos-usuario/${id}`, { method: "DELETE" });
+  },
+};

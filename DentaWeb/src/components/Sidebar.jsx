@@ -15,6 +15,7 @@ const navItems = [
   { path: '/tipos-cita', label: 'Tipos de Cita', icon: Calendar },
   { path: '/paquetes', label: 'Paquetes Roles', icon: Calendar },
   { path: '/roles', label: 'Roles', icon: Calendar },
+  { path: '/tipos-usuario', label: 'Tipos de Usuario', icon: Calendar },
   // { path: "/agenda", label: "Agenda", icon: Calendar },
 ];
 
