@@ -93,7 +93,7 @@ export function Sidebar() {
       {/* Sidebar: panel deslizante en mobile, fijo en escritorio */}
       <aside
         id="menu-lateral"
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col justify-between border-r border-slate-100 bg-white p-4 shadow-sm transition-[transform,visibility] duration-200 md:visible md:static md:h-screen md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50  flex w-64 flex-col justify-between border-r border-slate-100 bg-white p-4 shadow-sm transition-[transform,visibility] duration-200 md:visible md:static md:h-screen md:translate-x-0 ${
           abierto ? 'translate-x-0' : '-translate-x-full invisible'
         }`}
       >
@@ -111,7 +111,7 @@ export function Sidebar() {
           </header>
 
           {/* Menú de navegación */}
-          <nav aria-label="Navegación principal">
+          <nav aria-label="Navegación principal" >
             <ul className="m-0 list-none space-y-1.5 p-0">
               {itemsVisibles.map((item) => (
                 <li key={item.path}>

@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { CatalogoPage } from '../../components/CatalogoPage';
-import { odontologosApi, clinicasApi } from '../../services/api.js'; // agrega odontologosApi y usuariosApi en este archivo
+import { odontologosApi, clinicasApi } from '../../services/api.js';
 
+// Mobile: compacto. Desktop (md:): más amplio y cómodo
 const inputClass =
-  'w-full rounded-xl border border-slate-200 bg-white p-3 outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500';
+  'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500 md:rounded-xl md:px-4 md:py-3 md:text-base';
+
+const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const FORM_INICIAL = {
   nombre: '',
@@ -11,8 +14,11 @@ const FORM_INICIAL = {
   ape_mat: '',
   telefono: '',
   cedula: '',
-  idusuario: '',
   idclinica: '',
+  idusuario: '', // solo se conserva al editar (no se muestra)
+  correo: '', // llave de acceso (solo al crear)
+  contrasena: '',
+  confirmarContrasena: '',
 };
 
 // Acepta un arreglo directo o la lista envuelta en un objeto ({ data: [...] }, { odontologos: [...] })
@@ -23,22 +29,40 @@ const comoLista = (resp, clave) =>
 const mapearOdontologo = (o) => ({
   id: o.id_odontologo,
   nombre: o.nombre_completo ?? [o.nombre, o.ape_pat, o.ape_mat].filter(Boolean).join(' '),
-  cedula: o.cedula ?? '—',
-  telefono: o.telefono ?? '—',
+  cedula: o.cedula ?? 'Sin cedula',
+  telefono: o.telefono ?? 'Sin telefono',
   correo_usuario: o.correo_usuario ?? 'Sin usuario',
   clinica: o.nombre_clinica ?? 'Sin clínica',
   estado: o.activo ? 'Activo' : 'Inactivo',
 });
 
+const Etiqueta = ({ children, requerido }) => (
+  <label className="mb-1 block text-xs font-medium text-slate-700 md:mb-1.5 md:text-sm">
+    {children}
+    {requerido && <span className="ml-0.5 text-red-500">*</span>}
+  </label>
+);
+
+// Sección con título: el título solo se ve en desktop, en mobile queda igual que antes
+const Seccion = ({ titulo, children }) => (
+  <section className="flex flex-col gap-3 md:gap-5">
+    <h3 className="hidden border-b border-slate-100 pb-2 text-sm font-semibold text-slate-800 md:block">
+      {titulo}
+    </h3>
+    {children}
+  </section>
+);
+
 export default function OdontologosPage() {
   const [odontologos, setOdontologos] = useState([]); // datos crudos del backend
   const [clinicas, setClinicas] = useState([]); // para el select de clínica
-  const [usuarios, setUsuarios] = useState([]); // para el select de usuario
   const [cargando, setCargando] = useState(true);
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState(null);
   const [guardando, setGuardando] = useState(false);
+
+  const creando = editandoId === null;
 
   const cargar = useCallback(async () => {
     try {
@@ -54,19 +78,16 @@ export default function OdontologosPage() {
     }
   }, []);
 
-  // Catálogos para los selects (si fallan, la página sigue funcionando)
+  // Catálogo para el select (si falla, la página sigue funcionando)
   const cargarCatalogos = useCallback(async () => {
-  const [resClinicas] = await Promise.allSettled([
-    clinicasApi.listar(),
-    ]);
-    console.log('Clinicas cargadas:', resClinicas);
+    const [resClinicas] = await Promise.allSettled([clinicasApi.listar()]);
 
-  if (resClinicas.status === 'fulfilled') {
-    setClinicas(comoLista(resClinicas.value, 'clinicas'));
-  } else {
-    console.error('Error al cargar clínicas:', resClinicas.reason);
-  }
-}, []);
+    if (resClinicas.status === 'fulfilled') {
+      setClinicas(comoLista(resClinicas.value, 'clinicas'));
+    } else {
+      console.error('Error al cargar clínicas:', resClinicas.reason);
+    }
+  }, []);
 
   useEffect(() => {
     cargar();
@@ -79,20 +100,6 @@ export default function OdontologosPage() {
     [clinicas, form.idclinica]
   );
 
-  // Usuarios activos que no estén asignados a otro odontólogo
-  const opcionesUsuario = useMemo(() => {
-    const ocupados = new Set(
-      odontologos
-        .filter((o) => o.id_odontologo !== editandoId && o.id_usuario != null)
-        .map((o) => String(o.id_usuario))
-    );
-    return usuarios.filter(
-      (u) =>
-        String(u.id_usuario) === String(form.idusuario) ||
-        (u.activo && !ocupados.has(String(u.id_usuario)))
-    );
-  }, [usuarios, odontologos, editandoId, form.idusuario]);
-
   const handleChange = (campo) => (e) =>
     setForm((prev) => ({ ...prev, [campo]: e.target.value }));
 
@@ -102,35 +109,59 @@ export default function OdontologosPage() {
     setError(null);
   };
 
+  // Devuelve un mensaje de error o null si todo está bien
+  const validar = () => {
+    if (!form.nombre.trim()) return 'El nombre es obligatorio';
+    if (!form.ape_pat.trim()) return 'El apellido paterno es obligatorio';
+
+    if (creando) {
+      if (!form.idclinica) return 'La clínica es obligatoria';
+
+      const correo = form.correo.trim();
+      if (!correo) return 'El correo de acceso es obligatorio';
+      if (!REGEX_CORREO.test(correo)) return 'El correo de acceso no es válido';
+      if (form.contrasena.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
+      if (form.contrasena !== form.confirmarContrasena) return 'Las contraseñas no coinciden';
+    }
+    return null;
+  };
+
   // Devuelve true si guardó bien (para que el modal pueda cerrarse)
   const handleGuardar = async () => {
-    if (!form.nombre.trim()) {
-      setError('El nombre es obligatorio');
-      return false;
-    }
-    if (!form.ape_pat.trim()) {
-      setError('El apellido paterno es obligatorio');
+    const mensaje = validar();
+    if (mensaje) {
+      setError(mensaje);
       return false;
     }
 
     try {
       setGuardando(true);
       setError(null);
+        // Normaliza a mayúsculas lo que se manda al backend
+        const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
 
-      const payload = {
-        nombre: form.nombre.trim(),
-        ape_pat: form.ape_pat.trim(),
-        ape_mat: form.ape_mat.trim(),
+        const datosBase = {
+        nombre: mayus(form.nombre),
+        ape_pat: mayus(form.ape_pat),
+        ape_mat: mayus(form.ape_mat),
         telefono: form.telefono.trim(),
-        cedula: form.cedula.trim(),
-        idusuario: form.idusuario ? Number(form.idusuario) : null,
+        cedula: mayus(form.cedula),
         idclinica: form.idclinica ? Number(form.idclinica) : null,
-      };
+        };
 
       if (editandoId) {
-        await odontologosApi.actualizar(editandoId, payload);
+        // Al editar se conserva el usuario que ya tiene; no se tocan las credenciales
+        await odontologosApi.actualizar(editandoId, {
+          ...datosBase,
+          idusuario: form.idusuario ? Number(form.idusuario) : null,
+        });
       } else {
-        await odontologosApi.crear(payload);
+        // Al crear, el backend genera el usuario con estas credenciales
+        await odontologosApi.crear({
+          ...datosBase,
+          correo: form.correo.trim().toLowerCase(),
+          contrasena: form.contrasena,
+        });
       }
 
       resetFormulario();
@@ -151,13 +182,14 @@ export default function OdontologosPage() {
     setEditandoId(id);
     setError(null);
     setForm({
+      ...FORM_INICIAL,
       nombre: o.nombre ?? '',
       ape_pat: o.ape_pat ?? '',
       ape_mat: o.ape_mat ?? '',
       telefono: o.telefono ?? '',
       cedula: o.cedula ?? '',
-      idusuario: o.id_usuario != null ? String(o.id_usuario) : '',
       idclinica: o.id_clinica != null ? String(o.id_clinica) : '',
+      idusuario: o.id_usuario != null ? String(o.id_usuario) : '',
     });
   };
 
@@ -171,87 +203,136 @@ export default function OdontologosPage() {
     }
   };
 
+  // max-h + overflow: si no cabe, solo el formulario hace scroll
   const formularioOdontologo = (
-    <div className="flex flex-col gap-4">
+    <div className="flex max-h-[65vh] flex-col gap-3 overflow-y-auto pr-1 md:max-h-[72vh] md:gap-7 md:px-2">
       {error && (
-        <p className="rounded-xl bg-red-50 p-3 text-sm text-red-600">{error}</p>
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600 md:rounded-xl md:p-3 md:text-sm">
+          {error}
+        </p>
       )}
-      <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">Nombre(s):</label>
-        <input
-          type="text"
-          placeholder="Ej. Laura"
-          className={inputClass}
-          value={form.nombre}
-          onChange={handleChange('nombre')}
-        />
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Apellido paterno:</label>
-          <input
-            type="text"
-            placeholder="Ej. Gómez"
-            className={inputClass}
-            value={form.ape_pat}
-            onChange={handleChange('ape_pat')}
-          />
+
+      {/* Datos personales */}
+      <Seccion titulo="Datos personales" >
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
+          <div>
+            <Etiqueta requerido>Nombre(s):</Etiqueta>
+            <input
+              type="text"
+              placeholder="Ej. Laura"
+              className={inputClass}
+              value={form.nombre}
+              onChange={handleChange('nombre')}
+            />
+          </div>
+          <div>
+            <Etiqueta>Teléfono:</Etiqueta>
+            <input
+              type="tel"
+              placeholder="Ej. 6671234567"
+              className={inputClass}
+              value={form.telefono}
+              onChange={handleChange('telefono')}
+            />
+          </div>
+          <div>
+            <Etiqueta requerido>Apellido paterno:</Etiqueta>
+            <input
+              type="text"
+              placeholder="Ej. Gómez"
+              className={inputClass}
+              value={form.ape_pat}
+              onChange={handleChange('ape_pat')}
+            />
+          </div>
+          <div>
+            <Etiqueta>Apellido materno:</Etiqueta>
+            <input
+              type="text"
+              placeholder="Ej. Ríos"
+              className={inputClass}
+              value={form.ape_mat}
+              onChange={handleChange('ape_mat')}
+            />
+          </div>
         </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Apellido materno:</label>
-          <input
-            type="text"
-            placeholder="Ej. Ríos"
-            className={inputClass}
-            value={form.ape_mat}
-            onChange={handleChange('ape_mat')}
-          />
+      </Seccion>
+
+      {/* Datos profesionales */}
+      <Seccion titulo="Datos profesionales">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
+          <div>
+            <Etiqueta>Cédula profesional:</Etiqueta>
+            <input
+              type="text"
+              placeholder="Ej. 12345678"
+              className={inputClass}
+              value={form.cedula}
+              onChange={handleChange('cedula')}
+            />
+          </div>
+          <div>
+            <Etiqueta requerido={creando}>Clínica:</Etiqueta>
+            <select className={inputClass} value={form.idclinica} onChange={handleChange('idclinica')}>
+              <option value="">{creando ? 'Selecciona una clínica' : 'Sin clínica'}</option>
+              {opcionesClinica.map((c) => (
+                <option key={c.id_clinica} value={c.id_clinica}>
+                  {c.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Teléfono:</label>
-          <input
-            type="tel"
-            placeholder="Ej. 6671234567"
-            className={inputClass}
-            value={form.telefono}
-            onChange={handleChange('telefono')}
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Cédula profesional:</label>
-          <input
-            type="text"
-            placeholder="Ej. 12345678"
-            className={inputClass}
-            value={form.cedula}
-            onChange={handleChange('cedula')}
-          />
-        </div>
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">Clínica:</label>
-        <select className={inputClass} value={form.idclinica} onChange={handleChange('idclinica')}>
-          <option value="">Sin clínica</option>
-          {opcionesClinica.map((c) => (
-            <option key={c.id_clinica} value={c.id_clinica}>
-              {c.nombre}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">Usuario (correo):</label>
-        <select className={inputClass} value={form.idusuario} onChange={handleChange('idusuario')}>
-          <option value="">Sin usuario</option>
-          {opcionesUsuario.map((u) => (
-            <option key={u.id_usuario} value={u.id_usuario}>
-              {u.correo}
-            </option>
-          ))}
-        </select>
-      </div>
+      </Seccion>
+
+      {/* Llave de acceso: solo al crear, genera el usuario del odontólogo */}
+      {creando && (
+        <fieldset className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 pb-3 pt-1 md:gap-5 md:rounded-xl md:px-5 md:pb-5 md:pt-2">
+          <legend className="px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm">
+            🔑 Crear llave de acceso
+          </legend>
+          <p className="hidden text-sm text-slate-500 md:block">
+            Con estos datos el odontólogo iniciará sesión en el sistema.
+          </p>
+
+          <div>
+            <Etiqueta requerido>Correo electrónico:</Etiqueta>
+            <input
+              type="email"
+              autoComplete="off"
+              placeholder="odontologo@correo.com"
+              className={inputClass}
+              value={form.correo}
+              onChange={handleChange('correo')}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
+            <div>
+              <Etiqueta requerido>Contraseña:</Etiqueta>
+              <input
+                type="password"
+                autoComplete="new-password"
+                placeholder="Mínimo 8 caracteres"
+                className={inputClass}
+                value={form.contrasena}
+                onChange={handleChange('contrasena')}
+              />
+            </div>
+            <div>
+              <Etiqueta requerido>Confirmar contraseña:</Etiqueta>
+              <input
+                type="password"
+                autoComplete="new-password"
+                placeholder="Repite la contraseña"
+                className={inputClass}
+                value={form.confirmarContrasena}
+                onChange={handleChange('confirmarContrasena')}
+              />
+            </div>
+          </div>
+        </fieldset>
+      )}
     </div>
   );
 
