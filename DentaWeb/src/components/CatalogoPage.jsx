@@ -149,7 +149,7 @@ export function CatalogoPage({
                         {col.label}
                       </th>
                     ))}
-                    {hayAcciones && (
+                    {totalRegistros >= 1 && (
                       <th scope="col" className="px-5 py-3 text-right">
                         Acciones
                       </th>

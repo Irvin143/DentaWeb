@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { CatalogoPage } from '../../components/CatalogoPage';
-import { odontologosApi, clinicasApi, usuariosApi } from '../../services/api.js'; // agrega odontologosApi y usuariosApi en este archivo
+import { odontologosApi, clinicasApi } from '../../services/api.js'; // agrega odontologosApi y usuariosApi en este archivo
 
 const inputClass =
   'w-full rounded-xl border border-slate-200 bg-white p-3 outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500';

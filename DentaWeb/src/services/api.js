@@ -147,8 +147,107 @@ export const odontologosApi = {
   },
 };
 
-export const usuariosApi = {
+export const especialidadesApi = {
   listar() {
-    return apiRequest("/api/usuarios", { method: "GET" });
+    return apiRequest("/api/especialidades", { method: "GET" });
+  },
+  crear(payload) {
+    return apiRequest("/api/especialidades", { method: "POST", body: payload });
+  },
+  actualizar(id, payload) {
+    return apiRequest(`/api/especialidades/${id}`, { method: "PUT", body: payload });
+  },
+  eliminar(id) {
+    return apiRequest(`/api/especialidades/${id}`, { method: "DELETE" });
+  },
+};
+
+export const consultoriosApi = {
+  listar() {
+    return apiRequest("/api/consultorios", { method: "GET" });
+  },
+  crear(payload) {
+    return apiRequest("/api/consultorios", { method: "POST", body: payload });
+  },
+  actualizar(id, payload) {
+    return apiRequest(`/api/consultorios/${id}`, { method: "PUT", body: payload });
+  },
+  eliminar(id) {
+    return apiRequest(`/api/consultorios/${id}`, { method: "DELETE" });
+  },
+};
+
+export const estudiosApi = {
+  listar() {
+    return apiRequest("/api/estudios", { method: "GET" });
+  },
+  crear(payload) {
+    return apiRequest("/api/estudios", { method: "POST", body: payload });
+  },
+  actualizar(id, payload) {
+    return apiRequest(`/api/estudios/${id}`, { method: "PUT", body: payload });
+  },
+  eliminar(id) {
+    return apiRequest(`/api/estudios/${id}`, { method: "DELETE" });
+  },
+};
+
+export const rolesApi = {
+  listar() {
+    return apiRequest("/api/roles", { method: "GET" });
+  },
+  crear(payload) {
+    return apiRequest("/api/roles", { method: "POST", body: payload });
+  },
+  actualizar(id, payload) {
+    return apiRequest(`/api/roles/${id}`, { method: "PUT", body: payload });
+  },
+  eliminar(id) {
+    return apiRequest(`/api/roles/${id}`, { method: "DELETE" });
+  },
+};
+
+export const paquetesApi = {
+  listar() {
+    return apiRequest("/api/paquetes-roles", { method: "GET" });
+  },
+  crear(payload) {
+    return apiRequest("/api/paquetes-roles", { method: "POST", body: payload });
+  },
+  actualizar(id, payload) {
+    return apiRequest(`/api/paquetes-roles/${id}`, { method: "PUT", body: payload });
+  },
+  eliminar(id) {
+    return apiRequest(`/api/paquetes-roles/${id}`, { method: "DELETE" });
+  },
+};
+
+export const serviciosApi = {
+  listar() {
+    return apiRequest("/api/servicios", { method: "GET" });
+  },
+  crear(payload) {
+    return apiRequest("/api/servicios", { method: "POST", body: payload });
+  },
+  actualizar(id, payload) {
+    return apiRequest(`/api/servicios/${id}`, { method: "PUT", body: payload });
+  },
+  eliminar(id) {
+    return apiRequest(`/api/servicios/${id}`, { method: "DELETE" });
+  },
+};
+
+export const tiposCitaApi = {
+  listar() {
+    return apiRequest("/api/tipos-cita", { method: "GET" });
+  },
+  crear(payload) {
+    return apiRequest("/api/tipos-cita", { method: "POST", body: payload });
+  },
+  actualizar(id, payload) {
+    return apiRequest(`/api/tipos-cita/${id}`, { method: "PUT", body: payload });
+  },
+  eliminar(id) {
+    return apiRequest(`/api/tipos-cita/${id}`, { method: "DELETE" });
   },
 };

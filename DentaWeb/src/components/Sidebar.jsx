@@ -12,11 +12,18 @@ const mockActiveSession = {
 };
 
 const navItems = [
-  { path: "/panel", label: "Panel Principal", icon: LayoutGrid },
-  { path: "/clinicas", label: "Clínicas", icon: Building2 },
-  { path: "/odontologos", label: "Odontólogos", icon: Stethoscope },
+  // { path: "/panel", label: "Panel Principal", icon: LayoutGrid },
   { path: "/pacientes", label: "Pacientes", icon: Users },
-  { path: "/agenda", label: "Agenda", icon: Calendar },
+  { path: "/odontologos", label: "Odontólogos", icon: Stethoscope },
+  { path: "/clinicas", label: "Clínicas", icon: Building2 },
+  { path: "/consultorios", label: "Consultorios", icon: Calendar },
+  { path: "/servicios", label: "Servicios", icon: Calendar },
+  { path: "/especialidades", label: "Especialidades", icon: Calendar },
+  { path: "/estudios", label: "Estudios", icon: Calendar },
+  { path: "/tipos-cita", label: "Tipos de Cita", icon: Calendar },
+  { path: "/paquetes", label: "Paquetes Roles", icon: Calendar },
+  { path: "/roles", label: "Roles", icon: Calendar },
+  // { path: "/agenda", label: "Agenda", icon: Calendar },
 ];
 
 function Marca() {
