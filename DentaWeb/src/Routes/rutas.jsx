@@ -9,6 +9,8 @@ import Privacy from "../modules/legal/privacidad.jsx";
 import Cookies from "../modules/legal/cookies.jsx";
 import Security from "../modules/legal/seguridad.jsx";
 import ClinicasPage from "../modules/clinicas/ClinicasPage.jsx";
+import PacientesPage from "../modules/pacientes/PacientesPage.jsx";
+import OdontologosPage from "../modules/odontologos/OdontologosPage.jsx";
 
 export default function App() {
   return (
@@ -23,7 +25,8 @@ export default function App() {
         <Route path="/legal/cookies" element={<Cookies />} />
         <Route path="/legal/seguridad" element={<Security />} />
         <Route path="/clinicas" element={<ClinicasPage />} />
-
+        <Route path="/pacientes" element={<PacientesPage />} />
+        <Route path="/odontologos" element={<OdontologosPage />} />
         {/* <Route path="/administracion" element={<Panel />}>
           <Route index element={<PanelCitas/>}/>
           <Route path="rituales" element={<PanelRituales />} />

@@ -1,9 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Plus, ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import { MainLayout } from '../layouts/MainLayout';
 import { ModalGenerico } from './ModalGenerico';
 
 const REGISTROS_POR_PAGINA = 10;
+
+// Ordena por id (numérico, ascendente). Si no hay id, conserva el orden original.
+const porId = (a, b) => (Number(a.id) || 0) - (Number(b.id) || 0);
 
 export function CatalogoPage({
   // Encabezado
@@ -18,12 +21,17 @@ export function CatalogoPage({
   datos = [],
   cargando = false,
   columnas, // opcional: [{ key, label, render? }]
+  // Acciones por fila (opcionales: si no se pasan, no se muestra la columna)
+  onEditar, // (id) => void
+  onEliminar, // (id) => void
   // Modal
-  modal = {}, // { icono, titulo, textoGuardar, contenido, onGuardar }
+  modal = {}, // { icono, titulo, textoGuardar, contenido, onGuardar, onCerrar }
 }) {
   const [busqueda, setBusqueda] = useState('');
   const [pagina, setPagina] = useState(1);
   const [modalAbierto, setModalAbierto] = useState(false);
+
+  const hayAcciones = Boolean(onEditar || onEliminar);
 
   // Columnas: las definidas o las derivadas de los atributos del primer registro
   const cols = useMemo(() => {
@@ -35,13 +43,17 @@ export function CatalogoPage({
     }));
   }, [columnas, datos]);
 
-  // Filtro del buscador (sobre todos los valores de la fila)
+  const totalColumnas = cols.length + (hayAcciones ? 1 : 0);
+
+  // Filtro del buscador (sobre todos los valores de la fila), siempre ordenado por id
   const datosFiltrados = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
-    if (!q) return datos;
-    return datos.filter((fila) =>
-      Object.values(fila).some((v) => String(v).toLowerCase().includes(q))
-    );
+    const filtrados = q
+      ? datos.filter((fila) =>
+          Object.values(fila).some((v) => String(v).toLowerCase().includes(q))
+        )
+      : datos;
+    return [...filtrados].sort(porId);
   }, [datos, busqueda]);
 
   // Paginación
@@ -55,6 +67,36 @@ export function CatalogoPage({
     setBusqueda(e.target.value);
     setPagina(1);
   };
+
+  // ---- Modal ----
+  const cerrarModal = () => {
+    setModalAbierto(false);
+    modal.onCerrar?.(); // la página limpia su formulario
+  };
+
+  // La página devuelve true si guardó bien: entonces se cierra el modal
+  const handleGuardar = async () => {
+    if (!modal.onGuardar) {
+      cerrarModal(); // mismo comportamiento que antes: sin onGuardar, solo cierra
+      return;
+    }
+    const ok = await modal.onGuardar();
+    if (ok) setModalAbierto(false);
+    return ok;
+  };
+
+  // ---- Acciones de fila ----
+  const handleEditar = (fila) => {
+    onEditar?.(fila.id); // la página carga los datos en el formulario
+    setModalAbierto(true);
+  };
+
+  const handleEliminar = (fila) => {
+    onEliminar?.(fila.id);
+  };
+
+  const botonIcono =
+    'rounded-lg border border-slate-200 p-1.5 text-slate-600 transition-colors';
 
   return (
     <MainLayout>
@@ -107,18 +149,23 @@ export function CatalogoPage({
                         {col.label}
                       </th>
                     ))}
+                    {hayAcciones && (
+                      <th scope="col" className="px-5 py-3 text-right">
+                        Acciones
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {cargando ? (
                     <tr>
-                      <td colSpan={cols.length || 1} className="px-5 py-12 text-center text-slate-500">
+                      <td colSpan={totalColumnas || 1} className="px-5 py-12 text-center text-slate-500">
                         Ejecutando consulta a la base de datos...
                       </td>
                     </tr>
                   ) : totalRegistros === 0 ? (
                     <tr>
-                      <td colSpan={cols.length || 1} className="px-5 py-12 text-center text-slate-500">
+                      <td colSpan={totalColumnas || 1} className="px-5 py-12 text-center text-slate-500">
                         No se encontraron resultados.
                       </td>
                     </tr>
@@ -130,6 +177,34 @@ export function CatalogoPage({
                             {col.render ? col.render(fila[col.key], fila) : fila[col.key]}
                           </td>
                         ))}
+                        {hayAcciones && (
+                          <td className="px-5 py-3 align-top">
+                            <div className="flex items-center justify-end gap-2">
+                              {onEditar && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditar(fila)}
+                                  title="Editar"
+                                  aria-label="Editar"
+                                  className={`${botonIcono} hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600 cursor-pointer transition-colors`}
+                                >
+                                  <Pencil size={16} />
+                                </button>
+                              )}
+                              {onEliminar && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleEliminar(fila)}
+                                  title="Eliminar"
+                                  aria-label="Eliminar"
+                                  className={`${botonIcono} hover:border-red-200 hover:bg-red-50 hover:text-red-600 cursor-pointer transition-colors`}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))
                   )}
@@ -162,6 +237,31 @@ export function CatalogoPage({
                         </div>
                       ))}
                     </dl>
+
+                    {hayAcciones && (
+                      <div className="mt-3 flex justify-end gap-2">
+                        {onEditar && (
+                          <button
+                            type="button"
+                            onClick={() => handleEditar(fila)}
+                            className={`${botonIcono} flex items-center gap-1.5 px-3 text-xs font-medium hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600`}
+                          >
+                            <Pencil size={14} />
+                            Editar
+                          </button>
+                        )}
+                        {onEliminar && (
+                          <button
+                            type="button"
+                            onClick={() => handleEliminar(fila)}
+                            className={`${botonIcono} flex items-center gap-1.5 px-3 text-xs font-medium hover:border-red-200 hover:bg-red-50 hover:text-red-600`}
+                          >
+                            <Trash2 size={14} />
+                            Eliminar
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </li>
                 ))
               )}
@@ -207,11 +307,11 @@ export function CatalogoPage({
       {/* Modal */}
       <ModalGenerico
         isOpen={modalAbierto}
-        onClose={() => setModalAbierto(false)}
+        onClose={cerrarModal}
         iconoCabecera={modal.icono}
         titulo={modal.titulo}
         textoBotonGuardar={modal.textoGuardar}
-        onGuardar={modal.onGuardar}
+        onGuardar={handleGuardar}
       >
         {modal.contenido}
       </ModalGenerico>

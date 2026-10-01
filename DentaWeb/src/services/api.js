@@ -116,3 +116,39 @@ export const clinicasApi = {
     return apiRequest(`/api/clinicas/${id}`, { method: "DELETE" });
   },
 };
+
+export const pacientesApi = {
+  listar() {
+    return apiRequest("/api/pacientes", { method: "GET" });
+  },
+  crear(payload) {
+    return apiRequest("/api/pacientes", { method: "POST", body: payload });
+  },
+  actualizar(id, payload) {
+    return apiRequest(`/api/pacientes/${id}`, { method: "PUT", body: payload });
+  },
+  eliminar(id) {
+    return apiRequest(`/api/pacientes/${id}`, { method: "DELETE" });
+  },
+};
+
+export const odontologosApi = {
+  listar() {
+    return apiRequest("/api/odontologos", { method: "GET" });
+  },
+  crear(payload) {
+    return apiRequest("/api/odontologos", { method: "POST", body: payload });
+  },
+  actualizar(id, payload) {
+    return apiRequest(`/api/odontologos/${id}`, { method: "PUT", body: payload });
+  },
+  eliminar(id) {
+    return apiRequest(`/api/odontologos/${id}`, { method: "DELETE" });
+  },
+};
+
+export const usuariosApi = {
+  listar() {
+    return apiRequest("/api/usuarios", { method: "GET" });
+  },
+};
