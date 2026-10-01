@@ -30,6 +30,9 @@ app.use('/api/consultorios', consultorioRoutes);
 import rolRoutes from './routes/rolRutas.js';
 app.use('/api/roles', rolRoutes);
 
+import paqueteRolRoutes from './routes/paqueteRolRutas.js';
+app.use('/api/paquetes-roles', paqueteRolRoutes);
+
 app.use((err, req, res, next) => {
     if (err.status) {
         return res.status(err.status).json({ error: err.message });
