@@ -1,4 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_URL = (
+  import.meta.env.VITE_API_URL || "http://localhost:3001"
+).replace(/\/+$/, "");
 
 export class ApiError extends Error {
   constructor(message, { status, data } = {}) {
@@ -6,6 +8,15 @@ export class ApiError extends Error {
     this.name = "ApiError";
     this.status = status;
     this.data = data;
+  }
+}
+
+function obtenerToken() {
+  try {
+    const auth = JSON.parse(sessionStorage.getItem("clinicware_auth") || "null");
+    return auth?.token ?? null;
+  } catch {
+    return null;
   }
 }
 
@@ -33,10 +44,13 @@ export async function apiRequest(endpoint, options = {}) {
       ? body
       : JSON.stringify(body);
 
+  const token = obtenerToken();
+
   const response = await fetch(url, {
     ...requestOptions,
     headers: {
       "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
       ...headers,
     },
     body: requestBody,
@@ -82,5 +96,23 @@ export const authApi = {
       method: "POST",
       body: payload,
     });
+  },
+};
+
+export const clinicasApi = {
+  listar() {
+    return apiRequest("/api/clinicas", { method: "GET" });
+  },
+
+  crear(payload) {
+    return apiRequest("/api/clinicas", { method: "POST", body: payload });
+  },
+
+  actualizar(id, payload) {
+    return apiRequest(`/api/clinicas/${id}`, { method: "PUT", body: payload });
+  },
+
+  eliminar(id) {
+    return apiRequest(`/api/clinicas/${id}`, { method: "DELETE" });
   },
 };
