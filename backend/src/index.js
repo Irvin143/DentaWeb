@@ -21,6 +21,9 @@ app.use('/api/estudios', estudiosRoutes);
 import clinicasRoutes from './routes/clinicasRutas.js';
 app.use('/api/clinicas', clinicasRoutes);
 
+import serviciosRoutes from './routes/serviciosRutas.js';
+app.use('/api/servicios', serviciosRoutes);
+
 app.use((err, req, res, next) => {
     if (err.status) {
         return res.status(err.status).json({ error: err.message });
