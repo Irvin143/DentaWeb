@@ -16,7 +16,8 @@ const mapearClinica = (c) => ({
   nombre: c.nombre,
   direccion: c.direccion ?? '—',
   identificacion_fiscal: c.identificacion_fiscal ?? '—',
-  estado: c.activo ? 'Activa' : 'Inactiva',
+  correo_usuario: c.correo_usuario ?? 'Sin correo', 
+  estado: c.activo ? 'Activa' : 'Inactiva'
 });
 
 export default function ClinicasPage() {
