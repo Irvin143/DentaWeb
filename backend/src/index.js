@@ -14,6 +14,10 @@ import pacienteRutas from './routes/pacienteRutas.js';
 
 app.use("/api/pacientes", pacienteRutas);
 
+import especialidadesRoutes from './routes/especialidadesRutas.js';
+
+app.use('/api/especialidades', especialidadesRoutes);
+
 app.use((err, req, res, next) => {
     if (err.status) {
         return res.status(err.status).json({ error: err.message });
