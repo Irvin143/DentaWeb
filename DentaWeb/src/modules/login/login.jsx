@@ -50,6 +50,7 @@ const DentalWebLogin = () => {
           usuario: response.usuario,
         }),
       );
+      console.log("Login exitoso:", response);
       setSuccessMessage("Sesión iniciada correctamente.");
     } catch (error) {
       console.error("Login falló:", error?.status, error?.message, error?.data);
