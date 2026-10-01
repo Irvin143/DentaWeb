@@ -1,8 +1,6 @@
 import conexion from "./conexion.js"; // ajusta a como exportas tu conexión real
 
-export const obtenerPacientes = async ({ limite = 20, pagina = 1 } = {}) => {
-    const offset = (pagina - 1) * limite;
-
+export const obtenerPacientes = async () => {
     const query = `
         SELECT
             p.idPaciente   AS id_paciente,
@@ -13,16 +11,15 @@ export const obtenerPacientes = async ({ limite = 20, pagina = 1 } = {}) => {
             p.telefono,
             u.activo,
             u.correo,
-            p.idOdontologo as id_odontologo,
+            p.idOdontologo AS id_odontologo,
             CONCAT_WS(' ', o.nombre, o.ape_pat, o.ape_mat) AS nombre_odontologo
         FROM Pacientes p
         LEFT JOIN Usuarios u    ON p.idUsuario    = u.idUsuario
         LEFT JOIN Odontologos o ON p.idOdontologo = o.idOdontologo
-        ORDER BY p.ape_pat, p.nombre
-        LIMIT $1 OFFSET $2;
+        ORDER BY p.ape_pat, p.nombre;
     `;
 
-    const { rows } = await conexion.query(query, [limite, offset]);
+    const { rows } = await conexion.query(query);
     return rows;
 };
 

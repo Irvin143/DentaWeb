@@ -8,33 +8,16 @@ function leerId(req) {
     return Number.isInteger(id) && id > 0 ? id : null;
 }
 
-export async function obtenerEstudios(req, res, next) {
+export const obtenerEstudios = async (req, res) => {
     try {
-        let pagina = Number.parseInt(req.query.pagina, 10);
-        let limite = Number.parseInt(req.query.limite, 10);
-
-        if (!Number.isInteger(pagina) || pagina < 1) pagina = 1;
-        if (!Number.isInteger(limite) || limite < 1) limite = 20;
-        if (limite > 100) limite = 100;
-
-        const offset = (pagina - 1) * limite;
-
-        // ?activo=true | ?activo=false | (sin parámetro = todos)
-        const filtroActivo = ['true', 'false'].includes(req.query.activo) ? req.query.activo : 'todos';     
-
-        const { filas, total } = await estudiosService.obtenerEstudios({ limite, offset, filtroActivo });
-
-        res.status(200).json({
-        pagina,
-        limite,
-        total,
-        total_paginas: Math.ceil(total / limite),
-        estudios: filas,
-        });
-    } catch (err) {
-        next(err);
+        const filtroActivo = req.query.activo ?? 'todos';
+        const estudios = await estudiosService.obtenerEstudios({ filtroActivo });
+        res.json(estudios);
+    } catch (error) {
+        console.error("Error al obtener estudios:", error);
+        res.status(500).json({ error: "Error interno del servidor" });
     }
-}
+};
 
 export async function crearEstudio(req, res, next) {
     try {

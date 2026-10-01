@@ -8,26 +8,20 @@ const errorHttp = (status, mensaje) => {
 
 // ---------- LISTAR (paginado) ----------
 // filtroActivo: 'true' (default) | 'false' | 'todos'
-export const obtenerEstudios = async ({ limite, offset, filtroActivo = 'todos' }) => {  
-    
-    const filtro = `($1::text = 'todos' OR activo = ($1::text = 'true'))`;
-
-    const [datos, conteo] = await Promise.all([
-        conexion.query(
-        `SELECT idEstudio AS id_estudio, nombre, descripcion, activo
+export const obtenerEstudios = async ({ filtroActivo = 'todos' } = {}) => {
+    const query = `
+        SELECT
+            idEstudio AS id_estudio,
+            nombre,
+            descripcion,
+            activo
         FROM Estudios
-        WHERE ${filtro}
-        ORDER BY nombre, idEstudio
-        LIMIT $2 OFFSET $3`,
-        [filtroActivo, limite, offset]
-        ),
-        conexion.query(
-        `SELECT COUNT(*)::int AS total FROM Estudios WHERE ${filtro}`,
-        [filtroActivo]
-        ),
-    ]);
+        WHERE ($1::text = 'todos' OR activo = ($1::text = 'true'))
+        ORDER BY nombre, idEstudio;
+    `;
 
-    return { filas: datos.rows, total: conteo.rows[0].total };
+    const { rows } = await conexion.query(query, [filtroActivo]);
+    return rows;
 };
 
 // ---------- CREAR ----------
