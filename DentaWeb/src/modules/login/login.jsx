@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { authApi } from "../../services/api.js";
+import { useNavigate } from "react-router-dom";
 
 const DentalWebLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,6 +22,8 @@ const DentalWebLogin = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -50,8 +53,7 @@ const DentalWebLogin = () => {
           usuario: response.usuario,
         }),
       );
-      console.log("Login exitoso:", response);
-      setSuccessMessage("Sesión iniciada correctamente.");
+      navigate("/pacientes", { replace: true });
     } catch (error) {
       console.error("Login falló:", error?.status, error?.message, error?.data);
       if (error?.status === 400 || error?.status === 401) {

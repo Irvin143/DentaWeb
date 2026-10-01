@@ -99,7 +99,7 @@ export function CatalogoPage({
     'rounded-lg border border-slate-200 p-1.5 text-slate-600 transition-colors';
 
   return (
-    <MainLayout>
+    <div>
       <section className="flex min-h-screen flex-col gap-6 bg-slate-50/30 p-4 md:p-8">
         {/* Encabezado */}
         <header className="flex flex-wrap items-start justify-between gap-4">
@@ -315,6 +315,6 @@ export function CatalogoPage({
       >
         {modal.contenido}
       </ModalGenerico>
-    </MainLayout>
+    </div>
   );
 }

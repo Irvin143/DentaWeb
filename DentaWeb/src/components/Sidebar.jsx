@@ -1,28 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
-import { LayoutGrid, Building2, Stethoscope, Users, Calendar, Menu, X } from 'lucide-react';
-
-// Preparación para la sesión activa
-const mockActiveSession = {
-  user: {
-    name: "Sr. Jesús Mejía",
-    role: "Administrador General",
-    avatarUrl: null, // mostrará la inicial como fallback
-  },
-};
+import { NavLink, useNavigate } from 'react-router-dom';
+import { Building2, Stethoscope, Users, Calendar, Menu, X, LogOut } from 'lucide-react';
+import { getAuth, puedeVer } from '../config/permisos'; // ajusta la ruta a donde guardes permisos.js
 
 const navItems = [
   // { path: "/panel", label: "Panel Principal", icon: LayoutGrid },
-  { path: "/pacientes", label: "Pacientes", icon: Users },
-  { path: "/odontologos", label: "Odontólogos", icon: Stethoscope },
-  { path: "/clinicas", label: "Clínicas", icon: Building2 },
-  { path: "/consultorios", label: "Consultorios", icon: Calendar },
-  { path: "/servicios", label: "Servicios", icon: Calendar },
-  { path: "/especialidades", label: "Especialidades", icon: Calendar },
-  { path: "/estudios", label: "Estudios", icon: Calendar },
-  { path: "/tipos-cita", label: "Tipos de Cita", icon: Calendar },
-  { path: "/paquetes", label: "Paquetes Roles", icon: Calendar },
-  { path: "/roles", label: "Roles", icon: Calendar },
+  { path: '/pacientes', label: 'Pacientes', icon: Users },
+  { path: '/odontologos', label: 'Odontólogos', icon: Stethoscope },
+  { path: '/clinicas', label: 'Clínicas', icon: Building2 },
+  { path: '/consultorios', label: 'Consultorios', icon: Calendar },
+  { path: '/servicios', label: 'Servicios', icon: Calendar },
+  { path: '/especialidades', label: 'Especialidades', icon: Calendar },
+  { path: '/estudios', label: 'Estudios', icon: Calendar },
+  { path: '/tipos-cita', label: 'Tipos de Cita', icon: Calendar },
+  { path: '/paquetes', label: 'Paquetes Roles', icon: Calendar },
+  { path: '/roles', label: 'Roles', icon: Calendar },
   // { path: "/agenda", label: "Agenda", icon: Calendar },
 ];
 
@@ -43,8 +35,20 @@ function Marca() {
 }
 
 export function Sidebar() {
-  const { user } = mockActiveSession;
+  const navigate = useNavigate();
+  const usuario = getAuth()?.usuario;
   const [abierto, setAbierto] = useState(false);
+
+  // Solo se muestran las opciones a las que el usuario tiene acceso
+  const itemsVisibles = navItems.filter((item) => puedeVer(item.path, usuario));
+
+  const nombre = usuario?.nombre ?? usuario?.correo ?? 'Usuario';
+  const etiquetaRol = usuario?.paquete ?? '';
+
+  const cerrarSesion = () => {
+    sessionStorage.removeItem('clinicware_auth');
+    navigate('/', { replace: true });
+  };
 
   // Cerrar con Escape y bloquear el scroll del fondo mientras está abierto (mobile)
   useEffect(() => {
@@ -109,7 +113,7 @@ export function Sidebar() {
           {/* Menú de navegación */}
           <nav aria-label="Navegación principal">
             <ul className="m-0 list-none space-y-1.5 p-0">
-              {navItems.map((item) => (
+              {itemsVisibles.map((item) => (
                 <li key={item.path}>
                   <NavLink
                     to={item.path}
@@ -117,8 +121,8 @@ export function Sidebar() {
                     className={({ isActive }) =>
                       `group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm transition-all duration-200 ${
                         isActive
-                          ? "bg-teal-50 font-semibold text-teal-700"
-                          : "font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                          ? 'bg-teal-50 font-semibold text-teal-700'
+                          : 'font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                       }`
                     }
                   >
@@ -128,7 +132,7 @@ export function Sidebar() {
                           <item.icon
                             size={18}
                             aria-hidden="true"
-                            className={isActive ? "text-teal-600" : "text-slate-400 group-hover:text-slate-500"}
+                            className={isActive ? 'text-teal-600' : 'text-slate-400 group-hover:text-slate-500'}
                           />
                           {item.label}
                         </span>
@@ -148,26 +152,27 @@ export function Sidebar() {
           </nav>
         </section>
 
-        {/* Perfil de usuario dinámico */}
+        {/* Perfil de usuario y cierre de sesión */}
         <footer className="mt-4 border-t border-slate-100 pt-4">
+          <div className="flex items-center gap-3 px-2 py-2">
+            <span
+              aria-hidden="true"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 font-bold text-slate-600"
+            >
+              {nombre.charAt(0).toUpperCase()}
+            </span>
+            <span className="flex min-w-0 flex-col">
+              <strong className="truncate text-sm font-bold text-slate-800">{nombre}</strong>
+              <small className="truncate text-xs text-slate-500">{etiquetaRol}</small>
+            </span>
+          </div>
           <button
             type="button"
-            className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-slate-50"
+            onClick={cerrarSesion}
+            className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
           >
-            {user.avatarUrl ? (
-              <img src={user.avatarUrl} alt={user.name} className="h-10 w-10 rounded-full object-cover" />
-            ) : (
-              <span
-                aria-hidden="true"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 font-bold text-slate-600"
-              >
-                {user.name.charAt(0)}
-              </span>
-            )}
-            <span className="flex min-w-0 flex-col">
-              <strong className="truncate text-sm font-bold text-slate-800">{user.name}</strong>
-              <small className="truncate text-xs text-slate-500">{user.role}</small>
-            </span>
+            <LogOut size={18} aria-hidden="true" />
+            Cerrar sesión
           </button>
         </footer>
       </aside>
