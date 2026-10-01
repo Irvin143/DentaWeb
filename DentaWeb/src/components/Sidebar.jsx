@@ -1,88 +1,169 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutGrid, Building2, Stethoscope, Users, Calendar } from 'lucide-react';
+import { LayoutGrid, Building2, Stethoscope, Users, Calendar, Menu, X } from 'lucide-react';
 
-// Preparación para la sesión activa 
+// Preparación para la sesión activa
 const mockActiveSession = {
   user: {
     name: "Sr. Jesús Mejía",
     role: "Administrador General",
-    avatarUrl: null //mostrará la inicial como fallback
-  }
+    avatarUrl: null, // mostrará la inicial como fallback
+  },
 };
+
+const navItems = [
+  { path: "/panel", label: "Panel Principal", icon: LayoutGrid },
+  { path: "/clinicas", label: "Clínicas", icon: Building2 },
+  { path: "/odontologos", label: "Odontólogos", icon: Stethoscope },
+  { path: "/pacientes", label: "Pacientes", icon: Users },
+  { path: "/agenda", label: "Agenda", icon: Calendar },
+];
+
+function Marca() {
+  return (
+    <a href="/panel" className="flex items-center gap-3 px-2">
+      <figure className="m-0 flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50">
+        <img src="/logo.svg" alt="Logo DentalWeb" className="h-7 w-7" />
+      </figure>
+      <hgroup className="flex flex-col">
+        <p className="text-lg font-bold leading-tight text-slate-800">DentalWeb</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">
+          Clínicas SaaS
+        </p>
+      </hgroup>
+    </a>
+  );
+}
 
 export function Sidebar() {
   const { user } = mockActiveSession;
+  const [abierto, setAbierto] = useState(false);
 
-  const navItems = [
-    { path: "/panel", label: "Panel Principal", icon: LayoutGrid },
-    { path: "/clinicas", label: "Clínicas", icon: Building2 },
-    { path: "/odontologos", label: "Odontólogos", icon: Stethoscope },
-    { path: "/pacientes", label: "Pacientes", icon: Users },
-    { path: "/agenda", label: "Agenda", icon: Calendar },
-  ];
+  // Cerrar con Escape y bloquear el scroll del fondo mientras está abierto (mobile)
+  useEffect(() => {
+    if (!abierto) return;
+    const onKeyDown = (e) => e.key === 'Escape' && setAbierto(false);
+    document.addEventListener('keydown', onKeyDown);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [abierto]);
 
   return (
-    <aside className="flex h-screen w-64 flex-col justify-between border-r border-slate-100 bg-white p-4 shadow-sm">
-      <div>
-        <div className="mb-8 flex items-center gap-3 px-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50">
-            <img src="/logo.svg" alt="Logo DentalWeb" className="h-7 w-7" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-lg font-bold leading-tight text-slate-800">DentalWeb</span>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">Clínicas SaaS</span>
-          </div>
-        </div>
+    <>
+      {/* Barra superior (solo mobile) */}
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3 shadow-sm md:hidden">
+        <Marca />
+        <button
+          type="button"
+          onClick={() => setAbierto(true)}
+          aria-label="Abrir menú"
+          aria-expanded={abierto}
+          aria-controls="menu-lateral"
+          className="rounded-xl p-2 text-slate-600 transition-colors hover:bg-slate-50"
+        >
+          <Menu size={22} />
+        </button>
+      </header>
 
-        {/* Menu de Navegacion con NavLink */}
-        <nav className="space-y-1.5">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                `group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm transition-all duration-200 ${
-                  isActive
-                    ? "bg-teal-50 font-semibold text-teal-700"
-                    : "font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-                }`
-              }
+      {/* Fondo oscuro (solo mobile, cuando el menú está abierto) */}
+      {abierto && (
+        <button
+          type="button"
+          aria-label="Cerrar menú"
+          tabIndex={-1}
+          onClick={() => setAbierto(false)}
+          className="fixed inset-0 z-40 cursor-default bg-slate-900/40 md:hidden"
+        />
+      )}
+
+      {/* Sidebar: panel deslizante en mobile, fijo en escritorio */}
+      <aside
+        id="menu-lateral"
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col justify-between border-r border-slate-100 bg-white p-4 shadow-sm transition-[transform,visibility] duration-200 md:visible md:static md:h-screen md:translate-x-0 ${
+          abierto ? 'translate-x-0' : '-translate-x-full invisible'
+        }`}
+      >
+        <section>
+          <header className="mb-8 flex items-center justify-between">
+            <Marca />
+            <button
+              type="button"
+              onClick={() => setAbierto(false)}
+              aria-label="Cerrar menú"
+              className="rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-50 md:hidden"
             >
-              {({ isActive }) => (
-                <>
-                  <div className="flex items-center gap-3">
-                    <item.icon
-                      size={18}
-                      className={isActive ? "text-teal-600" : "text-slate-400 group-hover:text-slate-500"}
-                    />
-                    {item.label}
-                  </div>
-                  {/* Punto verde indica donde estas */}
-                  {isActive && <div className="h-1.5 w-1.5 rounded-full bg-teal-500 shadow-[0_0_4px_rgba(20,184,166,0.5)]" />}
-                </>
-              )}
-            </NavLink>
-          ))}
-        </nav>
-      </div>
+              <X size={20} />
+            </button>
+          </header>
 
-      {/* Perfil de Usuario Dinamico */}
-      <div className="mt-4 border-t border-slate-100 pt-4">
-        <div className="flex cursor-pointer items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
-          {user.avatarUrl ? (
-            <img src={user.avatarUrl} alt={user.name} className="h-10 w-10 rounded-full object-cover" />
-          ) : (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600 font-bold">
-              {user.name.charAt(0)}
-            </div>
-          )}
-          <div className="flex flex-col overflow-hidden">
-            <span className="truncate text-sm font-bold text-slate-800">{user.name}</span>
-            <span className="truncate text-xs text-slate-500">{user.role}</span>
-          </div>
-        </div>
-      </div>
-    </aside>
+          {/* Menú de navegación */}
+          <nav aria-label="Navegación principal">
+            <ul className="m-0 list-none space-y-1.5 p-0">
+              {navItems.map((item) => (
+                <li key={item.path}>
+                  <NavLink
+                    to={item.path}
+                    onClick={() => setAbierto(false)}
+                    className={({ isActive }) =>
+                      `group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm transition-all duration-200 ${
+                        isActive
+                          ? "bg-teal-50 font-semibold text-teal-700"
+                          : "font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <span className="flex items-center gap-3">
+                          <item.icon
+                            size={18}
+                            aria-hidden="true"
+                            className={isActive ? "text-teal-600" : "text-slate-400 group-hover:text-slate-500"}
+                          />
+                          {item.label}
+                        </span>
+                        {/* Punto verde: indica dónde estás */}
+                        {isActive && (
+                          <span
+                            aria-hidden="true"
+                            className="h-1.5 w-1.5 rounded-full bg-teal-500 shadow-[0_0_4px_rgba(20,184,166,0.5)]"
+                          />
+                        )}
+                      </>
+                    )}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </section>
+
+        {/* Perfil de usuario dinámico */}
+        <footer className="mt-4 border-t border-slate-100 pt-4">
+          <button
+            type="button"
+            className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-slate-50"
+          >
+            {user.avatarUrl ? (
+              <img src={user.avatarUrl} alt={user.name} className="h-10 w-10 rounded-full object-cover" />
+            ) : (
+              <span
+                aria-hidden="true"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 font-bold text-slate-600"
+              >
+                {user.name.charAt(0)}
+              </span>
+            )}
+            <span className="flex min-w-0 flex-col">
+              <strong className="truncate text-sm font-bold text-slate-800">{user.name}</strong>
+              <small className="truncate text-xs text-slate-500">{user.role}</small>
+            </span>
+          </button>
+        </footer>
+      </aside>
+    </>
   );
 }

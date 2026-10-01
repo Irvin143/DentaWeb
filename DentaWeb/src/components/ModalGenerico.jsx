@@ -39,12 +39,11 @@ export function ModalGenerico({
         <div className="px-6 py-5">{children}</div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-3 border-t border-slate-200 px-6 py-4">
-          <p className="text-xs text-slate-400">🔒 Cumple protocolo sanitario & HIPAA</p>
+        <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4">
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 cursor-pointer transition-colors"
             >
               Cancelar
             </button>

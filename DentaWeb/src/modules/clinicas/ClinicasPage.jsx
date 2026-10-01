@@ -3,14 +3,6 @@ import { CatalogoPage } from '../../components/CatalogoPage';
 import { ChevronDown, Building2 } from 'lucide-react';
 
 
-const filtrosExtra = (
-  <button className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50">
-    <Building2 size={16} className="text-slate-400" />
-    Todas las sedes
-    <ChevronDown size={16} className="ml-1 text-slate-400" />
-  </button>
-);
-
 const inputClass =
   'w-full rounded-xl border border-slate-200 p-3 outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500';
 
@@ -50,7 +42,6 @@ export default function ClinicasPage() {
       subtitulo="Gestiona las sedes activas y especialidades de la red médica."
       textoBotonNuevo="Agregar clínica"
       placeholderBusqueda="Buscar por nombre de clínica, dirección o especialidad..."
-      filtrosExtra={filtrosExtra}
       datos={datos}
       cargando={cargando}
       modal={{
