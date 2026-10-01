@@ -36,6 +36,9 @@ app.use('/api/paquetes-roles', paqueteRolRoutes);
 import odontologoRoutes from './routes/odontologosRutas.js';
 app.use('/api/odontologos', odontologoRoutes);
 
+import tipoCitaRoutes from './routes/tipoCitaRutas.js';
+app.use('/api/tipos-cita', tipoCitaRoutes);
+
 app.use((err, req, res, next) => {
     if (err.status) {
         return res.status(err.status).json({ error: err.message });
