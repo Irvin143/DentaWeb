@@ -39,6 +39,9 @@ app.use('/api/odontologos', odontologoRoutes);
 import tipoCitaRoutes from './routes/tipoCitaRutas.js';
 app.use('/api/tipos-cita', tipoCitaRoutes);
 
+import tipoUsuarioRoutes from './routes/tiposUsuariosRutas.js';
+app.use('/api/tipos-usuario', tipoUsuarioRoutes);
+
 app.use((err, req, res, next) => {
     if (err.status) {
         return res.status(err.status).json({ error: err.message });
