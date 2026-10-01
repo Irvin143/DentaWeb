@@ -33,6 +33,9 @@ app.use('/api/roles', rolRoutes);
 import paqueteRolRoutes from './routes/paqueteRolRutas.js';
 app.use('/api/paquetes-roles', paqueteRolRoutes);
 
+import odontologoRoutes from './routes/odontologosRutas.js';
+app.use('/api/odontologos', odontologoRoutes);
+
 app.use((err, req, res, next) => {
     if (err.status) {
         return res.status(err.status).json({ error: err.message });
