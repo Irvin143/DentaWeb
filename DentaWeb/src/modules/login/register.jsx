@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -11,9 +11,13 @@ import {
   UserRound,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { authApi } from "../../services/api.js";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const Register = () => {
   const navigate = useNavigate();
+  const redirectTimeout = useRef(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [nombre, setNombre] = useState("");
@@ -23,18 +27,84 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
-  const handleSubmit = (event) => {
+  useEffect(() => {
+    return () => {
+      if (redirectTimeout.current) clearTimeout(redirectTimeout.current);
+    };
+  }, []);
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    if (isSubmitting) return;
+
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const correo = email.trim();
+    const nombreLimpio = nombre.trim();
+    const apePatLimpio = apePat.trim();
+    const apeMatLimpio = apeMat.trim();
+
+    if (!nombreLimpio || !apePatLimpio) {
+      setErrorMessage("El nombre y el apellido paterno son obligatorios.");
+      return;
+    }
+
+    if (nombreLimpio.length > 100 || apePatLimpio.length > 100) {
+      setErrorMessage("El nombre y el apellido paterno no pueden exceder 100 caracteres.");
+      return;
+    }
+
+    if (correo.length > 150 || !EMAIL_RE.test(correo)) {
+      setErrorMessage("Introduce un correo electrónico válido.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMessage("Las contraseñas no coinciden.");
+      return;
+    }
+
+    if (password.length < 8 || password.length > 72) {
+      setErrorMessage("La contraseña debe tener entre 8 y 72 caracteres.");
+      return;
+    }
+
+    if (!acceptTerms) {
+      setErrorMessage("Debes aceptar los términos de servicio y la política de privacidad.");
+      return;
+    }
+
     const payload = {
-      correo: email,
+      correo,
       contrasena: password,
-      nombre,
-      ape_pat: apePat,
-      ape_mat: apeMat || null,
+      nombre: nombreLimpio,
+      ape_pat: apePatLimpio,
+      ape_mat: apeMatLimpio || null,
     };
 
-    console.log("Registration payload:", payload);
+    setIsSubmitting(true);
+
+    try {
+      await authApi.register(payload);
+      setSuccessMessage("Cuenta creada correctamente. Ya puedes iniciar sesión.");
+      redirectTimeout.current = setTimeout(() => {
+        navigate("/", { replace: true });
+      }, 1200);
+    } catch (error) {
+      if (error?.status === 409) {
+        setErrorMessage("Este correo ya está registrado.");
+      } else if (error?.status === 400) {
+        setErrorMessage(error?.message || "Revisa los datos introducidos.");
+      } else {
+        setErrorMessage("No fue posible crear la cuenta. Inténtalo de nuevo.");
+      }
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -70,7 +140,7 @@ const Register = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form noValidate onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label
               htmlFor="register-name"
@@ -89,6 +159,7 @@ const Register = () => {
                 onChange={(event) => setNombre(event.target.value)}
                 placeholder="Ana"
                 autoComplete="given-name"
+                maxLength={100}
                 required
                 className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
@@ -109,6 +180,7 @@ const Register = () => {
               onChange={(event) => setApePat(event.target.value)}
               placeholder="Pérez"
               autoComplete="family-name"
+              maxLength={100}
               required
               className="h-12 w-full rounded-xl border border-transparent bg-login-input px-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
             />
@@ -151,6 +223,7 @@ const Register = () => {
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="ejemplo@correo.com"
                 autoComplete="email"
+                maxLength={150}
                 required
                 className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
@@ -176,6 +249,7 @@ const Register = () => {
                 placeholder="Mínimo 8 caracteres"
                 autoComplete="new-password"
                 minLength={8}
+                maxLength={72}
                 required
                 className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-12 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
@@ -215,6 +289,7 @@ const Register = () => {
                 placeholder="Repite tu contraseña"
                 autoComplete="new-password"
                 minLength={8}
+                maxLength={72}
                 required
                 className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-12 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
@@ -272,12 +347,25 @@ const Register = () => {
             </span>
           </label>
 
+          {errorMessage && (
+            <p className="rounded-xl bg-error-container px-4 py-3 text-sm text-on-error-container" role="alert">
+              {errorMessage}
+            </p>
+          )}
+
+          {successMessage && (
+            <p className="rounded-xl bg-secondary-container px-4 py-3 text-sm text-on-secondary-container" role="status" aria-live="polite">
+              {successMessage}
+            </p>
+          )}
+
           <button
             type="submit"
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover"
+            disabled={isSubmitting}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
           >
-            Crear cuenta
-            <ArrowRight size={18} />
+            {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
+            {!isSubmitting && <ArrowRight size={18} />}
           </button>
         </form>
 
