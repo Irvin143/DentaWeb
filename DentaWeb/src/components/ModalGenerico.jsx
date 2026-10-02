@@ -8,6 +8,7 @@ export function ModalGenerico({
   titulo,
   badgeCabecera,
   textoBotonGuardar,
+  guardando = false,
   children,
 }) {
   if (!isOpen) return null;
@@ -47,12 +48,13 @@ export function ModalGenerico({
             >
               Cancelar
             </button>
-            <button
-              onClick={onGuardar ?? onClose}
-              className="cursor-pointer rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
-            >
-              {textoBotonGuardar}
-            </button>
+          <button
+            onClick={onGuardar ?? onClose}
+            disabled={guardando}
+            className="cursor-pointer rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {textoBotonGuardar}
+          </button>
           </div>
         </div>
       </div>

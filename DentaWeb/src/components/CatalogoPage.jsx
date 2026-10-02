@@ -1,5 +1,14 @@
-import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { Search, Plus, ChevronLeft, ChevronRight, Pencil, ArrowUp, ArrowDown } from 'lucide-react';
+import React, { useState, useMemo, useCallback } from 'react';
+import {
+  Search,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  Trash2,
+  ArrowUp,
+  ArrowDown,
+} from 'lucide-react';
 import { ModalGenerico } from './ModalGenerico';
 import ModalConfirmacion from './ModalConfirmacion';
 import { ToastContainer } from './Toast';
@@ -9,6 +18,37 @@ const REGISTROS_POR_PAGINA = 10;
 // Duración total de cada notificación y tiempo que tarda en salir
 const DURACION_TOAST = 3000;
 const DURACION_SALIDA = 300;
+
+// Textos de cada acción que pide confirmación
+const ACCIONES = {
+  eliminar: {
+    titulo: 'Desactivar registro',
+    mensaje: '¿Seguro que deseas desactivar este elemento? Esta acción requiere validación.',
+    textoConfirmar: 'Desactivar',
+    palabraRequerida: 'DESACTIVAR',
+    esPeligro: true,
+    textoExito: 'Registro desactivado correctamente',
+    textoError: 'No se pudo desactivar el registro',
+  },
+  reactivar: {
+    titulo: 'Reactivar registro',
+    mensaje: '¿Seguro que deseas reactivar este elemento?',
+    textoConfirmar: 'Reactivar',
+    palabraRequerida: '',
+    esPeligro: false,
+    textoExito: 'Registro reactivado correctamente',
+    textoError: 'No se pudo reactivar el registro',
+  },
+  borrar: {
+    titulo: 'Eliminar registro',
+    mensaje: 'Esta acción elimina el registro de forma permanente y no se puede deshacer.',
+    textoConfirmar: 'Eliminar',
+    palabraRequerida: 'ELIMINAR',
+    esPeligro: true,
+    textoExito: 'Registro eliminado correctamente',
+    textoError: 'No se pudo eliminar el registro',
+  },
+};
 
 // Ordena por id (numérico, ascendente). Si no hay id, conserva el orden original.
 const porId = (a, b) => (Number(a.id) || 0) - (Number(b.id) || 0);
@@ -31,6 +71,7 @@ function Interruptor({ activo, onClick }) {
       role="switch"
       aria-checked={activo}
       aria-label={activo ? 'Desactivar' : 'Reactivar'}
+      title={activo ? 'Desactivar' : 'Reactivar'}
       onClick={onClick}
       className={`relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors ${activo ? 'bg-teal-600' : 'bg-slate-300'}`}
     >
@@ -56,12 +97,13 @@ export function CatalogoPage({
   cargando = false,
   columnas, // opcional: [{ key, label, render? }]
   // Acciones por fila (opcionales: si no se pasan, no se muestra la columna)
-  // onEliminar y onReactivar: si lanzan un error o devuelven false, se muestra una notificación de error
+  // Si lanzan un error o devuelven false, se muestra una notificación de error
   onEditar, // (id) => void
-  onEliminar, // (id) => void | Promise
+  onEliminar, // (id) => void | Promise  -> desactivar (borrado lógico)
   onReactivar, // (id) => void | Promise
+  onBorrar, // (id) => void | Promise   -> eliminar permanente (opcional)
   // Modal
-  modal = {}, // { icono, titulo, textoGuardar, contenido, onGuardar, onCerrar }
+  modal = {}, // { icono, titulo, textoGuardar, contenido, onGuardar, onCerrar, guardando }
 }) {
   const [busqueda, setBusqueda] = useState('');
   const [pagina, setPagina] = useState(1);
@@ -73,13 +115,9 @@ export function CatalogoPage({
     id: null,
     accion: null,
   });
-
-  const [guardando, setGuardando] = useState(false);
-  const modalVista = useRef(modal);
-  if (!guardando) modalVista.current = modal;
   const [toasts, setToasts] = useState([]);
 
-  const hayAcciones = Boolean(onEditar || onEliminar || onReactivar);
+  const hayAcciones = Boolean(onEditar || onEliminar || onReactivar || onBorrar);
 
   // ---- Notificaciones ----
   const cerrarToast = useCallback((id) => {
@@ -87,24 +125,27 @@ export function CatalogoPage({
   }, []);
 
   // tipo: 'exito' | 'error'. Entra, se queda ~3 s en total y sale con animación
-  const mostrarToast = useCallback((tipo, mensaje) => {
-    const id = `${Date.now()}-${Math.random()}`;
+  const mostrarToast = useCallback(
+    (tipo, mensaje) => {
+      const id = `${Date.now()}-${Math.random()}`;
 
-    // Se agrega fuera de pantalla y en el siguiente cuadro pasa a visible (animación de entrada)
-    setToasts((prev) => [...prev, { id, tipo, mensaje, visible: false }]);
-    requestAnimationFrame(() =>
+      // Se agrega fuera de pantalla y en el siguiente cuadro pasa a visible (animación de entrada)
+      setToasts((prev) => [...prev, { id, tipo, mensaje, visible: false }]);
       requestAnimationFrame(() =>
-        setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, visible: true } : t)))
-      )
-    );
+        requestAnimationFrame(() =>
+          setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, visible: true } : t)))
+        )
+      );
 
-    // Animación de salida y retiro del DOM
-    setTimeout(
-      () => setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, visible: false } : t))),
-      DURACION_TOAST - DURACION_SALIDA
-    );
-    setTimeout(() => cerrarToast(id), DURACION_TOAST);
-  }, [cerrarToast]);
+      // Animación de salida y retiro del DOM
+      setTimeout(
+        () => setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, visible: false } : t))),
+        DURACION_TOAST - DURACION_SALIDA
+      );
+      setTimeout(() => cerrarToast(id), DURACION_TOAST);
+    },
+    [cerrarToast]
+  );
 
   // Columnas visibles: las definidas o las derivadas del primer registro, sin el id real
   const cols = useMemo(() => {
@@ -194,17 +235,17 @@ export function CatalogoPage({
   // Si devuelve false (o un texto con el motivo), se avisa del error y el modal sigue abierto.
   const handleGuardar = async () => {
     if (!modal.onGuardar) {
-      cerrarModal();
+      cerrarModal(); // sin onGuardar, solo cierra
       return;
     }
-
-    setGuardando(true); // congela título y contenido
 
     try {
       const resultado = await modal.onGuardar();
 
       if (resultado === true) {
+        // Cierra y limpia el formulario en el mismo lote: el modal no pasa por "nuevo"
         setModalAbierto(false);
+        modal.onCerrar?.();
         mostrarToast(
           'exito',
           modoEdicion ? 'Registro actualizado correctamente' : 'Registro creado correctamente'
@@ -220,8 +261,6 @@ export function CatalogoPage({
     } catch (err) {
       mostrarToast('error', err?.message || 'No se pudo guardar el registro');
       return false;
-    } finally {
-      setGuardando(false); // el modal ya está cerrado (o sigue abierto tras un error)
     }
   };
 
@@ -232,43 +271,32 @@ export function CatalogoPage({
     setModalAbierto(true);
   };
 
-  const handleEliminar = (fila) => {
-    setConfirmacion({ isOpen: true, id: fila.id, accion: 'eliminar' });
+  const pedirConfirmacion = (fila, accion) => {
+    setConfirmacion({ isOpen: true, id: fila.id, accion });
   };
 
-  const handleReactivar = (fila) => {
-    setConfirmacion({ isOpen: true, id: fila.id, accion: 'reactivar' });
-  };
+  const cerrarConfirmacion = () => setConfirmacion({ isOpen: false, id: null, accion: null });
 
   const procesarConfirmacion = async () => {
     const { id, accion } = confirmacion;
-    const esEliminar = accion === 'eliminar';
-    const ejecutar = esEliminar ? onEliminar : onReactivar;
+    const config = ACCIONES[accion];
+    const ejecutar = { eliminar: onEliminar, reactivar: onReactivar, borrar: onBorrar }[accion];
+    if (!config) return;
 
     try {
       const resultado = await ejecutar?.(id);
       if (resultado === false) {
-        mostrarToast(
-          'error',
-          esEliminar ? 'No se pudo desactivar el registro' : 'No se pudo reactivar el registro'
-        );
+        mostrarToast('error', config.textoError);
         return;
       }
-      mostrarToast(
-        'exito',
-        esEliminar ? 'Registro desactivado correctamente' : 'Registro reactivado correctamente'
-      );
+      mostrarToast('exito', config.textoExito);
     } catch (err) {
-      mostrarToast(
-        'error',
-        err?.message ||
-          (esEliminar ? 'No se pudo desactivar el registro' : 'No se pudo reactivar el registro')
-      );
+      mostrarToast('error', err?.message || config.textoError);
     }
   };
 
-  const botonIcono =
-    'rounded-lg border border-slate-200 p-1.5 text-slate-600 transition-colors';
+  const botonIcono = 'rounded-lg border border-slate-200 p-1.5 text-slate-600 transition-colors';
+  const configConfirmacion = ACCIONES[confirmacion.accion] ?? ACCIONES.eliminar;
 
   return (
     <div>
@@ -384,13 +412,19 @@ export function CatalogoPage({
                 <tbody className="divide-y divide-slate-100">
                   {cargando ? (
                     <tr>
-                      <td colSpan={totalColumnas || 1} className="px-5 py-12 text-center text-slate-500">
+                      <td
+                        colSpan={totalColumnas || 1}
+                        className="px-5 py-12 text-center text-slate-500"
+                      >
                         Ejecutando consulta a la base de datos...
                       </td>
                     </tr>
                   ) : totalRegistros === 0 ? (
                     <tr>
-                      <td colSpan={totalColumnas || 1} className="px-5 py-12 text-center text-slate-500">
+                      <td
+                        colSpan={totalColumnas || 1}
+                        className="px-5 py-12 text-center text-slate-500"
+                      >
                         No se encontraron resultados.
                       </td>
                     </tr>
@@ -426,7 +460,7 @@ export function CatalogoPage({
                                   onClick={() => handleEditar(fila)}
                                   title="Editar"
                                   aria-label="Editar"
-                                  className={`${botonIcono} hover:border-slate-300 hover:bg-slate-100 hover:text-slate-800 cursor-pointer transition-colors`}
+                                  className={`${botonIcono} cursor-pointer hover:border-slate-300 hover:bg-slate-100 hover:text-slate-800`}
                                 >
                                   <Pencil size={16} />
                                 </button>
@@ -435,9 +469,23 @@ export function CatalogoPage({
                                 <Interruptor
                                   activo={!estaInactiva(fila)}
                                   onClick={() =>
-                                    estaInactiva(fila) ? handleReactivar(fila) : handleEliminar(fila)
+                                    pedirConfirmacion(
+                                      fila,
+                                      estaInactiva(fila) ? 'reactivar' : 'eliminar'
+                                    )
                                   }
                                 />
+                              )}
+                              {onBorrar && (
+                                <button
+                                  type="button"
+                                  onClick={() => pedirConfirmacion(fila, 'borrar')}
+                                  title="Eliminar permanentemente"
+                                  aria-label="Eliminar permanentemente"
+                                  className={`${botonIcono} cursor-pointer hover:border-red-200 hover:bg-red-50 hover:text-red-600`}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
                               )}
                             </div>
                           </td>
@@ -468,11 +516,13 @@ export function CatalogoPage({
                     <dl className="m-0 grid gap-2">
                       <div className="grid grid-cols-[6.5rem_1fr] gap-3 text-sm">
                         <dt
-                          className={`text-xs font-semibold tracking-wider normal-case ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-500'}`}
+                          className={`text-xs font-semibold normal-case tracking-wider ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-500'}`}
                         >
                           No.
                         </dt>
-                        <dd className={`m-0 break-words ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}>
+                        <dd
+                          className={`m-0 break-words ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
+                        >
                           {inicio + rowIndex + 1}
                         </dd>
                       </div>
@@ -483,7 +533,9 @@ export function CatalogoPage({
                           >
                             {col.label}
                           </dt>
-                          <dd className={`m-0 break-words ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}>
+                          <dd
+                            className={`m-0 break-words ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
+                          >
                             {col.render ? col.render(fila[col.key], fila) : fila[col.key]}
                           </dd>
                         </div>
@@ -491,7 +543,7 @@ export function CatalogoPage({
                     </dl>
 
                     {hayAcciones && (
-                      <div className="mt-3 flex justify-end gap-2">
+                      <div className="mt-3 flex items-center justify-end gap-2">
                         {onEditar && (
                           <button
                             type="button"
@@ -506,9 +558,20 @@ export function CatalogoPage({
                           <Interruptor
                             activo={!estaInactiva(fila)}
                             onClick={() =>
-                              estaInactiva(fila) ? handleReactivar(fila) : handleEliminar(fila)
+                              pedirConfirmacion(fila, estaInactiva(fila) ? 'reactivar' : 'eliminar')
                             }
                           />
+                        )}
+                        {onBorrar && (
+                          <button
+                            type="button"
+                            onClick={() => pedirConfirmacion(fila, 'borrar')}
+                            aria-label="Eliminar permanentemente"
+                            className={`${botonIcono} flex cursor-pointer items-center gap-1.5 px-3 text-xs font-medium hover:border-red-200 hover:bg-red-50 hover:text-red-600`}
+                          >
+                            <Trash2 size={14} />
+                            Eliminar
+                          </button>
                         )}
                       </div>
                     )}
@@ -554,7 +617,7 @@ export function CatalogoPage({
         </main>
       </section>
 
-      {/* Modal */}
+      {/* Modal de alta / edición */}
       <ModalGenerico
         isOpen={modalAbierto}
         onClose={cerrarModal}
@@ -562,24 +625,21 @@ export function CatalogoPage({
         titulo={modal.titulo}
         textoBotonGuardar={modal.textoGuardar}
         onGuardar={handleGuardar}
+        guardando={modal.guardando}
       >
         {modal.contenido}
       </ModalGenerico>
 
-      {/* MODAL DE CONFIRMACIÓN */}
+      {/* Modal de confirmación (desactivar, reactivar o eliminar permanente) */}
       <ModalConfirmacion
         isOpen={confirmacion.isOpen}
-        onClose={() => setConfirmacion({ isOpen: false, id: null, accion: null })}
+        onClose={cerrarConfirmacion}
         onConfirm={procesarConfirmacion}
-        titulo={confirmacion.accion === 'eliminar' ? 'Desactivar registro' : 'Reactivar registro'}
-        mensaje={
-          confirmacion.accion === 'eliminar'
-            ? '¿Seguro que deseas desactivar este elemento? Esta acción requiere validación.'
-            : '¿Seguro que deseas reactivar este elemento?'
-        }
-        textoConfirmar={confirmacion.accion === 'eliminar' ? 'Desactivar' : 'Reactivar'}
-        esPeligro={confirmacion.accion === 'eliminar'}
-        palabraRequerida={confirmacion.accion === 'eliminar' ? 'DESACTIVAR' : ''}
+        titulo={configConfirmacion.titulo}
+        mensaje={configConfirmacion.mensaje}
+        textoConfirmar={configConfirmacion.textoConfirmar}
+        esPeligro={configConfirmacion.esPeligro}
+        palabraRequerida={configConfirmacion.palabraRequerida}
       />
 
       {/* Notificaciones */}

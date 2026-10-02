@@ -176,6 +176,10 @@ console.log('mapearPaciente:', pacientes);
       setGuardando(false);
     }
   };
+    const handleBorrar = async (id) => {
+        await pacientesApi.borrar(id);
+        await cargar();
+    };
 
   // Carga los datos de la fila en el formulario antes de abrir el modal
   const handleEditar = (id) => {
@@ -348,6 +352,7 @@ console.log('mapearPaciente:', pacientes);
       onEditar={handleEditar}
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}
+      onBorrar={handleBorrar}
       modal={{
         icono: '🧑‍⚕️',
         titulo: editandoId ? 'Editar Paciente' : 'Nuevo Paciente',

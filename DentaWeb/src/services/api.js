@@ -156,6 +156,9 @@ export const pacientesApi = {
   reactivar(id) {
     return apiRequest(`/api/pacientes/${id}/reactivar`, { method: "PUT" });
   },
+  borrar(id) {
+    return apiRequest(`/api/pacientes/${id}/forzar`, { method: "DELETE" });
+  }
 };
 
 export const odontologosApi = {
