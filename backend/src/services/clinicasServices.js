@@ -21,7 +21,7 @@ const SELECT_BASE = `
     SELECT
         c.idClinica AS id_clinica,
         c.nombre,
-        c.activo,
+        u.activo,
         c.direccion,
         c.identificacion_fiscal,
         c.idUsuario AS id_usuario,

@@ -31,7 +31,7 @@ const COLUMNAS = `
     CONCAT_WS(' ', o.nombre, o.ape_pat, o.ape_mat) AS nombre_completo,
     o.telefono,
     o.cedula,
-    o.activo,
+    u.activo,
     o.idUsuario AS id_usuario,
     u.correo AS correo_usuario,
     o.idClinica AS id_clinica,
