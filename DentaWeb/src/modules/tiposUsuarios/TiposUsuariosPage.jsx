@@ -106,6 +106,16 @@ export default function TiposUsuarioPage() {
     }
   };
 
+  const handleReactivar = async (id) => {
+    if (!window.confirm('¿Seguro que deseas reactivar este tipo de usuario?')) return;
+    try {
+      await tiposUsuarioApi.reactivar(id);
+      await cargar();
+    } catch (err) {
+      alert(err.message || 'Error al reactivar el tipo de usuario');
+    }
+  };
+
   const formularioTipoUsuario = (
     <div className="flex flex-col gap-4">
       {error && (
@@ -135,6 +145,7 @@ export default function TiposUsuarioPage() {
       cargando={cargando}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
+      onReactivar={handleReactivar}
       modal={{
         icono: '👤',
         titulo: editandoId ? 'Editar Tipo de Usuario' : 'Nuevo Tipo de Usuario',

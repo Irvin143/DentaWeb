@@ -110,6 +110,16 @@ export default function RolesPage() {
     }
   };
 
+  const handleReactivar = async (id) => {
+    if (!window.confirm('¿Seguro que deseas reactivar este rol?')) return;
+    try {
+      await rolesApi.reactivar(id);
+      await cargar();
+    } catch (err) {
+      alert(err.message || 'Error al reactivar el rol');
+    }
+  };
+
   const formularioRol = (
     <div className="flex flex-col gap-4">
       {error && (
@@ -149,6 +159,7 @@ export default function RolesPage() {
       cargando={cargando}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
+      onReactivar={handleReactivar}
       modal={{
         icono: '🔐',
         titulo: editandoId ? 'Editar Rol' : 'Nuevo Rol',

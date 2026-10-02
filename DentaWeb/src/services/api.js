@@ -115,6 +115,10 @@ export const clinicasApi = {
   eliminar(id) {
     return apiRequest(`/api/clinicas/${id}`, { method: "DELETE" });
   },
+
+  reactivar(id) {
+    return apiRequest(`/api/clinicas/${id}/reactivar`, { method: "PATCH" });
+  },
 };
 
 export const pacientesApi = {
@@ -129,6 +133,10 @@ export const pacientesApi = {
   },
   eliminar(id) {
     return apiRequest(`/api/pacientes/${id}`, { method: "DELETE" });
+  },
+
+  reactivar(id) {
+    return apiRequest(`/api/pacientes/${id}/reactivar`, { method: "PUT" });
   },
 };
 
@@ -145,6 +153,10 @@ export const odontologosApi = {
   eliminar(id) {
     return apiRequest(`/api/odontologos/${id}`, { method: "DELETE" });
   },
+
+  reactivar(id) {
+    return apiRequest(`/api/odontologos/${id}/reactivar`, { method: "PATCH" });
+  },
 };
 
 export const especialidadesApi = {
@@ -159,6 +171,10 @@ export const especialidadesApi = {
   },
   eliminar(id) {
     return apiRequest(`/api/especialidades/${id}`, { method: "DELETE" });
+  },
+
+  reactivar(id) {
+    return apiRequest(`/api/especialidades/${id}/reactivar`, { method: "PUT" });
   },
 };
 
@@ -175,6 +191,10 @@ export const consultoriosApi = {
   eliminar(id) {
     return apiRequest(`/api/consultorios/${id}`, { method: "DELETE" });
   },
+
+  reactivar(id) {
+    return apiRequest(`/api/consultorios/${id}/reactivar`, { method: "PATCH" });
+  },
 };
 
 export const estudiosApi = {
@@ -189,6 +209,10 @@ export const estudiosApi = {
   },
   eliminar(id) {
     return apiRequest(`/api/estudios/${id}`, { method: "DELETE" });
+  },
+
+  reactivar(id) {
+    return apiRequest(`/api/estudios/${id}/reactivar`, { method: "PUT" });
   },
 };
 
@@ -205,6 +229,10 @@ export const rolesApi = {
   eliminar(id) {
     return apiRequest(`/api/roles/${id}`, { method: "DELETE" });
   },
+
+  reactivar(id) {
+    return apiRequest(`/api/roles/${id}/reactivar`, { method: "PATCH" });
+  },
 };
 
 export const paquetesApi = {
@@ -219,6 +247,10 @@ export const paquetesApi = {
   },
   eliminar(id) {
     return apiRequest(`/api/paquetes-roles/${id}`, { method: "DELETE" });
+  },
+
+  reactivar(id) {
+    return apiRequest(`/api/paquetes-roles/${id}/reactivar`, { method: "PATCH" });
   },
 };
 
@@ -235,6 +267,10 @@ export const serviciosApi = {
   eliminar(id) {
     return apiRequest(`/api/servicios/${id}`, { method: "DELETE" });
   },
+
+  reactivar(id) {
+    return apiRequest(`/api/servicios/${id}/reactivar`, { method: "PATCH" });
+  },
 };
 
 export const tiposCitaApi = {
@@ -250,6 +286,10 @@ export const tiposCitaApi = {
   eliminar(id) {
     return apiRequest(`/api/tipos-cita/${id}`, { method: "DELETE" });
   },
+
+  reactivar(id) {
+    return apiRequest(`/api/tipos-cita/${id}/reactivar`, { method: "PATCH" });
+  },
 };
 
 export const tiposUsuarioApi = {
@@ -264,5 +304,9 @@ export const tiposUsuarioApi = {
   },
   eliminar(id) {
     return apiRequest(`/api/tipos-usuario/${id}`, { method: "DELETE" });
+  },
+
+  reactivar(id) {
+    return apiRequest(`/api/tipos-usuario/${id}/reactivar`, { method: "PATCH" });
   },
 };

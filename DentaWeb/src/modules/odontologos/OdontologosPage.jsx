@@ -203,6 +203,16 @@ export default function OdontologosPage() {
     }
   };
 
+  const handleReactivar = async (id) => {
+    if (!window.confirm('¿Seguro que deseas reactivar este odontólogo?')) return;
+    try {
+      await odontologosApi.reactivar(id);
+      await cargar();
+    } catch (err) {
+      alert(err.message || 'Error al reactivar el odontólogo');
+    }
+  };
+
   // max-h + overflow: si no cabe, solo el formulario hace scroll
   const formularioOdontologo = (
     <div className="flex max-h-[65vh] flex-col gap-3 overflow-y-auto pr-1 md:max-h-[72vh] md:gap-7 md:px-2">
@@ -346,6 +356,7 @@ export default function OdontologosPage() {
       cargando={cargando}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
+      onReactivar={handleReactivar}
       modal={{
         icono: '🦷',
         titulo: editandoId ? 'Editar Odontólogo' : 'Nuevo Odontólogo',

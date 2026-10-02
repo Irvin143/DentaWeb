@@ -29,7 +29,7 @@ export function ModalGenerico({
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            className="cursor-pointer rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
           >
             ✕
           </button>
@@ -49,7 +49,7 @@ export function ModalGenerico({
             </button>
             <button
               onClick={onGuardar ?? onClose}
-              className="rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
+              className="cursor-pointer rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
             >
               {textoBotonGuardar}
             </button>

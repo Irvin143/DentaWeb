@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Plus, ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react';
+import { Search, Plus, ChevronLeft, ChevronRight, Pencil, Trash2, RotateCcw } from 'lucide-react';
 import { MainLayout } from '../layouts/MainLayout';
 import { ModalGenerico } from './ModalGenerico';
 
@@ -7,6 +7,7 @@ const REGISTROS_POR_PAGINA = 10;
 
 // Ordena por id (numérico, ascendente). Si no hay id, conserva el orden original.
 const porId = (a, b) => (Number(a.id) || 0) - (Number(b.id) || 0);
+const estaInactiva = (fila) => /^inactiv[oa]$/i.test(String(fila.estado ?? '').trim());
 
 export function CatalogoPage({
   // Encabezado
@@ -24,6 +25,7 @@ export function CatalogoPage({
   // Acciones por fila (opcionales: si no se pasan, no se muestra la columna)
   onEditar, // (id) => void
   onEliminar, // (id) => void
+  onReactivar, // (id) => void
   // Modal
   modal = {}, // { icono, titulo, textoGuardar, contenido, onGuardar, onCerrar }
 }) {
@@ -31,7 +33,7 @@ export function CatalogoPage({
   const [pagina, setPagina] = useState(1);
   const [modalAbierto, setModalAbierto] = useState(false);
 
-  const hayAcciones = Boolean(onEditar || onEliminar);
+  const hayAcciones = Boolean(onEditar || onEliminar || onReactivar);
 
   // Columnas: las definidas o las derivadas de los atributos del primer registro
   const cols = useMemo(() => {
@@ -95,6 +97,10 @@ export function CatalogoPage({
     onEliminar?.(fila.id);
   };
 
+  const handleReactivar = (fila) => {
+    onReactivar?.(fila.id);
+  };
+
   const botonIcono =
     'rounded-lg border border-slate-200 p-1.5 text-slate-600 transition-colors';
 
@@ -111,7 +117,7 @@ export function CatalogoPage({
           <button
             type="button"
             onClick={() => setModalAbierto(true)}
-            className="flex items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-teal-600/20 transition-colors hover:bg-teal-700"
+            className="flex cursor-pointer items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-teal-600/20 transition-colors hover:bg-teal-700"
           >
             <Plus size={18} strokeWidth={2.5} />
             {textoBotonNuevo}
@@ -202,6 +208,17 @@ export function CatalogoPage({
                                   <Trash2 size={16} />
                                 </button>
                               )}
+                              {onReactivar && estaInactiva(fila) && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleReactivar(fila)}
+                                  title="Reactivar"
+                                  aria-label="Reactivar"
+                                  className={`${botonIcono} cursor-pointer transition-colors hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600`}
+                                >
+                                  <RotateCcw size={16} />
+                                </button>
+                              )}
                             </div>
                           </td>
                         )}
@@ -244,7 +261,7 @@ export function CatalogoPage({
                           <button
                             type="button"
                             onClick={() => handleEditar(fila)}
-                            className={`${botonIcono} flex items-center gap-1.5 px-3 text-xs font-medium hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600`}
+                            className={`${botonIcono} flex cursor-pointer items-center gap-1.5 px-3 text-xs font-medium hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600`}
                           >
                             <Pencil size={14} />
                             Editar
@@ -254,10 +271,21 @@ export function CatalogoPage({
                           <button
                             type="button"
                             onClick={() => handleEliminar(fila)}
-                            className={`${botonIcono} flex items-center gap-1.5 px-3 text-xs font-medium hover:border-red-200 hover:bg-red-50 hover:text-red-600`}
+                            className={`${botonIcono} flex cursor-pointer items-center gap-1.5 px-3 text-xs font-medium hover:border-red-200 hover:bg-red-50 hover:text-red-600`}
                           >
                             <Trash2 size={14} />
                             Eliminar
+                          </button>
+                        )}
+                        {onReactivar && estaInactiva(fila) && (
+                          <button
+                            type="button"
+                            onClick={() => handleReactivar(fila)}
+                            aria-label="Reactivar"
+                            className={`${botonIcono} flex cursor-pointer items-center gap-1.5 px-3 text-xs font-medium hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600`}
+                          >
+                            <RotateCcw size={14} />
+                            Reactivar
                           </button>
                         )}
                       </div>
@@ -279,7 +307,7 @@ export function CatalogoPage({
                     onClick={() => setPagina(paginaActual - 1)}
                     disabled={paginaActual === 1}
                     aria-label="Página anterior"
-                    className="rounded-lg border border-slate-200 p-1.5 text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="cursor-pointer rounded-lg border border-slate-200 p-1.5 text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <ChevronLeft size={16} />
                   </button>
@@ -293,7 +321,7 @@ export function CatalogoPage({
                     onClick={() => setPagina(paginaActual + 1)}
                     disabled={paginaActual === totalPaginas}
                     aria-label="Página siguiente"
-                    className="rounded-lg border border-slate-200 p-1.5 text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="cursor-pointer rounded-lg border border-slate-200 p-1.5 text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <ChevronRight size={16} />
                   </button>

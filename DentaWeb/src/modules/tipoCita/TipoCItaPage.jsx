@@ -106,6 +106,16 @@ export default function TiposCitaPage() {
     }
   };
 
+  const handleReactivar = async (id) => {
+    if (!window.confirm('¿Seguro que deseas reactivar este tipo de cita?')) return;
+    try {
+      await tiposCitaApi.reactivar(id);
+      await cargar();
+    } catch (err) {
+      alert(err.message || 'Error al reactivar el tipo de cita');
+    }
+  };
+
   const formularioTipoCita = (
     <div className="flex flex-col gap-4">
       {error && (
@@ -135,6 +145,7 @@ export default function TiposCitaPage() {
       cargando={cargando}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
+      onReactivar={handleReactivar}
       modal={{
         icono: '📅',
         titulo: editandoId ? 'Editar Tipo de Cita' : 'Nuevo Tipo de Cita',

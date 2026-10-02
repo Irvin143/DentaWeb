@@ -110,6 +110,16 @@ export default function ServiciosPage() {
     }
   };
 
+  const handleReactivar = async (id) => {
+    if (!window.confirm('¿Seguro que deseas reactivar este servicio?')) return;
+    try {
+      await serviciosApi.reactivar(id);
+      await cargar();
+    } catch (err) {
+      alert(err.message || 'Error al reactivar el servicio');
+    }
+  };
+
   const formularioServicio = (
     <div className="flex flex-col gap-4">
       {error && (
@@ -149,6 +159,7 @@ export default function ServiciosPage() {
       cargando={cargando}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
+      onReactivar={handleReactivar}
       modal={{
         icono: '🩺',
         titulo: editandoId ? 'Editar Servicio' : 'Nuevo Servicio',

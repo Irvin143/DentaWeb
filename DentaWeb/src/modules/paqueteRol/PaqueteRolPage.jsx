@@ -111,6 +111,16 @@ export default function PaquetesPage() {
     }
   };
 
+  const handleReactivar = async (id) => {
+    if (!window.confirm('¿Seguro que deseas reactivar este paquete?')) return;
+    try {
+      await paquetesApi.reactivar(id);
+      await cargar();
+    } catch (err) {
+      alert(err.message || 'Error al reactivar el paquete');
+    }
+  };
+
   const formularioPaquete = (
     <div className="flex flex-col gap-4">
       {error && (
@@ -150,6 +160,7 @@ export default function PaquetesPage() {
       cargando={cargando}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
+      onReactivar={handleReactivar}
       modal={{
         icono: '📦',
         titulo: editandoId ? 'Editar Paquete' : 'Nuevo Paquete',

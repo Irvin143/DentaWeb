@@ -111,6 +111,16 @@ export default function ClinicasPage() {
     }
   };
 
+  const handleReactivar = async (id) => {
+    if (!window.confirm('¿Seguro que deseas reactivar esta clínica?')) return;
+    try {
+      await clinicasApi.reactivar(id);
+      await cargar();
+    } catch (err) {
+      alert(err.message || 'Error al reactivar la clínica');
+    }
+  };
+
   const formularioClinica = (
     <div className="flex flex-col gap-4">
       {error && (
@@ -159,6 +169,7 @@ export default function ClinicasPage() {
       cargando={cargando}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
+      onReactivar={handleReactivar}
       modal={{
         icono: '🏥',
         titulo: editandoId ? 'Editar Clínica' : 'Nueva Clínica',

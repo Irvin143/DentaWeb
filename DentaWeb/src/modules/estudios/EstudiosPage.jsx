@@ -110,6 +110,16 @@ export default function EstudiosPage() {
     }
   };
 
+  const handleReactivar = async (id) => {
+    if (!window.confirm('¿Seguro que deseas reactivar este estudio?')) return;
+    try {
+      await estudiosApi.reactivar(id);
+      await cargar();
+    } catch (err) {
+      alert(err.message || 'Error al reactivar el estudio');
+    }
+  };
+
   const formularioEstudio = (
     <div className="flex flex-col gap-4">
       {error && (
@@ -149,6 +159,7 @@ export default function EstudiosPage() {
       cargando={cargando}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
+      onReactivar={handleReactivar}
       modal={{
         icono: '🔬',
         titulo: editandoId ? 'Editar Estudio' : 'Nuevo Estudio',

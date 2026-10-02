@@ -106,6 +106,16 @@ export default function EspecialidadesPage() {
     }
   };
 
+  const handleReactivar = async (id) => {
+    if (!window.confirm('¿Seguro que deseas reactivar esta especialidad?')) return;
+    try {
+      await especialidadesApi.reactivar(id);
+      await cargar();
+    } catch (err) {
+      alert(err.message || 'Error al reactivar la especialidad');
+    }
+  };
+
   const formularioEspecialidad = (
     <div className="flex flex-col gap-4">
       {error && (
@@ -135,6 +145,7 @@ export default function EspecialidadesPage() {
       cargando={cargando}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
+      onReactivar={handleReactivar}
       modal={{
         icono: '🦷',
         titulo: editandoId ? 'Editar Especialidad' : 'Nueva Especialidad',

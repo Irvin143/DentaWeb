@@ -122,6 +122,16 @@ export default function ConsultoriosPage() {
     }
   };
 
+  const handleReactivar = async (id) => {
+    if (!window.confirm('¿Seguro que deseas reactivar este consultorio?')) return;
+    try {
+      await consultoriosApi.reactivar(id);
+      await cargar();
+    } catch (err) {
+      alert(err.message || 'Error al reactivar el consultorio');
+    }
+  };
+
   const formularioConsultorio = (
     <div className="flex flex-col gap-4">
       {error && (
@@ -166,6 +176,7 @@ export default function ConsultoriosPage() {
       cargando={cargando}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
+      onReactivar={handleReactivar}
       modal={{
         icono: '🏥',
         titulo: editandoId ? 'Editar Consultorio' : 'Nuevo Consultorio',
