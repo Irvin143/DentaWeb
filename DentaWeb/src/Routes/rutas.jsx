@@ -20,6 +20,7 @@ import PaquetesRolesPage from "../modules/paqueteRol/PaqueteRolPage.jsx";
 import ServiciosPage from "../modules/servicios/ServiciosPage.jsx"; 
 import TipoCitaPage from "../modules/tipoCita/TipoCItaPage.jsx"; 
 import TiposUsuarioPage from "../modules/tiposUsuarios/TiposUsuariosPage.jsx";
+import UsuariosPage from "../modules/usuarios/UsuariosPage.jsx";
 
 export default function App() {
   return (
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="/servicios" element={<ServiciosPage />} />
           <Route path="/tipos-cita" element={<TipoCitaPage />} />
           <Route path="/tipos-usuario" element={<TiposUsuarioPage />} />
+          <Route path="/usuarios" element={<UsuariosPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

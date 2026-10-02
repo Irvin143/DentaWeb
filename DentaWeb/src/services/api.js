@@ -121,6 +121,24 @@ export const clinicasApi = {
   },
 };
 
+export const usuariosApi = {
+  listar() {
+    return apiRequest("/api/usuarios", { method: "GET" });
+  },
+  crear(payload) {
+    return apiRequest("/api/usuarios", { method: "POST", body: payload });
+  },
+  actualizar(id, payload) {
+    return apiRequest(`/api/usuarios/${id}`, { method: "PUT", body: payload });
+  },
+  eliminar(id) {
+    return apiRequest(`/api/usuarios/${id}`, { method: "DELETE" });
+  },
+  reactivar(id) {
+    return apiRequest(`/api/usuarios/${id}/reactivar`, { method: "PATCH" });
+  },
+};
+
 export const pacientesApi = {
   listar() {
     return apiRequest("/api/pacientes", { method: "GET" });
