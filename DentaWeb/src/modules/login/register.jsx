@@ -15,6 +15,25 @@ import { authApi } from "../../services/api.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function errorContrasena(contrasena) {
+  if (contrasena.length < 8 || contrasena.length > 72) {
+    return "La contraseña debe tener entre 8 y 72 caracteres.";
+  }
+  if (!/\p{Lu}/u.test(contrasena)) {
+    return "La contraseña debe incluir al menos una mayúscula.";
+  }
+  if (!/\p{Ll}/u.test(contrasena)) {
+    return "La contraseña debe incluir al menos una minúscula.";
+  }
+  if (!/\p{Nd}/u.test(contrasena)) {
+    return "La contraseña debe incluir al menos un número.";
+  }
+  if (!/[^\p{L}\p{N}]/u.test(contrasena)) {
+    return "La contraseña debe incluir al menos un carácter especial.";
+  }
+  return null;
+}
+
 const Register = () => {
   const navigate = useNavigate();
   const redirectTimeout = useRef(null);
@@ -69,8 +88,9 @@ const Register = () => {
       return;
     }
 
-    if (password.length < 8 || password.length > 72) {
-      setErrorMessage("La contraseña debe tener entre 8 y 72 caracteres.");
+    const errorClave = errorContrasena(password);
+    if (errorClave) {
+      setErrorMessage(errorClave);
       return;
     }
 
@@ -246,7 +266,7 @@ const Register = () => {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Mínimo 8 caracteres, una mayúscula, un número y un símbolo"
                 autoComplete="new-password"
                 minLength={8}
                 maxLength={72}
