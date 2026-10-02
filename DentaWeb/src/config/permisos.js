@@ -1,6 +1,7 @@
 // Qué paquetes/roles pueden ver cada catálogo.
 // No importan mayúsculas, acentos ni espacios extra: "Odontólogo" = "odontologo".
 export const PERMISOS_RUTAS = {
+    '/panel':          ['admin'],
     '/pacientes':      ['admin', 'clinica', 'odontologo', 'paciente'], 
     '/odontologos':    ['admin', 'clinica', 'paciente'],
     '/clinicas':       ['admin', 'paciente','paciente'],
