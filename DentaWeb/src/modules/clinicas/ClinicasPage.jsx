@@ -1,31 +1,153 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { CatalogoPage } from '../../components/CatalogoPage';
-import { clinicasApi } from '../../services/api.js'; // ajusta la ruta a donde tengas tu clinicasApi
+import { clinicasApi } from '../../services/api.js';
 
 // Mobile: compacto. Desktop (md:): más amplio y cómodo
 const inputClass =
   'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500 md:rounded-xl md:px-4 md:py-3 md:text-base';
 
+/* ============================================================
+   VALIDACIONES
+   ============================================================ */
+
+// Correo
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Nombre / dirección: letras, números, espacios y signos comunes de dirección
+const REGEX_NOMBRE = /^[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ][A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,#°&/-]*$/;
+const REGEX_DIRECCION = /^[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ][A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,#°&/-]*$/;
+
+// RFC / NIT / RUC: alfanumérico con guiones y puntos
+const REGEX_RFC = /^[A-Z0-9][A-Z0-9.-]*$/;
+
+// Contraseña: mínimo 8, al menos una mayúscula, una minúscula y un número
+const REGEX_PASSWORD = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+// Filtros en tiempo real
+const LIMPIAR_NOMBRE = /[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,#°&/-]/g;
+const LIMPIAR_DIRECCION = /[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,#°&/-]/g;
+const LIMPIAR_RFC = /[^A-Za-z0-9.-]/g;
+const LIMPIAR_CORREO = /[^A-Za-z0-9@._+-]/g;
+
+// Longitudes máximas según el DER
+const MAX_NOMBRE = 150;
+const MAX_DIRECCION = 300;
+const MAX_RFC = 50;
+const MAX_CORREO = 150;
+
+/* ------------------------------------------------------------
+   Validadores por campo (devuelven string o null)
+   ------------------------------------------------------------ */
+
+const validarNombreClinica = (valor) => {
+  const v = valor.trim();
+  if (!v) return 'El nombre de la clínica es obligatorio';
+  if (v.length < 2) return 'El nombre debe tener al menos 2 caracteres';
+  if (v.length > MAX_NOMBRE)
+    return `El nombre no puede exceder ${MAX_NOMBRE} caracteres`;
+  if (!REGEX_NOMBRE.test(v))
+    return 'El nombre contiene caracteres no permitidos';
+  return null;
+};
+
+const validarDireccion = (valor) => {
+  const v = valor.trim();
+  if (!v) return null; // opcional
+  if (v.length > MAX_DIRECCION)
+    return `La dirección no puede exceder ${MAX_DIRECCION} caracteres`;
+  if (!REGEX_DIRECCION.test(v))
+    return 'La dirección contiene caracteres no permitidos';
+  return null;
+};
+
+const validarRFC = (valor) => {
+  const v = valor.trim();
+  if (!v) return null; // opcional
+  if (v.length < 12) return 'La identificación fiscal debe tener al menos 12 caracteres';
+  if (v.length > MAX_RFC)
+    return `La identificación fiscal no puede exceder ${MAX_RFC} caracteres`;
+  if (!REGEX_RFC.test(v))
+    return 'La identificación fiscal solo puede contener letras, números, guiones y puntos';
+  return null;
+};
+
+const validarCorreo = (valor, { obligatorio = false } = {}) => {
+  const v = valor.trim();
+  if (!v) return obligatorio ? 'El correo es obligatorio' : null;
+  if (v.length > MAX_CORREO)
+    return `El correo no puede exceder ${MAX_CORREO} caracteres`;
+  if (!REGEX_CORREO.test(v)) return 'Ingresa un correo electrónico válido';
+  return null;
+};
+
+const validarContrasena = (valor, { obligatorio = false } = {}) => {
+  if (!valor) return obligatorio ? 'La contraseña es obligatoria' : null;
+  if (valor.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
+  if (valor.length > 100) return 'La contraseña no puede exceder 100 caracteres';
+  if (!REGEX_PASSWORD.test(valor))
+    return 'Debe incluir al menos una mayúscula, una minúscula y un número';
+  return null;
+};
+
+/* ------------------------------------------------------------
+   Validador global del formulario
+   ------------------------------------------------------------ */
+
+const validarFormulario = (form, creando, clinicas = []) => {
+  const errores = {};
+
+  const errNombre = validarNombreClinica(form.nombre);
+  if (errNombre) errores.nombre = errNombre;
+
+  const errDir = validarDireccion(form.direccion);
+  if (errDir) errores.direccion = errDir;
+
+  const errRfc = validarRFC(form.identificacion_fiscal);
+  if (errRfc) errores.identificacion_fiscal = errRfc;
+
+  if (creando) {
+    const errCorreo = validarCorreo(form.correo, { obligatorio: true });
+    if (errCorreo) errores.correo = errCorreo;
+    else {
+      const duplicado = clinicas.some(
+        (c) =>
+          (c.correo_usuario ?? '').toLowerCase() ===
+          form.correo.trim().toLowerCase()
+      );
+      if (duplicado) errores.correo = 'Ya existe una clínica con ese correo';
+    }
+
+    const errPass = validarContrasena(form.contrasena, { obligatorio: true });
+    if (errPass) errores.contrasena = errPass;
+
+    if (!form.confirmarContrasena)
+      errores.confirmarContrasena = 'Confirma la contraseña';
+    else if (form.contrasena !== form.confirmarContrasena)
+      errores.confirmarContrasena = 'Las contraseñas no coinciden';
+  }
+
+  return errores;
+};
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
 
 const FORM_INICIAL = {
   nombre: '',
   direccion: '',
   identificacion_fiscal: '',
-  idusuario: '', // solo se conserva al editar (no se muestra)
-  correo: '', // llave de acceso (solo al crear)
+  idusuario: '',
+  correo: '',
   contrasena: '',
   confirmarContrasena: '',
 };
 
-// Acepta un arreglo directo o la lista envuelta en un objeto ({ data: [...] }, { clinicas: [...] })
 const comoLista = (resp, clave) =>
   Array.isArray(resp) ? resp : resp?.[clave] ?? resp?.data ?? [];
 
-// Normaliza a mayúsculas lo que se manda al backend
 const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
 
-// Convierte lo que devuelve el backend a lo que muestra la tabla
 const mapearClinica = (c) => ({
   id: c.id_clinica,
   nombre: c.nombre,
@@ -42,7 +164,6 @@ const Etiqueta = ({ children, requerido }) => (
   </label>
 );
 
-// Sección con título: el título solo se ve en desktop, en mobile queda compacto
 const Seccion = ({ titulo, children }) => (
   <section className="flex flex-col gap-3 md:gap-5">
     <h3 className="hidden border-b border-slate-100 pb-2 text-sm font-semibold text-slate-800 md:block">
@@ -52,12 +173,17 @@ const Seccion = ({ titulo, children }) => (
   </section>
 );
 
+/* ============================================================
+   COMPONENTE
+   ============================================================ */
+
 export default function ClinicasPage() {
-  const [clinicas, setClinicas] = useState([]); // datos crudos del backend
+  const [clinicas, setClinicas] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState(null);
+  const [erroresCampos, setErroresCampos] = useState({});
   const [guardando, setGuardando] = useState(false);
 
   const creando = editandoId === null;
@@ -80,45 +206,78 @@ export default function ClinicasPage() {
     cargar();
   }, [cargar]);
 
-  const handleChange = (campo) => (e) =>
-    setForm((prev) => ({ ...prev, [campo]: e.target.value }));
+  /* ------------------------------------------------------------
+     HANDLE CHANGE con filtros en tiempo real
+     ------------------------------------------------------------ */
+  const handleChange = (campo) => (e) => {
+    let valor = e.target.value;
+
+    switch (campo) {
+      case 'nombre':
+        valor = valor.replace(LIMPIAR_NOMBRE, '').toUpperCase();
+        break;
+      case 'direccion':
+        valor = valor.replace(LIMPIAR_DIRECCION, '').toUpperCase();
+        break;
+      case 'identificacion_fiscal':
+        valor = valor.replace(LIMPIAR_RFC, '').toUpperCase();
+        break;
+      case 'correo':
+        valor = valor.replace(LIMPIAR_CORREO, '').toLowerCase();
+        break;
+      case 'contrasena':
+      case 'confirmarContrasena':
+        break;
+      default:
+        break;
+    }
+
+    setForm((prev) => ({ ...prev, [campo]: valor }));
+
+    setErroresCampos((prev) => {
+      if (!prev[campo]) return prev;
+      const copia = { ...prev };
+      delete copia[campo];
+      return copia;
+    });
+  };
+
+  /* ------------------------------------------------------------
+     HANDLE BLUR para validar un campo al salir
+     ------------------------------------------------------------ */
+  const handleBlur = (campo) => () => {
+    const todos = validarFormulario(form, creando, clinicas);
+    setErroresCampos((prev) => {
+      const copia = { ...prev };
+      if (todos[campo]) copia[campo] = todos[campo];
+      else delete copia[campo];
+      return copia;
+    });
+  };
 
   const resetFormulario = () => {
     setForm(FORM_INICIAL);
     setEditandoId(null);
     setError(null);
+    setErroresCampos({});
   };
 
-  // Devuelve un mensaje de error o null si todo está bien
-  const validar = () => {
-    if (!form.nombre.trim()) return 'El nombre es obligatorio';
-    if (form.nombre.trim().length > 150) return 'El nombre no puede exceder 150 caracteres';
-    if (form.identificacion_fiscal.trim().length > 50) {
-      return 'La identificación fiscal no puede exceder 50 caracteres';
-    }
-
-    if (creando) {
-      const correo = form.correo.trim();
-      if (!correo) return 'El correo de acceso es obligatorio';
-      if (correo.length > 150) return 'El correo no puede exceder 150 caracteres';
-      if (!REGEX_CORREO.test(correo)) return 'El correo de acceso no es válido';
-      if (form.contrasena.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
-      if (form.contrasena !== form.confirmarContrasena) return 'Las contraseñas no coinciden';
-    }
-    return null;
-  };
-
-  // Devuelve true si guardó bien (para que el modal pueda cerrarse)
+  /* ------------------------------------------------------------
+     GUARDAR
+     ------------------------------------------------------------ */
   const handleGuardar = async () => {
-    const mensaje = validar();
-    if (mensaje) {
-      setError(mensaje);
+    const errores = validarFormulario(form, creando, clinicas);
+
+    if (Object.keys(errores).length > 0) {
+      setErroresCampos(errores);
+      setError('Revisa los campos marcados antes de continuar');
       return false;
     }
 
     try {
       setGuardando(true);
       setError(null);
+      setErroresCampos({});
 
       const datosBase = {
         nombre: mayus(form.nombre),
@@ -127,13 +286,11 @@ export default function ClinicasPage() {
       };
 
       if (editandoId) {
-        // Al editar se conserva el usuario que ya tiene; no se tocan las credenciales
         await clinicasApi.actualizar(editandoId, {
           ...datosBase,
           idusuario: form.idusuario ? Number(form.idusuario) : null,
         });
       } else {
-        // Al crear, el backend genera el usuario (tipo clínica) con estas credenciales
         await clinicasApi.crear({
           ...datosBase,
           correo: form.correo.trim().toLowerCase(),
@@ -152,17 +309,17 @@ export default function ClinicasPage() {
     }
   };
 
-  // Carga los datos de la fila en el formulario antes de abrir el modal
   const handleEditar = (id) => {
     const c = clinicas.find((x) => x.id_clinica === id);
     if (!c) return;
     setEditandoId(id);
     setError(null);
+    setErroresCampos({});
     setForm({
       ...FORM_INICIAL,
-      nombre: c.nombre ?? '',
-      direccion: c.direccion ?? '',
-      identificacion_fiscal: c.identificacion_fiscal ?? '',
+      nombre: (c.nombre ?? '').toUpperCase(),
+      direccion: (c.direccion ?? '').toUpperCase(),
+      identificacion_fiscal: (c.identificacion_fiscal ?? '').toUpperCase(),
       idusuario: c.id_usuario != null ? String(c.id_usuario) : '',
     });
   };
@@ -185,7 +342,15 @@ export default function ClinicasPage() {
     }
   };
 
-  // max-h + overflow: si no cabe, solo el formulario hace scroll
+  // Clase para marcar el input en rojo si tiene error
+  const claseConError = (campo) =>
+    erroresCampos[campo]
+      ? `${inputClass} border-red-400 focus:border-red-500 focus:ring-red-500`
+      : inputClass;
+
+  /* ------------------------------------------------------------
+     FORMULARIO (misma vista, solo agregamos clases y mensajes)
+     ------------------------------------------------------------ */
   const formularioClinica = (
     <div className="flex max-h-[65vh] flex-col gap-3 overflow-y-auto pr-1 md:max-h-[72vh] md:gap-7 md:px-2">
       {error && (
@@ -194,45 +359,62 @@ export default function ClinicasPage() {
         </p>
       )}
 
-      {/* Datos de la clínica */}
       <Seccion titulo="Datos de la clínica">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
           <div>
             <Etiqueta requerido>Nombre de la clínica:</Etiqueta>
             <input
               type="text"
-              maxLength={150}
+              maxLength={MAX_NOMBRE}
               placeholder="Ej. Clínica Centro"
-              className={inputClass}
+              className={claseConError('nombre')}
               value={form.nombre}
               onChange={handleChange('nombre')}
+              onBlur={handleBlur('nombre')}
             />
+            {erroresCampos.nombre && (
+              <p className="mt-1 text-xs text-red-600">
+                {erroresCampos.nombre}
+              </p>
+            )}
           </div>
           <div>
             <Etiqueta>Identificación fiscal:</Etiqueta>
             <input
               type="text"
-              maxLength={50}
+              maxLength={MAX_RFC}
               placeholder="RFC / NIT / RUC"
-              className={inputClass}
+              className={claseConError('identificacion_fiscal')}
               value={form.identificacion_fiscal}
               onChange={handleChange('identificacion_fiscal')}
+              onBlur={handleBlur('identificacion_fiscal')}
             />
+            {erroresCampos.identificacion_fiscal && (
+              <p className="mt-1 text-xs text-red-600">
+                {erroresCampos.identificacion_fiscal}
+              </p>
+            )}
           </div>
           <div className="md:col-span-2">
             <Etiqueta>Dirección completa:</Etiqueta>
             <input
               type="text"
+              maxLength={MAX_DIRECCION}
               placeholder="Calle, Número, Ciudad"
-              className={inputClass}
+              className={claseConError('direccion')}
               value={form.direccion}
               onChange={handleChange('direccion')}
+              onBlur={handleBlur('direccion')}
             />
+            {erroresCampos.direccion && (
+              <p className="mt-1 text-xs text-red-600">
+                {erroresCampos.direccion}
+              </p>
+            )}
           </div>
         </div>
       </Seccion>
 
-      {/* Llave de acceso: solo al crear, genera el usuario de la clínica */}
       {creando && (
         <fieldset className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 pb-3 pt-1 md:gap-5 md:rounded-xl md:px-5 md:pb-5 md:pt-2">
           <legend className="px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm">
@@ -247,12 +429,18 @@ export default function ClinicasPage() {
             <input
               type="email"
               autoComplete="off"
-              maxLength={150}
+              maxLength={MAX_CORREO}
               placeholder="clinica@correo.com"
-              className={inputClass}
+              className={claseConError('correo')}
               value={form.correo}
               onChange={handleChange('correo')}
+              onBlur={handleBlur('correo')}
             />
+            {erroresCampos.correo && (
+              <p className="mt-1 text-xs text-red-600">
+                {erroresCampos.correo}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
@@ -262,10 +450,17 @@ export default function ClinicasPage() {
                 type="password"
                 autoComplete="new-password"
                 placeholder="Mínimo 8 caracteres"
-                className={inputClass}
+                className={claseConError('contrasena')}
                 value={form.contrasena}
                 onChange={handleChange('contrasena')}
+                onBlur={handleBlur('contrasena')}
+                maxLength={100}
               />
+              {erroresCampos.contrasena && (
+                <p className="mt-1 text-xs text-red-600">
+                  {erroresCampos.contrasena}
+                </p>
+              )}
             </div>
             <div>
               <Etiqueta requerido>Confirmar contraseña:</Etiqueta>
@@ -273,10 +468,17 @@ export default function ClinicasPage() {
                 type="password"
                 autoComplete="new-password"
                 placeholder="Repite la contraseña"
-                className={inputClass}
+                className={claseConError('confirmarContrasena')}
                 value={form.confirmarContrasena}
                 onChange={handleChange('confirmarContrasena')}
+                onBlur={handleBlur('confirmarContrasena')}
+                maxLength={100}
               />
+              {erroresCampos.confirmarContrasena && (
+                <p className="mt-1 text-xs text-red-600">
+                  {erroresCampos.confirmarContrasena}
+                </p>
+              )}
             </div>
           </div>
         </fieldset>
