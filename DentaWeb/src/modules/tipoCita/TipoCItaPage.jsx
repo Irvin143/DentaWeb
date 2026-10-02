@@ -10,6 +10,8 @@ const FORM_INICIAL = {
   nombre: '',
 };
 
+const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
+
 // Convierte lo que devuelve el backend a lo que muestra la tabla
 const mapearTipoCita = (t) => ({
   id: t.id_tipo,
@@ -42,7 +44,10 @@ export default function TiposCitaPage() {
   }, [cargar]);
 
   const handleChange = (campo) => (e) =>
-    setForm((prev) => ({ ...prev, [campo]: e.target.value }));
+    setForm((prev) => ({
+      ...prev,
+      [campo]: e.target.value.toLocaleUpperCase('es-MX'),
+    }));
 
   const resetFormulario = () => {
     setForm(FORM_INICIAL);
@@ -66,7 +71,7 @@ export default function TiposCitaPage() {
       setError(null);
 
       const payload = {
-        nombre: form.nombre.trim(),
+        nombre: mayus(form.nombre),
       };
 
       if (editandoId) {
@@ -93,7 +98,7 @@ export default function TiposCitaPage() {
     setEditandoId(id);
     setError(null);
     setForm({
-      nombre: t.nombre ?? '',
+      nombre: (t.nombre ?? '').toLocaleUpperCase('es-MX'),
     });
   };
 

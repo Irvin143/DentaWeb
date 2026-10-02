@@ -11,6 +11,8 @@ const FORM_INICIAL = {
   descripcion: '',
 };
 
+const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
+
 // Convierte lo que devuelve el backend a lo que muestra la tabla
 const mapearRol = (r) => ({
   id: r.id_rol,
@@ -44,7 +46,10 @@ export default function RolesPage() {
   }, [cargar]);
 
   const handleChange = (campo) => (e) =>
-    setForm((prev) => ({ ...prev, [campo]: e.target.value }));
+    setForm((prev) => ({
+      ...prev,
+      [campo]: e.target.value.toLocaleUpperCase('es-MX'),
+    }));
 
   const resetFormulario = () => {
     setForm(FORM_INICIAL);
@@ -68,8 +73,8 @@ export default function RolesPage() {
       setError(null);
 
       const payload = {
-        nombre: form.nombre.trim(),
-        descripcion: form.descripcion.trim() || null,
+        nombre: mayus(form.nombre),
+        descripcion: form.descripcion.trim() ? mayus(form.descripcion) : null,
       };
 
       if (editandoId) {
@@ -96,8 +101,8 @@ export default function RolesPage() {
     setEditandoId(id);
     setError(null);
     setForm({
-      nombre: r.nombre ?? '',
-      descripcion: r.descripcion ?? '',
+      nombre: (r.nombre ?? '').toLocaleUpperCase('es-MX'),
+      descripcion: (r.descripcion ?? '').toLocaleUpperCase('es-MX'),
     });
   };
 

@@ -90,9 +90,9 @@ const Register = () => {
     setSuccessMessage("");
 
     const correo = email.trim();
-    const nombreLimpio = nombre.trim();
-    const apePatLimpio = apePat.trim();
-    const apeMatLimpio = apeMat.trim();
+    const nombreLimpio = nombre.trim().toLocaleUpperCase("es-MX");
+    const apePatLimpio = apePat.trim().toLocaleUpperCase("es-MX");
+    const apeMatLimpio = apeMat.trim().toLocaleUpperCase("es-MX");
 
     if (!nombreLimpio || !apePatLimpio) {
       setErrorMessage("El nombre y el apellido paterno son obligatorios.");
@@ -202,7 +202,9 @@ const Register = () => {
                 id="register-name"
                 type="text"
                 value={nombre}
-                onChange={(event) => setNombre(event.target.value)}
+                onChange={(event) =>
+                  setNombre(event.target.value.toLocaleUpperCase("es-MX"))
+                }
                 placeholder="Ana"
                 autoComplete="given-name"
                 maxLength={100}
@@ -223,7 +225,9 @@ const Register = () => {
               id="register-last-name"
               type="text"
               value={apePat}
-              onChange={(event) => setApePat(event.target.value)}
+              onChange={(event) =>
+                setApePat(event.target.value.toLocaleUpperCase("es-MX"))
+              }
               placeholder="Pérez"
               autoComplete="family-name"
               maxLength={100}
@@ -244,7 +248,9 @@ const Register = () => {
               id="register-second-last-name"
               type="text"
               value={apeMat}
-              onChange={(event) => setApeMat(event.target.value)}
+              onChange={(event) =>
+                setApeMat(event.target.value.toLocaleUpperCase("es-MX"))
+              }
               placeholder="García"
               autoComplete="additional-name"
               className="h-12 w-full rounded-xl border border-transparent bg-login-input px-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
