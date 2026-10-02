@@ -168,22 +168,20 @@ export default function ClinicasPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas desactivar esta clínica? Podrás reactivarla después.')) return;
     try {
       await clinicasApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al desactivar la clínica');
+      setError(err.message || 'Error al desactivar la clínica');
     }
   };
 
   const handleReactivar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas reactivar esta clínica?')) return;
     try {
       await clinicasApi.reactivar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al reactivar la clínica');
+      setError(err.message || 'Error al reactivar la clínica');
     }
   };
 

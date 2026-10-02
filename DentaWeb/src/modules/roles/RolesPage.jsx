@@ -101,22 +101,20 @@ export default function RolesPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas desactivar este rol? Podrás reactivarlo después.')) return;
     try {
       await rolesApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al desactivar el rol');
+      setError(err.message || 'Error al desactivar el rol');
     }
   };
 
   const handleReactivar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas reactivar este rol?')) return;
     try {
       await rolesApi.reactivar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al reactivar el rol');
+      setError(err.message || 'Error al reactivar el rol');
     }
   };
 

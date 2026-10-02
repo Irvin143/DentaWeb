@@ -102,22 +102,20 @@ export default function PaquetesPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas desactivar este paquete? Podrás reactivarlo después.')) return;
     try {
       await paquetesApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al desactivar el paquete');
+      setError(err.message || 'Error al desactivar el paquete');
     }
   };
 
   const handleReactivar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas reactivar este paquete?')) return;
     try {
       await paquetesApi.reactivar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al reactivar el paquete');
+      setError(err.message || 'Error al reactivar el paquete');
     }
   };
 

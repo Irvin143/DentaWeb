@@ -97,22 +97,20 @@ export default function TiposCitaPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas desactivar este tipo de cita? Podrás reactivarlo después.')) return;
     try {
       await tiposCitaApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al desactivar el tipo de cita');
+      setError(err.message || 'Error al desactivar el tipo de cita');
     }
   };
 
   const handleReactivar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas reactivar este tipo de cita?')) return;
     try {
       await tiposCitaApi.reactivar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al reactivar el tipo de cita');
+      setError(err.message || 'Error al reactivar el tipo de cita');
     }
   };
 
