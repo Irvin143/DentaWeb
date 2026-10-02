@@ -13,13 +13,6 @@ const FORM_INICIAL = {
   correo: '',
 };
 
-// '1990-05-12' o '1990-05-12T00:00:00.000Z' -> '12/05/1990'
-const formatearFecha = (valor) => {
-  if (!valor) return '—';
-  const [anio, mes, dia] = String(valor).slice(0, 10).split('-');
-  return `${dia}/${mes}/${anio}`;
-};
-
 const mapearPaciente = (p) => ({
   id: p.id_paciente,
   nombre: (
@@ -38,14 +31,30 @@ const mapearPaciente = (p) => ({
    VALIDACIONES
    ============================================================ */
 
-// Solo letras (incluye acentos y ñ), espacios y guiones. Entre 2 y 50 caracteres.
-const REGEX_NOMBRE = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:[\s'-][A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)*$/;
+// Solo letras (incluye acentos y ñ), espacios, apóstrofes, guiones y puntos.
+// Entre 2 y 50 caracteres.
+const REGEX_NOMBRE =
+  /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:[\s'.-][A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)*$/;
 
 // Teléfono: 10 dígitos exactos (formato México). Ajusta si necesitas otro.
 const REGEX_TELEFONO = /^\d{10}$/;
 
 // Correo: validación estándar razonable.
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+/* ============================================================
+   FILTROS EN TIEMPO REAL
+   (bloquean caracteres inválidos mientras el usuario escribe)
+   ============================================================ */
+
+// Nombres: solo letras (con acentos y ñ), espacios, apóstrofes, guiones y puntos.
+const LIMPIAR_NOMBRE = /[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s'.-]/g;
+
+// Teléfono: solo dígitos, espacios, guiones y paréntesis.
+const LIMPIAR_TELEFONO = /[^\d\s()-]/g;
+
+// Correo: solo letras, números, @ . _ - +
+const LIMPIAR_CORREO = /[^A-Za-z0-9@._+-]/g;
 
 // Cuenta cuántas palabras tiene un nombre compuesto.
 const contarPalabras = (str) =>
@@ -57,7 +66,7 @@ const validarNombre = (valor, etiqueta) => {
   if (v.length < 2) return `El ${etiqueta} debe tener al menos 2 caracteres`;
   if (v.length > 50) return `El ${etiqueta} no puede exceder 50 caracteres`;
   if (!REGEX_NOMBRE.test(v))
-    return `El ${etiqueta} solo puede contener letras, espacios, apóstrofes o guiones`;
+    return `El ${etiqueta} solo puede contener letras, espacios, apóstrofes, puntos o guiones`;
   return null;
 };
 
@@ -126,12 +135,11 @@ export default function PacientesPage() {
   const [erroresCampos, setErroresCampos] = useState({});
   const [guardando, setGuardando] = useState(false);
 
-  const cargar = useCallback(async () => {
+  const cargar = useCallback(async (mostrarSpinner = true) => {
     try {
-      setCargando(true);
+      if (mostrarSpinner) setCargando(true);
       const data = await pacientesApi.listar();
       setPacientes(data?.pacientes ?? (Array.isArray(data) ? data : []));
-      console.log('Pacientes cargados:', data);
     } catch (err) {
       setError(err.message || 'No se pudieron cargar los pacientes');
     } finally {
@@ -141,25 +149,50 @@ export default function PacientesPage() {
 
   useEffect(() => {
     cargar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cargar]);
 
-  // Al cambiar un campo, actualizamos su valor y limpiamos su error puntual.
+  // Al cambiar un campo: filtramos caracteres inválidos, aplicamos
+  // mayúsculas (excepto correo) y limpiamos el error puntual del campo.
   const handleChange = (campo) => (e) => {
-  // Todo a mayúsculas (los campos numéricos no se ven afectados).
-  const valor = e.target.value.toUpperCase();
-  setForm((prev) => ({ ...prev, [campo]: valor }));
-  setErroresCampos((prev) => {
-    if (!prev[campo] && !prev.contacto) return prev;
-    const copia = { ...prev };
-    delete copia[campo];
-    if (campo === 'telefono' || campo === 'correo') {
-      const tel = campo === 'telefono' ? valor : form.telefono;
-      const correo = campo === 'correo' ? valor : form.correo;
-      if (tel.trim() || correo.trim()) delete copia.contacto;
+    let valor = e.target.value;
+
+    // 1) Filtro según el tipo de campo.
+    switch (campo) {
+      case 'nombre':
+      case 'ape_pat':
+      case 'ape_mat':
+        valor = valor.replace(LIMPIAR_NOMBRE, '');
+        break;
+      case 'telefono':
+        valor = valor.replace(LIMPIAR_TELEFONO, '');
+        break;
+      case 'correo':
+        valor = valor.replace(LIMPIAR_CORREO, '');
+        break;
+      default:
+        break;
     }
-    return copia;
-  });
-};
+
+    // 2) Normalización de mayúsculas/minúsculas.
+    // El correo se mantiene en minúsculas por estándar; el resto en mayúsculas.
+    valor = campo === 'correo' ? valor.toLowerCase() : valor.toUpperCase();
+
+    setForm((prev) => ({ ...prev, [campo]: valor }));
+
+    // 3) Limpieza de errores.
+    setErroresCampos((prev) => {
+      if (!prev[campo] && !prev.contacto) return prev;
+      const copia = { ...prev };
+      delete copia[campo];
+      if (campo === 'telefono' || campo === 'correo') {
+        const tel = campo === 'telefono' ? valor : form.telefono;
+        const correo = campo === 'correo' ? valor : form.correo;
+        if (tel.trim() || correo.trim()) delete copia.contacto;
+      }
+      return copia;
+    });
+  };
 
   // Validación al salir del campo (blur) para dar feedback inmediato.
   const handleBlur = (campo) => () => {
@@ -200,7 +233,7 @@ export default function PacientesPage() {
         ape_pat: form.ape_pat.trim().toUpperCase(),
         ape_mat: form.ape_mat.trim().toUpperCase(),
         telefono: form.telefono.trim().replace(/[\s()-]/g, ''),
-        correo: form.correo.trim().toUpperCase(),
+        correo: form.correo.trim().toLowerCase(),
         id_odontologo: null,
       };
 
@@ -232,7 +265,7 @@ export default function PacientesPage() {
       ape_pat: (p.ape_pat ?? '').toUpperCase(),
       ape_mat: (p.ape_mat ?? '').toUpperCase(),
       telefono: p.telefono ?? '',
-      correo: (p.correo ?? '').toUpperCase(),
+      correo: (p.correo ?? '').toLowerCase(),
       fecha_nacimiento: p.fecha_nacimiento
         ? String(p.fecha_nacimiento).slice(0, 10)
         : '',
