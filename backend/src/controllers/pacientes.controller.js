@@ -121,3 +121,16 @@ export async function crearPaciente(req, res, next) {
         next(err);
     }
 }
+export async function eliminarPacientePermanente(req, res, next) {
+    try {
+        const id = leerId(req);
+        if (!id) return res.status(400).json({ error: 'ID inválido' });
+
+        const eliminado = await pacientesService.eliminarPacientePermanente(id);
+        if (!eliminado) return res.status(404).json({ error: 'Paciente no encontrado' });
+        
+        res.status(200).json({ mensaje: 'Paciente eliminado permanentemente' });
+    } catch (err) {
+        next(err);
+    }
+}

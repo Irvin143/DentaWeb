@@ -88,3 +88,14 @@ export const reactivarPaciente = async (id) => {
     );
     return rowCount > 0;
 };
+
+
+export const eliminarPacientePermanente = async (id) => {
+    const query = `
+        DELETE FROM Pacientes
+        WHERE idPaciente = $1
+        RETURNING idPaciente AS id_paciente;
+    `;
+    const { rows } = await conexion.query(query, [id]);
+    return rows[0] ?? null; // null = no existe
+};
