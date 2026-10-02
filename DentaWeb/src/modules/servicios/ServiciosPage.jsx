@@ -134,22 +134,20 @@ export default function ServiciosPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas desactivar este servicio? Podrás reactivarlo después.')) return;
     try {
       await serviciosApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al desactivar el servicio');
+      setError(err.message || 'Error al desactivar el servicio');
     }
   };
 
   const handleReactivar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas reactivar este servicio?')) return;
     try {
       await serviciosApi.reactivar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al reactivar el servicio');
+      setError(err.message || 'Error al reactivar el servicio');
     }
   };
 
