@@ -258,6 +258,15 @@ export default function UsuariosPage() {
           await usuariosApi.cambiarContrasena(editandoId, form.contrasena);
         }
       } else if (esOdontologo) {
+        const telefono = String(form.telefono).trim() ? digitosTelefono(form.telefono) : '';
+        if (telefono) {
+          const data = await odontologosApi.listar();
+          const lista = comoLista(data, 'odontologos');
+          if (telefonoRepetido(telefono, lista)) {
+            setError('Ya existe un odontólogo con ese teléfono');
+            return false;
+          }
+        }
         // Crea usuario (tipo odontólogo) + registro de odontólogo
         await odontologosApi.crear({
           nombre: mayus(form.nombre),

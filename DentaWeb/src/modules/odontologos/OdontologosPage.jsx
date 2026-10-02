@@ -124,9 +124,18 @@ const validarFormulario = (
     if (errApeMat) errores.ape_mat = errApeMat;
   }
 
-  // --- Teléfono (opcional) ---
+  // --- Teléfono (opcional; si viene, checar duplicado como la cédula) ---
   const errTel = validarTelefono(form.telefono);
   if (errTel) errores.telefono = errTel;
+  else if (form.telefono.trim()) {
+    const digitos = form.telefono.replace(/[\s()-]/g, '');
+    const duplicado = odontologos.some(
+      (o) =>
+        o.id_odontologo !== editandoId &&
+        String(o.telefono ?? '').replace(/\D/g, '') === digitos
+    );
+    if (duplicado) errores.telefono = 'Ya existe un odontólogo con ese teléfono';
+  }
 
   // --- Cédula (opcional pero si viene, validar y checar duplicado) ---
   const errCedula = validarCedula(form.cedula);
