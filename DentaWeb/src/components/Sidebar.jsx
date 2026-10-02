@@ -15,10 +15,10 @@ const navItems = [
   { path: '/servicios', label: 'Servicios', icon: BriefcaseMedical },
   { path: '/especialidades', label: 'Especialidades', icon: GraduationCap },
   { path: '/estudios', label: 'Estudios', icon: Scan },
-  { path: '/tipos-cita', label: 'Tipos de Cita', icon: CalendarClock },
+  { path: '/tipos-cita', label: 'Tipos de cita', icon: CalendarClock },
   { path: '/paquetes', label: 'Paquetes Roles', icon: Package },
   { path: '/roles', label: 'Roles', icon: Shield },
-  { path: '/tipos-usuario', label: 'Tipos de Usuario', icon: IdCard },
+  { path: '/tipos-usuario', label: 'Tipos de usuario', icon: IdCard },
   { path: '/usuarios', label: 'Usuarios', icon: UserCog },
   // { path: "/agenda", label: "Agenda", icon: Calendar },
 ];
@@ -61,7 +61,7 @@ function DialogoCerrarSesion({ onCancelar, onConfirmar }) {
             aria-label="Cerrar"
             className="rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
           >
-            ✕
+            <X size={20} aria-hidden="true" />
           </button>
         </div>
 
@@ -121,7 +121,18 @@ export function Sidebar() {
   const itemsVisibles = navItems.filter((item) => puedeVer(item.path, usuario));
 
   const nombre = usuario?.nombre ?? usuario?.correo ?? 'Usuario';
-  const etiquetaRol = usuario?.paquete ?? '';
+  const clavePaquete = String(usuario?.paquete ?? '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+  const etiquetaRol =
+    {
+      admin: 'Administrador',
+      clinica: 'Admín. de Clínica',
+      odontologo: 'Odontólogo',
+      paciente: 'Paciente',
+    }[clavePaquete] ?? usuario?.paquete ?? '';
 
   const cerrarSesion = () => {
     sessionStorage.removeItem('clinicware_auth');

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { IdCard } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage.jsx';
 import { tiposUsuarioApi } from '../../services/api.js'; // agrega tiposUsuarioApi en este archivo
 
@@ -145,9 +146,9 @@ export default function TiposUsuarioPage() {
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}
       modal={{
-        icono: '👤',
-        titulo: editandoId ? 'Editar Tipo de Usuario' : 'Nuevo Tipo de Usuario',
-        textoGuardar: guardando ? 'Guardando...' : 'Guardar Tipo de Usuario',
+        icono: <IdCard />,
+        titulo: editandoId ? 'Editar Tipo de usuario' : 'Nuevo Tipo de usuario',
+        textoGuardar: guardando ? 'Guardando...' : 'Guardar Tipo de usuario',
         contenido: formularioTipoUsuario,
         onGuardar: handleGuardar,
         onCerrar: resetFormulario,

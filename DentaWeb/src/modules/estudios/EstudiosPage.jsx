@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Scan } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
 import { estudiosApi } from '../../services/api.js';
 
@@ -326,7 +327,7 @@ export default function EstudiosPage() {
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}
       modal={{
-        icono: '🔬',
+        icono: <Scan />,
         titulo: editandoId ? 'Editar Estudio' : 'Nuevo Estudio',
         textoGuardar: guardando ? 'Guardando...' : 'Guardar Estudio',
         contenido: formularioEstudio,

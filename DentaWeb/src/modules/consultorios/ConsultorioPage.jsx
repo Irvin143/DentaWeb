@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { DoorOpen } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
 import { consultoriosApi, clinicasApi } from '../../services/api.js';
 
@@ -288,7 +289,7 @@ export default function ConsultoriosPage() {
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}
       modal={{
-        icono: '🏥',
+        icono: <DoorOpen />,
         titulo: editandoId ? 'Editar Consultorio' : 'Nuevo Consultorio',
         textoGuardar: guardando ? 'Guardando...' : 'Guardar Consultorio',
         contenido: formularioConsultorio,

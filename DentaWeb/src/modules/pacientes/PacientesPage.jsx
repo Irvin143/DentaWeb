@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { KeyRound, Users } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
 import { pacientesApi, odontologosApi } from '../../services/api.js';
 
@@ -25,6 +26,24 @@ const comoLista = (resp, clave) =>
 
 // Normaliza a mayúsculas lo que se manda al backend
 const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
+
+const limitarTelefono = (valor) => String(valor ?? '').replace(/\D/g, '').slice(0, 10);
+const digitosTelefono = (valor) => String(valor ?? '').replace(/\D/g, '');
+
+// Vacío está permitido. Si hay valor: solo dígitos y exactamente 10.
+const mensajeTelefono = (valor) => {
+  if (!String(valor ?? '').trim()) return null;
+  const digitos = digitosTelefono(valor);
+  if (digitos && !/^\d+$/.test(digitos)) return 'El teléfono solo puede contener números';
+  if (!/^\d{10}$/.test(digitos)) return 'El teléfono debe tener exactamente 10 dígitos';
+  return null;
+};
+
+const telefonoRepetido = (digitos, lista, idActual) =>
+  lista.some((p) => {
+    if (idActual != null && String(p.id_paciente) === String(idActual)) return false;
+    return digitosTelefono(p.telefono) === digitos;
+  });
 
 // Convierte lo que devuelve el backend a lo que muestra la tabla
 const mapearPaciente = (p) => ({
@@ -110,8 +129,10 @@ console.log('mapearPaciente:', pacientes);
     [odontologos, form.id_odontologo]
   );
 
-  const handleChange = (campo) => (e) =>
-    setForm((prev) => ({ ...prev, [campo]: e.target.value }));
+  const handleChange = (campo) => (e) => {
+    const valor = campo === 'telefono' ? limitarTelefono(e.target.value) : e.target.value;
+    setForm((prev) => ({ ...prev, [campo]: valor }));
+  };
 
   const resetFormulario = () => {
     setForm(FORM_INICIAL);
@@ -123,6 +144,13 @@ console.log('mapearPaciente:', pacientes);
   const validar = () => {
     if (!form.nombre.trim()) return 'El nombre es obligatorio';
     if (!form.ape_pat.trim()) return 'El apellido paterno es obligatorio';
+
+    const errTel = mensajeTelefono(form.telefono);
+    if (errTel) return errTel;
+    const digitos = digitosTelefono(form.telefono);
+    if (/^\d{10}$/.test(digitos) && telefonoRepetido(digitos, pacientes, editandoId)) {
+      return 'Ya existe un paciente con ese teléfono';
+    }
 
     if (creando) {
       const correo = form.correo.trim();
@@ -150,7 +178,7 @@ console.log('mapearPaciente:', pacientes);
         nombre: mayus(form.nombre),
         ape_pat: mayus(form.ape_pat),
         ape_mat: mayus(form.ape_mat),
-        telefono: form.telefono.trim(),
+        telefono: String(form.telefono).trim() ? digitosTelefono(form.telefono) : '',
         id_odontologo: form.id_odontologo ? Number(form.id_odontologo) : null,
       };
 
@@ -242,6 +270,8 @@ console.log('mapearPaciente:', pacientes);
             <Etiqueta>Teléfono:</Etiqueta>
             <input
               type="tel"
+              inputMode="numeric"
+              maxLength={10}
               placeholder="Ej. 6671234567"
               className={inputClass}
               value={form.telefono}
@@ -293,8 +323,8 @@ console.log('mapearPaciente:', pacientes);
       {/* Llave de acceso: solo al crear, genera el usuario del paciente */}
       {creando && (
         <fieldset className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 pb-3 pt-1 md:gap-5 md:rounded-xl md:px-5 md:pb-5 md:pt-2">
-          <legend className="px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm">
-            🔑 Crear llave de acceso
+          <legend className="inline-flex items-center gap-1 px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm">
+            <KeyRound size={14} aria-hidden="true" /> Crear llave de acceso
           </legend>
           <p className="hidden text-sm text-slate-500 md:block">
             Con estos datos el paciente iniciará sesión en el sistema.
@@ -354,7 +384,7 @@ console.log('mapearPaciente:', pacientes);
       onReactivar={handleReactivar}
       onBorrar={handleBorrar}
       modal={{
-        icono: '🧑‍⚕️',
+        icono: <Users />,
         titulo: editandoId ? 'Editar Paciente' : 'Nuevo Paciente',
         textoGuardar: guardando ? 'Guardando...' : 'Guardar Paciente',
         contenido: formularioPaciente,

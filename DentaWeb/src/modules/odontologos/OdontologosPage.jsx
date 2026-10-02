@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { KeyRound, Stethoscope } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
 import { odontologosApi, clinicasApi } from '../../services/api.js';
 
@@ -28,13 +29,12 @@ const REGEX_PASSWORD = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 // Filtros en tiempo real
 const LIMPIAR_NOMBRE = /[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s'.-]/g;
-const LIMPIAR_TELEFONO = /[^\d\s()-]/g;
+const limitarTelefono = (valor) => String(valor ?? '').replace(/\D/g, '').slice(0, 10);
 const LIMPIAR_CEDULA = /[^\d]/g;
 const LIMPIAR_CORREO = /[^A-Za-z0-9@._+-]/g;
 
 // Longitudes máximas según el DER
 const MAX_NOMBRE = 100;
-const MAX_TELEFONO = 20;   // varchar(20)
 const MAX_CEDULA = 50;     // varchar(50)
 const MAX_CORREO = 150;
 
@@ -279,7 +279,7 @@ export default function OdontologosPage() {
         valor = valor.replace(LIMPIAR_NOMBRE, '').toUpperCase();
         break;
       case 'telefono':
-        valor = valor.replace(LIMPIAR_TELEFONO, '');
+        valor = limitarTelefono(valor);
         break;
       case 'cedula':
         valor = valor.replace(LIMPIAR_CEDULA, '');
@@ -462,7 +462,7 @@ export default function OdontologosPage() {
             <Etiqueta>Teléfono:</Etiqueta>
             <input
               type="tel"
-              maxLength={MAX_TELEFONO}
+              maxLength={10}
               placeholder="Ej. 6671234567"
               className={claseConError('telefono')}
               value={form.telefono}
@@ -563,8 +563,8 @@ export default function OdontologosPage() {
       {/* Llave de acceso */}
       {creando && (
         <fieldset className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 pb-3 pt-1 md:gap-5 md:rounded-xl md:px-5 md:pb-5 md:pt-2">
-          <legend className="px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm">
-            🔑 Crear llave de acceso
+          <legend className="inline-flex items-center gap-1 px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm">
+            <KeyRound size={14} aria-hidden="true" /> Crear llave de acceso
           </legend>
           <p className="hidden text-sm text-slate-500 md:block">
             Con estos datos el odontólogo iniciará sesión en el sistema.
@@ -644,7 +644,7 @@ export default function OdontologosPage() {
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}
       modal={{
-        icono: '🦷',
+        icono: <Stethoscope />,
         titulo: editandoId ? 'Editar Odontólogo' : 'Nuevo Odontólogo',
         textoGuardar: guardando ? 'Guardando...' : 'Guardar Odontólogo',
         contenido: formularioOdontologo,

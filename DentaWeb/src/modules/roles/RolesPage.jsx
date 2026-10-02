@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Shield } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
 import { rolesApi } from '../../services/api.js'; // agrega rolesApi en este archivo
 
@@ -159,7 +160,7 @@ export default function RolesPage() {
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}
       modal={{
-        icono: '🔐',
+        icono: <Shield />,
         titulo: editandoId ? 'Editar Rol' : 'Nuevo Rol',
         textoGuardar: guardando ? 'Guardando...' : 'Guardar Rol',
         contenido: formularioRol,
