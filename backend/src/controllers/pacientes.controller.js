@@ -102,9 +102,6 @@ export async function crearPaciente(req, res, next) {
         if (!esTexto(nombre, 100) || !esTexto(ape_pat, 100)) {
         return res.status(400).json({ error: 'Nombre y apellido paterno son obligatorios' });
         }
-        if (!esOpcional(ape_mat, 100) || !esOpcional(telefono, 20)) {
-        return res.status(400).json({ error: 'Apellido materno o teléfono inválidos' });
-        }
         if (id_odontologo !== null && !(Number.isInteger(id_odontologo) && id_odontologo > 0)) {
         return res.status(400).json({ error: 'id_odontologo inválido' });
         }
