@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Search, Plus, ChevronLeft, ChevronRight, Pencil, CircleOff, RotateCcw, ArrowUp, ArrowDown } from 'lucide-react';
 import { MainLayout } from '../layouts/MainLayout';
 import { ModalGenerico } from './ModalGenerico';
+import ModalConfirmacion from './ModalConfirmacion';
 
 const REGISTROS_POR_PAGINA = 10;
 
@@ -43,7 +44,12 @@ export function CatalogoPage({
   const [pagina, setPagina] = useState(1);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [orden, setOrden] = useState({ columna: 'id', direccion: 'asc' });
-
+  const [confirmacion, setConfirmacion] = useState({
+    isOpen: false,
+    id: null,
+    accion: null,
+  });
+  
   const hayAcciones = Boolean(onEditar || onEliminar || onReactivar);
 
   // Columnas: las definidas o las derivadas de los atributos del primer registro
@@ -131,11 +137,19 @@ export function CatalogoPage({
   };
 
   const handleEliminar = (fila) => {
-    onEliminar?.(fila.id);
+    setConfirmacion({ isOpen: true, id: fila.id, accion: 'eliminar' });
   };
 
   const handleReactivar = (fila) => {
-    onReactivar?.(fila.id);
+    setConfirmacion({ isOpen: true, id: fila.id, accion: 'reactivar' });
+  };
+
+  const procesarConfirmacion = () => {
+    if (confirmacion.accion === 'eliminar') {
+      onEliminar?.(confirmacion.id);
+    } else {
+      onReactivar?.(confirmacion.id);
+    }
   };
 
   const botonIcono =
@@ -444,6 +458,21 @@ export function CatalogoPage({
       >
         {modal.contenido}
       </ModalGenerico>
+      {/*MODAL DE CONFIRMACIÓN */}
+      <ModalConfirmacion
+        isOpen={confirmacion.isOpen}
+        onClose={() => setConfirmacion({ isOpen: false, id: null, accion: null })}
+        onConfirm={procesarConfirmacion}
+        titulo={confirmacion.accion === 'eliminar' ? 'Desactivar registro' : 'Reactivar registro'}
+        mensaje={
+          confirmacion.accion === 'eliminar'
+            ? '¿Seguro que deseas desactivar este elemento? Esta acción requiere validación.'
+            : '¿Seguro que deseas reactivar este elemento?'
+        }
+        textoConfirmar={confirmacion.accion === 'eliminar' ? 'Desactivar' : 'Reactivar'}
+        esPeligro={confirmacion.accion === 'eliminar'}
+        palabraRequerida={confirmacion.accion === 'eliminar' ? 'DESACTIVAR' : ''} 
+      />
     </div>
   );
 }

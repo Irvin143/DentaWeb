@@ -97,22 +97,20 @@ export default function EspecialidadesPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas desactivar esta especialidad? Podrás reactivarla después.')) return;
     try {
       await especialidadesApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al desactivar la especialidad');
+      setError(err.message || 'Error al desactivar la especialidad');
     }
   };
 
   const handleReactivar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas reactivar esta especialidad?')) return;
     try {
       await especialidadesApi.reactivar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al reactivar la especialidad');
+      setError(err.message || 'Error al reactivar la especialidad');
     }
   };
 

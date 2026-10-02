@@ -194,22 +194,20 @@ export default function OdontologosPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas desactivar este odontólogo? Podrás reactivarlo después.')) return;
     try {
       await odontologosApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al desactivar el odontólogo');
+      setError(err.message || 'Error al desactivar el odontólogo');
     }
   };
 
   const handleReactivar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas reactivar este odontólogo?')) return;
     try {
       await odontologosApi.reactivar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al reactivar el odontólogo');
+      setError(err.message || 'Error al reactivar el odontólogo');
     }
   };
 

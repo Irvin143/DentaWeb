@@ -97,22 +97,20 @@ export default function TiposUsuarioPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas desactivar este tipo de usuario? Podrás reactivarlo después.')) return;
     try {
       await tiposUsuarioApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al desactivar el tipo de usuario');
+      setError(err.message || 'Error al desactivar el tipo de usuario');
     }
   };
 
   const handleReactivar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas reactivar este tipo de usuario?')) return;
     try {
       await tiposUsuarioApi.reactivar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al reactivar el tipo de usuario');
+      setError(err.message || 'Error al reactivar el tipo de usuario');
     }
   };
 
