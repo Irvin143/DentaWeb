@@ -4,7 +4,10 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const esTexto = (v, max) => typeof v === 'string' && v.trim().length > 0 && v.length <= max;
 
 function errorContrasena(contrasena) {
-    if (typeof contrasena !== 'string' || contrasena.length < 8 || contrasena.length > 72) {
+    if (typeof contrasena !== 'string' || contrasena.trim().length === 0) {
+        return 'La contraseña no puede ser solo espacios.';
+    }
+    if (contrasena.length < 8 || contrasena.length > 72) {
         return 'La contraseña debe tener entre 8 y 72 caracteres.';
     }
     if (!/\p{Lu}/u.test(contrasena)) {
@@ -16,7 +19,7 @@ function errorContrasena(contrasena) {
     if (!/\p{Nd}/u.test(contrasena)) {
         return 'La contraseña debe incluir al menos un número.';
     }
-    if (!/[^\p{L}\p{N}]/u.test(contrasena)) {
+    if (!/[^\p{L}\p{N}\s]/u.test(contrasena)) {
         return 'La contraseña debe incluir al menos un carácter especial.';
     }
     return null;
@@ -61,7 +64,7 @@ export async function login(req, res, next) {
         const { correo, contrasena } = req.body ?? {};
 
         // 1. Validación básica
-        if (typeof correo !== 'string' || typeof contrasena !== 'string' || !correo.trim() || !contrasena) {
+        if (typeof correo !== 'string' || typeof contrasena !== 'string' || !correo.trim() || !contrasena.trim()) {
         return res.status(400).json({ error: 'Correo y contraseña son obligatorios' });
         }
 

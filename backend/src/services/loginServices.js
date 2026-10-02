@@ -57,14 +57,15 @@ export async function login({ correo, contrasena }) {
         { expiresIn: '1h' }
     );
 
-    return {
-        token,
-        usuario: {
-            id: user.id_usuario,
-            correo: user.correo,
-            tipo: user.tipo,
-            paquete: user.nombre_paquete,
-            roles: user.roles,
-        },
+    const usuario = {
+        id: user.id_usuario,
+        correo: user.correo,
+        tipo: user.tipo,
+        paquete: user.nombre_paquete,
+        roles: user.roles,
     };
+    if (user.nombre) usuario.nombre = user.nombre;
+    if (user.ape_pat) usuario.ape_pat = user.ape_pat;
+
+    return { token, usuario };
 }

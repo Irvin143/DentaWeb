@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { Search, Plus, ChevronLeft, ChevronRight, Pencil, CircleOff, RotateCcw, ArrowUp, ArrowDown } from 'lucide-react';
+import { Search, Plus, ChevronLeft, ChevronRight, Pencil, ArrowUp, ArrowDown } from 'lucide-react';
 import { ModalGenerico } from './ModalGenerico';
 import ModalConfirmacion from './ModalConfirmacion';
 import { ToastContainer } from './Toast';
@@ -23,6 +23,24 @@ const compararValores = (a, b) =>
 
 const etiquetaColumna = (label) =>
   label ? label.charAt(0).toUpperCase() + label.slice(1) : '';
+
+function Interruptor({ activo, onClick }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={activo}
+      aria-label={activo ? 'Desactivar' : 'Reactivar'}
+      onClick={onClick}
+      className={`relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors ${activo ? 'bg-teal-600' : 'bg-slate-300'}`}
+    >
+      <span
+        aria-hidden="true"
+        className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${activo ? 'translate-x-5' : 'translate-x-0'}`}
+      />
+    </button>
+  );
+}
 
 export function CatalogoPage({
   // Encabezado
@@ -413,27 +431,13 @@ export function CatalogoPage({
                                   <Pencil size={16} />
                                 </button>
                               )}
-                              {onEliminar && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleEliminar(fila)}
-                                  title="Desactivar"
-                                  aria-label="Desactivar"
-                                  className={`${botonIcono} hover:border-red-200 hover:bg-red-50 hover:text-red-600 cursor-pointer transition-colors`}
-                                >
-                                  <CircleOff size={16} />
-                                </button>
-                              )}
-                              {onReactivar && estaInactiva(fila) && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleReactivar(fila)}
-                                  title="Reactivar"
-                                  aria-label="Reactivar"
-                                  className={`${botonIcono} cursor-pointer transition-colors hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600`}
-                                >
-                                  <RotateCcw size={16} />
-                                </button>
+                              {(onEliminar || onReactivar) && (
+                                <Interruptor
+                                  activo={!estaInactiva(fila)}
+                                  onClick={() =>
+                                    estaInactiva(fila) ? handleReactivar(fila) : handleEliminar(fila)
+                                  }
+                                />
                               )}
                             </div>
                           </td>
@@ -498,27 +502,13 @@ export function CatalogoPage({
                             Editar
                           </button>
                         )}
-                        {onEliminar && (
-                          <button
-                            type="button"
-                            onClick={() => handleEliminar(fila)}
-                            aria-label="Desactivar"
-                            className={`${botonIcono} flex cursor-pointer items-center gap-1.5 px-3 text-xs font-medium hover:border-red-200 hover:bg-red-50 hover:text-red-600`}
-                          >
-                            <CircleOff size={14} />
-                            Desactivar
-                          </button>
-                        )}
-                        {onReactivar && estaInactiva(fila) && (
-                          <button
-                            type="button"
-                            onClick={() => handleReactivar(fila)}
-                            aria-label="Reactivar"
-                            className={`${botonIcono} flex cursor-pointer items-center gap-1.5 px-3 text-xs font-medium hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600`}
-                          >
-                            <RotateCcw size={14} />
-                            Reactivar
-                          </button>
+                        {(onEliminar || onReactivar) && (
+                          <Interruptor
+                            activo={!estaInactiva(fila)}
+                            onClick={() =>
+                              estaInactiva(fila) ? handleReactivar(fila) : handleEliminar(fila)
+                            }
+                          />
                         )}
                       </div>
                     )}
