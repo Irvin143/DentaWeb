@@ -142,7 +142,7 @@ export default function ClinicasPage() {
       }
 
       resetFormulario();
-      await cargar();
+       cargar();
       return true;
     } catch (err) {
       setError(err.message || 'Error al guardar la clínica');

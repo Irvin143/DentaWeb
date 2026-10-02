@@ -1,10 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { Search, Plus, ChevronLeft, ChevronRight, Pencil, CircleOff, RotateCcw, ArrowUp, ArrowDown } from 'lucide-react';
-import { MainLayout } from '../layouts/MainLayout';
 import { ModalGenerico } from './ModalGenerico';
 import ModalConfirmacion from './ModalConfirmacion';
+import { ToastContainer } from './Toast';
 
 const REGISTROS_POR_PAGINA = 10;
+
+// Duración total de cada notificación y tiempo que tarda en salir
+const DURACION_TOAST = 3000;
+const DURACION_SALIDA = 300;
 
 // Ordena por id (numérico, ascendente). Si no hay id, conserva el orden original.
 const porId = (a, b) => (Number(a.id) || 0) - (Number(b.id) || 0);
@@ -34,23 +38,55 @@ export function CatalogoPage({
   cargando = false,
   columnas, // opcional: [{ key, label, render? }]
   // Acciones por fila (opcionales: si no se pasan, no se muestra la columna)
+  // onEliminar y onReactivar: si lanzan un error o devuelven false, se muestra una notificación de error
   onEditar, // (id) => void
-  onEliminar, // (id) => void
-  onReactivar, // (id) => void
+  onEliminar, // (id) => void | Promise
+  onReactivar, // (id) => void | Promise
   // Modal
   modal = {}, // { icono, titulo, textoGuardar, contenido, onGuardar, onCerrar }
 }) {
   const [busqueda, setBusqueda] = useState('');
   const [pagina, setPagina] = useState(1);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [modoEdicion, setModoEdicion] = useState(false); // para el texto de la notificación
   const [orden, setOrden] = useState({ columna: 'id', direccion: 'asc' });
   const [confirmacion, setConfirmacion] = useState({
     isOpen: false,
     id: null,
     accion: null,
   });
-  
+
+  const [guardando, setGuardando] = useState(false);
+  const modalVista = useRef(modal);
+  if (!guardando) modalVista.current = modal;
+  const [toasts, setToasts] = useState([]);
+
   const hayAcciones = Boolean(onEditar || onEliminar || onReactivar);
+
+  // ---- Notificaciones ----
+  const cerrarToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  // tipo: 'exito' | 'error'. Entra, se queda ~3 s en total y sale con animación
+  const mostrarToast = useCallback((tipo, mensaje) => {
+    const id = `${Date.now()}-${Math.random()}`;
+
+    // Se agrega fuera de pantalla y en el siguiente cuadro pasa a visible (animación de entrada)
+    setToasts((prev) => [...prev, { id, tipo, mensaje, visible: false }]);
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() =>
+        setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, visible: true } : t)))
+      )
+    );
+
+    // Animación de salida y retiro del DOM
+    setTimeout(
+      () => setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, visible: false } : t))),
+      DURACION_TOAST - DURACION_SALIDA
+    );
+    setTimeout(() => cerrarToast(id), DURACION_TOAST);
+  }, [cerrarToast]);
 
   // Columnas: las definidas o las derivadas de los atributos del primer registro
   const cols = useMemo(() => {
@@ -114,25 +150,55 @@ export function CatalogoPage({
   };
 
   // ---- Modal ----
+  const abrirNuevo = () => {
+    setModoEdicion(false);
+    setModalAbierto(true);
+  };
+
   const cerrarModal = () => {
     setModalAbierto(false);
     modal.onCerrar?.(); // la página limpia su formulario
   };
 
-  // La página devuelve true si guardó bien: entonces se cierra el modal
+  // La página devuelve true si guardó bien: entonces se cierra el modal y se avisa.
+  // Si devuelve false (o un texto con el motivo), se avisa del error y el modal sigue abierto.
   const handleGuardar = async () => {
     if (!modal.onGuardar) {
-      cerrarModal(); // mismo comportamiento que antes: sin onGuardar, solo cierra
+      cerrarModal();
       return;
     }
-    const ok = await modal.onGuardar();
-    if (ok) setModalAbierto(false);
-    return ok;
+
+    setGuardando(true); // congela título y contenido
+
+    try {
+      const resultado = await modal.onGuardar();
+
+      if (resultado === true) {
+        setModalAbierto(false);
+        mostrarToast(
+          'exito',
+          modoEdicion ? 'Registro actualizado correctamente' : 'Registro creado correctamente'
+        );
+        return true;
+      }
+
+      mostrarToast(
+        'error',
+        typeof resultado === 'string' ? resultado : 'No se pudo guardar. Revisa los datos.'
+      );
+      return false;
+    } catch (err) {
+      mostrarToast('error', err?.message || 'No se pudo guardar el registro');
+      return false;
+    } finally {
+      setGuardando(false); // el modal ya está cerrado (o sigue abierto tras un error)
+    }
   };
 
   // ---- Acciones de fila ----
   const handleEditar = (fila) => {
     onEditar?.(fila.id); // la página carga los datos en el formulario
+    setModoEdicion(true);
     setModalAbierto(true);
   };
 
@@ -144,11 +210,30 @@ export function CatalogoPage({
     setConfirmacion({ isOpen: true, id: fila.id, accion: 'reactivar' });
   };
 
-  const procesarConfirmacion = () => {
-    if (confirmacion.accion === 'eliminar') {
-      onEliminar?.(confirmacion.id);
-    } else {
-      onReactivar?.(confirmacion.id);
+  const procesarConfirmacion = async () => {
+    const { id, accion } = confirmacion;
+    const esEliminar = accion === 'eliminar';
+    const ejecutar = esEliminar ? onEliminar : onReactivar;
+
+    try {
+      const resultado = await ejecutar?.(id);
+      if (resultado === false) {
+        mostrarToast(
+          'error',
+          esEliminar ? 'No se pudo desactivar el registro' : 'No se pudo reactivar el registro'
+        );
+        return;
+      }
+      mostrarToast(
+        'exito',
+        esEliminar ? 'Registro desactivado correctamente' : 'Registro reactivado correctamente'
+      );
+    } catch (err) {
+      mostrarToast(
+        'error',
+        err?.message ||
+          (esEliminar ? 'No se pudo desactivar el registro' : 'No se pudo reactivar el registro')
+      );
     }
   };
 
@@ -167,7 +252,7 @@ export function CatalogoPage({
 
           <button
             type="button"
-            onClick={() => setModalAbierto(true)}
+            onClick={abrirNuevo}
             className="flex cursor-pointer items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-teal-600/20 transition-colors hover:bg-teal-700"
           >
             <Plus size={18} strokeWidth={2.5} />
@@ -458,7 +543,8 @@ export function CatalogoPage({
       >
         {modal.contenido}
       </ModalGenerico>
-      {/*MODAL DE CONFIRMACIÓN */}
+
+      {/* MODAL DE CONFIRMACIÓN */}
       <ModalConfirmacion
         isOpen={confirmacion.isOpen}
         onClose={() => setConfirmacion({ isOpen: false, id: null, accion: null })}
@@ -471,8 +557,11 @@ export function CatalogoPage({
         }
         textoConfirmar={confirmacion.accion === 'eliminar' ? 'Desactivar' : 'Reactivar'}
         esPeligro={confirmacion.accion === 'eliminar'}
-        palabraRequerida={confirmacion.accion === 'eliminar' ? 'DESACTIVAR' : ''} 
+        palabraRequerida={confirmacion.accion === 'eliminar' ? 'DESACTIVAR' : ''}
       />
+
+      {/* Notificaciones */}
+      <ToastContainer toasts={toasts} onCerrar={cerrarToast} />
     </div>
   );
 }

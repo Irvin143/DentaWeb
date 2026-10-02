@@ -79,7 +79,7 @@ export default function PaquetesPage() {
       }
 
       resetFormulario();
-      await cargar();
+       cargar();
       return true;
     } catch (err) {
       setError(err.message || 'Error al guardar el paquete');

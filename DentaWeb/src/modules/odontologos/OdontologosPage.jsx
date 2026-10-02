@@ -165,7 +165,7 @@ export default function OdontologosPage() {
       }
 
       resetFormulario();
-      await cargar();
+      cargar();
       return true;
     } catch (err) {
       setError(err.message || 'Error al guardar el odontólogo');
