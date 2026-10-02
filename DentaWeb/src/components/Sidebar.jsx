@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Building2, BriefcaseMedical, CalendarClock, DoorOpen, GraduationCap, IdCard, LayoutGrid, LogOut, Menu, Package, Scan, Shield, Stethoscope, UserCog, Users, X } from 'lucide-react';
-import { getAuth, puedeVer } from '../config/permisos'; // ajusta la ruta a donde guardes permisos.js
+import { Building2, BriefcaseMedical, CalendarCheck, CalendarClock, DoorOpen, GraduationCap, IdCard, LayoutGrid, LogOut, Menu, Package, Scan, Shield, Stethoscope, UserCog, Users, X } from 'lucide-react';
+import { getAuth, puedeVer, primeraRutaPermitida } from '../config/permisos'; // ajusta la ruta a donde guardes permisos.js
 //hola
 const navItems = [
   { path: '/panel', label: 'Panel Principal', icon: LayoutGrid },
+  { path: '/panel-paciente', label: 'Mi panel', icon: CalendarCheck },
   { path: '/pacientes', label: 'Pacientes', icon: Users },
   { path: '/odontologos', label: 'Odontólogos', icon: Stethoscope },
   { path: '/clinicas', label: 'Clínicas', icon: Building2 },
@@ -92,7 +93,7 @@ function DialogoCerrarSesion({ onCancelar, onConfirmar }) {
 
 function Marca() {
   return (
-    <Link to="/panel" className="flex items-center gap-3 px-2">
+    <Link to={primeraRutaPermitida(getAuth()?.usuario) ?? '/panel'} className="flex items-center gap-3 px-2">
       <figure className="m-0 flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50">
         <img src="/logo.svg" alt="Logo DentalWeb" className="h-7 w-7" />
       </figure>
