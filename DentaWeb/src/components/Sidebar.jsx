@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Building2, Stethoscope, Users, Calendar, LayoutGrid, Menu, X, LogOut } from 'lucide-react';
+import { Building2, BriefcaseMedical, CalendarClock, DoorOpen, GraduationCap, IdCard, LayoutGrid, LogOut, Menu, Package, Scan, Shield, Stethoscope, UserCog, Users, X } from 'lucide-react';
 import { getAuth, puedeVer } from '../config/permisos'; // ajusta la ruta a donde guardes permisos.js
 //hola
 const navItems = [
@@ -9,15 +9,15 @@ const navItems = [
   { path: '/pacientes', label: 'Pacientes', icon: Users },
   { path: '/odontologos', label: 'Odontólogos', icon: Stethoscope },
   { path: '/clinicas', label: 'Clínicas', icon: Building2 },
-  { path: '/consultorios', label: 'Consultorios', icon: Calendar },
-  { path: '/servicios', label: 'Servicios', icon: Calendar },
-  { path: '/especialidades', label: 'Especialidades', icon: Calendar },
-  { path: '/estudios', label: 'Estudios', icon: Calendar },
-  { path: '/tipos-cita', label: 'Tipos de Cita', icon: Calendar },
-  { path: '/paquetes', label: 'Paquetes Roles', icon: Calendar },
-  { path: '/roles', label: 'Roles', icon: Calendar },
-  { path: '/tipos-usuario', label: 'Tipos de Usuario', icon: Calendar },
-  { path: '/usuarios', label: 'Usuarios', icon: Users },
+  { path: '/consultorios', label: 'Consultorios', icon: DoorOpen },
+  { path: '/servicios', label: 'Servicios', icon: BriefcaseMedical },
+  { path: '/especialidades', label: 'Especialidades', icon: GraduationCap },
+  { path: '/estudios', label: 'Estudios', icon: Scan },
+  { path: '/tipos-cita', label: 'Tipos de Cita', icon: CalendarClock },
+  { path: '/paquetes', label: 'Paquetes Roles', icon: Package },
+  { path: '/roles', label: 'Roles', icon: Shield },
+  { path: '/tipos-usuario', label: 'Tipos de Usuario', icon: IdCard },
+  { path: '/usuarios', label: 'Usuarios', icon: UserCog },
   // { path: "/agenda", label: "Agenda", icon: Calendar },
 ];
 
