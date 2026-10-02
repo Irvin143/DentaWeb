@@ -113,12 +113,12 @@ export default function ConsultoriosPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar este consultorio?')) return;
+    if (!window.confirm('¿Seguro que deseas desactivar este consultorio? Podrás reactivarlo después.')) return;
     try {
       await consultoriosApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al eliminar el consultorio');
+      alert(err.message || 'Error al desactivar el consultorio');
     }
   };
 

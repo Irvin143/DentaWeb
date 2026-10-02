@@ -102,12 +102,12 @@ export default function PaquetesPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar este paquete?')) return;
+    if (!window.confirm('¿Seguro que deseas desactivar este paquete? Podrás reactivarlo después.')) return;
     try {
       await paquetesApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al eliminar el paquete');
+      alert(err.message || 'Error al desactivar el paquete');
     }
   };
 

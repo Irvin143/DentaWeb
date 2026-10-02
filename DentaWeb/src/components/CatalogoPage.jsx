@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Plus, ChevronLeft, ChevronRight, Pencil, Trash2, RotateCcw, ArrowUp, ArrowDown } from 'lucide-react';
+import { Search, Plus, ChevronLeft, ChevronRight, Pencil, CircleOff, RotateCcw, ArrowUp, ArrowDown } from 'lucide-react';
 import { MainLayout } from '../layouts/MainLayout';
 import { ModalGenerico } from './ModalGenerico';
 
@@ -262,9 +262,19 @@ export function CatalogoPage({
                     </tr>
                   ) : (
                     datosPagina.map((fila, rowIndex) => (
-                      <tr key={fila.id ?? rowIndex} className="transition-colors hover:bg-slate-50/50">
+                      <tr
+                        key={fila.id ?? rowIndex}
+                        className={
+                          estaInactiva(fila)
+                            ? 'bg-slate-50 transition-colors'
+                            : 'transition-colors hover:bg-slate-50/50'
+                        }
+                      >
                         {cols.map((col) => (
-                          <td key={col.key} className="px-5 py-3 align-top text-slate-700">
+                          <td
+                            key={col.key}
+                            className={`px-5 py-3 align-top ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
+                          >
                             {col.render ? col.render(fila[col.key], fila) : fila[col.key]}
                           </td>
                         ))}
@@ -286,11 +296,11 @@ export function CatalogoPage({
                                 <button
                                   type="button"
                                   onClick={() => handleEliminar(fila)}
-                                  title="Eliminar"
-                                  aria-label="Eliminar"
+                                  title="Desactivar"
+                                  aria-label="Desactivar"
                                   className={`${botonIcono} hover:border-red-200 hover:bg-red-50 hover:text-red-600 cursor-pointer transition-colors`}
                                 >
-                                  <Trash2 size={16} />
+                                  <CircleOff size={16} />
                                 </button>
                               )}
                               {onReactivar && estaInactiva(fila) && (
@@ -326,14 +336,19 @@ export function CatalogoPage({
                 </li>
               ) : (
                 datosPagina.map((fila, rowIndex) => (
-                  <li key={fila.id ?? rowIndex} className="px-4 py-4">
+                  <li
+                    key={fila.id ?? rowIndex}
+                    className={estaInactiva(fila) ? 'bg-slate-50 px-4 py-4' : 'px-4 py-4'}
+                  >
                     <dl className="m-0 grid gap-2">
                       {cols.map((col) => (
                         <div key={col.key} className="grid grid-cols-[6.5rem_1fr] gap-3 text-sm">
-                          <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                          <dt
+                            className={`text-xs font-semibold uppercase tracking-wider ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-500'}`}
+                          >
                             {col.label}
                           </dt>
-                          <dd className="m-0 break-words text-slate-700">
+                          <dd className={`m-0 break-words ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}>
                             {col.render ? col.render(fila[col.key], fila) : fila[col.key]}
                           </dd>
                         </div>
@@ -356,10 +371,11 @@ export function CatalogoPage({
                           <button
                             type="button"
                             onClick={() => handleEliminar(fila)}
+                            aria-label="Desactivar"
                             className={`${botonIcono} flex cursor-pointer items-center gap-1.5 px-3 text-xs font-medium hover:border-red-200 hover:bg-red-50 hover:text-red-600`}
                           >
-                            <Trash2 size={14} />
-                            Eliminar
+                            <CircleOff size={14} />
+                            Desactivar
                           </button>
                         )}
                         {onReactivar && estaInactiva(fila) && (

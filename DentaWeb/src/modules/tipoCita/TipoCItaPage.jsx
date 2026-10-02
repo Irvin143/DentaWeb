@@ -97,12 +97,12 @@ export default function TiposCitaPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar este tipo de cita?')) return;
+    if (!window.confirm('¿Seguro que deseas desactivar este tipo de cita? Podrás reactivarlo después.')) return;
     try {
       await tiposCitaApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al eliminar el tipo de cita');
+      alert(err.message || 'Error al desactivar el tipo de cita');
     }
   };
 

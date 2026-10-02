@@ -97,12 +97,12 @@ export default function EspecialidadesPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar esta especialidad?')) return;
+    if (!window.confirm('¿Seguro que deseas desactivar esta especialidad? Podrás reactivarla después.')) return;
     try {
       await especialidadesApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al eliminar la especialidad');
+      alert(err.message || 'Error al desactivar la especialidad');
     }
   };
 

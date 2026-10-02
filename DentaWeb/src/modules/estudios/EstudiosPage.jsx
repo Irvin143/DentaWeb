@@ -101,12 +101,12 @@ export default function EstudiosPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar este estudio?')) return;
+    if (!window.confirm('¿Seguro que deseas desactivar este estudio? Podrás reactivarlo después.')) return;
     try {
       await estudiosApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al eliminar el estudio');
+      alert(err.message || 'Error al desactivar el estudio');
     }
   };
 

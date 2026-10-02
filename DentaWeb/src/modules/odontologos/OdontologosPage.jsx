@@ -194,12 +194,12 @@ export default function OdontologosPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar este odontólogo?')) return;
+    if (!window.confirm('¿Seguro que deseas desactivar este odontólogo? Podrás reactivarlo después.')) return;
     try {
       await odontologosApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al eliminar el odontólogo');
+      alert(err.message || 'Error al desactivar el odontólogo');
     }
   };
 

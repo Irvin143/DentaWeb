@@ -97,12 +97,12 @@ export default function TiposUsuarioPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar este tipo de usuario?')) return;
+    if (!window.confirm('¿Seguro que deseas desactivar este tipo de usuario? Podrás reactivarlo después.')) return;
     try {
       await tiposUsuarioApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al eliminar el tipo de usuario');
+      alert(err.message || 'Error al desactivar el tipo de usuario');
     }
   };
 

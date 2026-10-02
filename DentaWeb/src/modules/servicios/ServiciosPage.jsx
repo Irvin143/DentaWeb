@@ -101,12 +101,12 @@ export default function ServiciosPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar este servicio?')) return;
+    if (!window.confirm('¿Seguro que deseas desactivar este servicio? Podrás reactivarlo después.')) return;
     try {
       await serviciosApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al eliminar el servicio');
+      alert(err.message || 'Error al desactivar el servicio');
     }
   };
 

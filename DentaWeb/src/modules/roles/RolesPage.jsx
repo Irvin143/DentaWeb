@@ -101,12 +101,12 @@ export default function RolesPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar este rol?')) return;
+    if (!window.confirm('¿Seguro que deseas desactivar este rol? Podrás reactivarlo después.')) return;
     try {
       await rolesApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al eliminar el rol');
+      alert(err.message || 'Error al desactivar el rol');
     }
   };
 

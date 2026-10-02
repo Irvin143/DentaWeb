@@ -123,12 +123,12 @@ export default function PacientesPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar este paciente?')) return;
+    if (!window.confirm('¿Seguro que deseas desactivar este paciente? Podrás reactivarlo después.')) return;
     try {
       await pacientesApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al eliminar el paciente');
+      alert(err.message || 'Error al desactivar el paciente');
     }
   };
 

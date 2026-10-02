@@ -102,12 +102,12 @@ export default function ClinicasPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar esta clínica?')) return;
+    if (!window.confirm('¿Seguro que deseas desactivar esta clínica? Podrás reactivarla después.')) return;
     try {
       await clinicasApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al eliminar la clínica');
+      alert(err.message || 'Error al desactivar la clínica');
     }
   };
 
