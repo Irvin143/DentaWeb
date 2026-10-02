@@ -99,21 +99,11 @@ export const eliminarClinica = async (id) => {
 export const reactivarClinica = async (id) => {
     try {
         const { rows } = await conexion.query(
-            `WITH c AS (
-                UPDATE Clinicas
-                SET activo = true
-                WHERE idClinica = $1 AND NOT activo
-                RETURNING idClinica, nombre, activo, direccion,
-                          identificacion_fiscal, idUsuario
-            ),
-            u AS (
-                UPDATE usuarios
-                SET activo = true
-                WHERE idUsuario IN (SELECT idUsuario FROM c)
-            )
-            SELECT idClinica AS id_clinica, nombre, activo, direccion,
-                   identificacion_fiscal, idUsuario AS id_usuario
-            FROM c`,
+            `UPDATE Clinicas
+             SET activo = true
+             WHERE idClinica = $1 AND NOT activo
+             RETURNING idClinica AS id_clinica, nombre, activo, direccion,
+                       identificacion_fiscal, idUsuario AS id_usuario`,
             [id]
         );
         return rows[0] ?? null; // null = no existe o ya estaba activa

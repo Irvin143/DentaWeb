@@ -138,25 +138,17 @@ export const eliminarOdontologo = async (id) => {
 
 // ---------- REACTIVAR ----------
 export const reactivarOdontologo = async (id) => {
-    // 1. Reactiva la cuenta de usuario ligada al odontólogo
-    const { rowCount } = await conexion.query(
-            `UPDATE usuarios
-            SET activo = true
-            WHERE idUsuario = (SELECT idUsuario FROM odontologos WHERE idOdontologo = $1)
-            AND NOT activo`,
-        [id]
-    );
-    if (rowCount === 0) return null; // no existe o ya estaba activo
-
-    // 2. Devuelve el odontólogo ya con el estado actualizado
     const { rows } = await conexion.query(
         `WITH o AS (
-            SELECT * FROM odontologos WHERE idOdontologo = $1
+            UPDATE usuarios
+            SET activo = true
+            WHERE idOdontologo = $1 AND NOT activo
+            RETURNING *
         )
         SELECT ${COLUMNAS}
         FROM o
         ${JOINS}`,
         [id]
     );
-    return rows[0] ?? null;
+    return rows[0] ?? null; // null = no existe o ya estaba activo
 };
