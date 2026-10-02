@@ -42,6 +42,9 @@ app.use('/api/tipos-cita', tipoCitaRoutes);
 import tipoUsuarioRoutes from './routes/tiposUsuariosRutas.js';
 app.use('/api/tipos-usuario', tipoUsuarioRoutes);
 
+import usuarioRoutes from './routes/usuariosRutas.js';
+app.use('/api/usuarios', usuarioRoutes);
+
 app.use((err, req, res, next) => {
     if (err.status) {
         return res.status(err.status).json({ error: err.message });
