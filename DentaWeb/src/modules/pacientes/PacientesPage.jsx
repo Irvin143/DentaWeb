@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { KeyRound, Users } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
+import { ChecklistContrasena, errorContrasena } from '../../components/ChecklistContrasena';
 import { pacientesApi, odontologosApi } from '../../services/api.js';
 
 // Mobile: compacto. Desktop (md:): más amplio y cómodo
@@ -156,7 +157,8 @@ console.log('mapearPaciente:', pacientes);
       const correo = form.correo.trim();
       if (!correo) return 'El correo de acceso es obligatorio';
       if (!REGEX_CORREO.test(correo)) return 'El correo de acceso no es válido';
-      if (form.contrasena.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
+      const errorClave = errorContrasena(form.contrasena);
+      if (errorClave) return errorClave;
       if (form.contrasena !== form.confirmarContrasena) return 'Las contraseñas no coinciden';
     }
     return null;
@@ -348,11 +350,13 @@ console.log('mapearPaciente:', pacientes);
               <input
                 type="password"
                 autoComplete="new-password"
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Crea una contraseña"
+                maxLength={72}
                 className={inputClass}
                 value={form.contrasena}
                 onChange={handleChange('contrasena')}
               />
+              <ChecklistContrasena contrasena={form.contrasena} />
             </div>
             <div>
               <Etiqueta requerido>Confirmar contraseña:</Etiqueta>

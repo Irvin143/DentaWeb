@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { KeyRound, Stethoscope } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
+import { ChecklistContrasena, errorContrasena } from '../../components/ChecklistContrasena';
 import { odontologosApi, clinicasApi } from '../../services/api.js';
 
 // Mobile: compacto. Desktop (md:): más amplio y cómodo
@@ -23,9 +24,6 @@ const REGEX_TELEFONO = /^\d{10}$/;
 
 // Cédula profesional mexicana: 7 u 8 dígitos (ajústalo si tu país usa otro formato)
 const REGEX_CEDULA = /^\d{7,8}$/;
-
-// Contraseña: mínimo 8, al menos una mayúscula, una minúscula y un número
-const REGEX_PASSWORD = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 // Filtros en tiempo real
 const LIMPIAR_NOMBRE = /[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s'.-]/g;
@@ -84,15 +82,6 @@ const validarCorreo = (valor, { obligatorio = false } = {}) => {
   if (v.length > MAX_CORREO)
     return `El correo no puede exceder ${MAX_CORREO} caracteres`;
   if (!REGEX_CORREO.test(v)) return 'Ingresa un correo electrónico válido';
-  return null;
-};
-
-const validarContrasena = (valor, { obligatorio = false } = {}) => {
-  if (!valor) return obligatorio ? 'La contraseña es obligatoria' : null;
-  if (valor.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
-  if (valor.length > 100) return 'La contraseña no puede exceder 100 caracteres';
-  if (!REGEX_PASSWORD.test(valor))
-    return 'Debe incluir al menos una mayúscula, una minúscula y un número';
   return null;
 };
 
@@ -160,7 +149,7 @@ const validarFormulario = (
     const errCorreo = validarCorreo(form.correo, { obligatorio: true });
     if (errCorreo) errores.correo = errCorreo;
 
-    const errPass = validarContrasena(form.contrasena, { obligatorio: true });
+    const errPass = errorContrasena(form.contrasena);
     if (errPass) errores.contrasena = errPass;
 
     if (!form.confirmarContrasena)
@@ -352,7 +341,11 @@ export default function OdontologosPage() {
 
     if (Object.keys(errores).length > 0) {
       setErroresCampos(errores);
-      setError('Revisa los campos marcados antes de continuar');
+      setError(
+        errores.contrasena ||
+          errores.confirmarContrasena ||
+          'Revisa los campos marcados antes de continuar'
+      );
       return false;
     }
 
@@ -604,18 +597,14 @@ export default function OdontologosPage() {
               <input
                 type="password"
                 autoComplete="new-password"
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Crea una contraseña"
                 className={claseConError('contrasena')}
                 value={form.contrasena}
                 onChange={handleChange('contrasena')}
                 onBlur={handleBlur('contrasena')}
-                maxLength={100}
+                maxLength={72}
               />
-              {erroresCampos.contrasena && (
-                <p className="mt-1 text-xs text-red-600">
-                  {erroresCampos.contrasena}
-                </p>
-              )}
+              <ChecklistContrasena contrasena={form.contrasena} />
             </div>
             <div>
               <Etiqueta requerido>Confirmar contraseña:</Etiqueta>
@@ -627,7 +616,7 @@ export default function OdontologosPage() {
                 value={form.confirmarContrasena}
                 onChange={handleChange('confirmarContrasena')}
                 onBlur={handleBlur('confirmarContrasena')}
-                maxLength={100}
+                maxLength={72}
               />
               {erroresCampos.confirmarContrasena && (
                 <p className="mt-1 text-xs text-red-600">

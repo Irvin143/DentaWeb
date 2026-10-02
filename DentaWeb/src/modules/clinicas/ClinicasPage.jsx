@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Building2, KeyRound } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
+import { ChecklistContrasena, errorContrasena } from '../../components/ChecklistContrasena';
 import { clinicasApi } from '../../services/api.js';
 
 // Mobile: compacto. Desktop (md:): más amplio y cómodo
@@ -20,9 +21,6 @@ const REGEX_DIRECCION = /^[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ][A-Za-z0-9ÁÉ�
 
 // RFC / NIT / RUC: alfanumérico con guiones y puntos
 const REGEX_RFC = /^[A-Z0-9][A-Z0-9.-]*$/;
-
-// Contraseña: mínimo 8, al menos una mayúscula, una minúscula y un número
-const REGEX_PASSWORD = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 // Filtros en tiempo real
 const LIMPIAR_NOMBRE = /[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,#°&/-]/g;
@@ -81,15 +79,6 @@ const validarCorreo = (valor, { obligatorio = false } = {}) => {
   return null;
 };
 
-const validarContrasena = (valor, { obligatorio = false } = {}) => {
-  if (!valor) return obligatorio ? 'La contraseña es obligatoria' : null;
-  if (valor.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
-  if (valor.length > 100) return 'La contraseña no puede exceder 100 caracteres';
-  if (!REGEX_PASSWORD.test(valor))
-    return 'Debe incluir al menos una mayúscula, una minúscula y un número';
-  return null;
-};
-
 /* ------------------------------------------------------------
    Validador global del formulario
    ------------------------------------------------------------ */
@@ -118,7 +107,7 @@ const validarFormulario = (form, creando, clinicas = []) => {
       if (duplicado) errores.correo = 'Ya existe una clínica con ese correo';
     }
 
-    const errPass = validarContrasena(form.contrasena, { obligatorio: true });
+    const errPass = errorContrasena(form.contrasena);
     if (errPass) errores.contrasena = errPass;
 
     if (!form.confirmarContrasena)
@@ -271,7 +260,11 @@ export default function ClinicasPage() {
 
     if (Object.keys(errores).length > 0) {
       setErroresCampos(errores);
-      setError('Revisa los campos marcados antes de continuar');
+      setError(
+        errores.contrasena ||
+          errores.confirmarContrasena ||
+          'Revisa los campos marcados antes de continuar'
+      );
       return false;
     }
 
@@ -450,18 +443,14 @@ export default function ClinicasPage() {
               <input
                 type="password"
                 autoComplete="new-password"
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Crea una contraseña"
                 className={claseConError('contrasena')}
                 value={form.contrasena}
                 onChange={handleChange('contrasena')}
                 onBlur={handleBlur('contrasena')}
-                maxLength={100}
+                maxLength={72}
               />
-              {erroresCampos.contrasena && (
-                <p className="mt-1 text-xs text-red-600">
-                  {erroresCampos.contrasena}
-                </p>
-              )}
+              <ChecklistContrasena contrasena={form.contrasena} />
             </div>
             <div>
               <Etiqueta requerido>Confirmar contraseña:</Etiqueta>
@@ -473,7 +462,7 @@ export default function ClinicasPage() {
                 value={form.confirmarContrasena}
                 onChange={handleChange('confirmarContrasena')}
                 onBlur={handleBlur('confirmarContrasena')}
-                maxLength={100}
+                maxLength={72}
               />
               {erroresCampos.confirmarContrasena && (
                 <p className="mt-1 text-xs text-red-600">
