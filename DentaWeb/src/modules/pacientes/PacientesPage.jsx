@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { KeyRound, Users } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
 import { pacientesApi, odontologosApi } from '../../services/api.js';
 
@@ -318,8 +319,8 @@ console.log('mapearPaciente:', pacientes);
       {/* Llave de acceso: solo al crear, genera el usuario del paciente */}
       {creando && (
         <fieldset className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 pb-3 pt-1 md:gap-5 md:rounded-xl md:px-5 md:pb-5 md:pt-2">
-          <legend className="px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm">
-            🔑 Crear llave de acceso
+          <legend className="inline-flex items-center gap-1 px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm">
+            <KeyRound size={14} aria-hidden="true" /> Crear llave de acceso
           </legend>
           <p className="hidden text-sm text-slate-500 md:block">
             Con estos datos el paciente iniciará sesión en el sistema.
@@ -378,7 +379,7 @@ console.log('mapearPaciente:', pacientes);
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}
       modal={{
-        icono: '🧑‍⚕️',
+        icono: <Users />,
         titulo: editandoId ? 'Editar Paciente' : 'Nuevo Paciente',
         textoGuardar: guardando ? 'Guardando...' : 'Guardar Paciente',
         contenido: formularioPaciente,

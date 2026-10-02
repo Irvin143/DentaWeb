@@ -1,4 +1,5 @@
 import React from 'react';
+import { X } from 'lucide-react';
 
 export function ModalGenerico({
   isOpen = true,
@@ -18,9 +19,13 @@ export function ModalGenerico({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-bold text-slate-800">
-              {iconoCabecera} {titulo}
-            </h2>
+            {React.isValidElement(iconoCabecera) &&
+              React.cloneElement(iconoCabecera, {
+                size: 18,
+                'aria-hidden': true,
+                className: 'text-teal-600',
+              })}
+            <h2 className="text-lg font-bold text-slate-800">{titulo}</h2>
             {badgeCabecera && (
               <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700">
                 {badgeCabecera}
@@ -29,9 +34,10 @@ export function ModalGenerico({
           </div>
           <button
             onClick={onClose}
+            aria-label="Cerrar"
             className="cursor-pointer rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
           >
-            ✕
+            <X size={20} aria-hidden="true" />
           </button>
         </div>
 

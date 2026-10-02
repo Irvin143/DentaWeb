@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Package } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
 import { paquetesApi } from '../../services/api.js'; // agrega paquetesApi en este archivo
 
@@ -160,7 +161,7 @@ export default function PaquetesPage() {
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}
       modal={{
-        icono: '📦',
+        icono: <Package />,
         titulo: editandoId ? 'Editar Paquete' : 'Nuevo Paquete',
         textoGuardar: guardando ? 'Guardando...' : 'Guardar Paquete',
         contenido: formularioPaquete,

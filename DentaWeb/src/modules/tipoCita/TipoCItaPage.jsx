@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { CalendarClock } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage.jsx';
 import { tiposCitaApi } from '../../services/api.js'; // agrega tiposCitaApi en este archivo
 
@@ -145,7 +146,7 @@ export default function TiposCitaPage() {
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}
       modal={{
-        icono: '📅',
+        icono: <CalendarClock />,
         titulo: editandoId ? 'Editar Tipo de Cita' : 'Nuevo Tipo de Cita',
         textoGuardar: guardando ? 'Guardando...' : 'Guardar Tipo de Cita',
         contenido: formularioTipoCita,

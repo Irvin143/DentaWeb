@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { BriefcaseMedical } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
 import { serviciosApi, clinicasApi } from '../../services/api.js'; // agrega serviciosApi en este archivo
 
@@ -212,7 +213,7 @@ export default function ServiciosPage() {
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}
       modal={{
-        icono: '🩺',
+        icono: <BriefcaseMedical />,
         titulo: editandoId ? 'Editar Servicio' : 'Nuevo Servicio',
         textoGuardar: guardando ? 'Guardando...' : 'Guardar Servicio',
         contenido: formularioServicio,

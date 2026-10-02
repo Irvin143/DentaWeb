@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { KeyRound, Stethoscope } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
 import { odontologosApi, clinicasApi } from '../../services/api.js';
 
@@ -562,8 +563,8 @@ export default function OdontologosPage() {
       {/* Llave de acceso */}
       {creando && (
         <fieldset className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 pb-3 pt-1 md:gap-5 md:rounded-xl md:px-5 md:pb-5 md:pt-2">
-          <legend className="px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm">
-            🔑 Crear llave de acceso
+          <legend className="inline-flex items-center gap-1 px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm">
+            <KeyRound size={14} aria-hidden="true" /> Crear llave de acceso
           </legend>
           <p className="hidden text-sm text-slate-500 md:block">
             Con estos datos el odontólogo iniciará sesión en el sistema.
@@ -643,7 +644,7 @@ export default function OdontologosPage() {
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}
       modal={{
-        icono: '🦷',
+        icono: <Stethoscope />,
         titulo: editandoId ? 'Editar Odontólogo' : 'Nuevo Odontólogo',
         textoGuardar: guardando ? 'Guardando...' : 'Guardar Odontólogo',
         contenido: formularioOdontologo,

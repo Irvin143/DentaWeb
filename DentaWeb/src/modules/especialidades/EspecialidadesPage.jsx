@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { GraduationCap } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
 import { especialidadesApi } from '../../services/api.js';
 
@@ -263,7 +264,7 @@ export default function EspecialidadesPage() {
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}
       modal={{
-        icono: '🦷',
+        icono: <GraduationCap />,
         titulo: editandoId ? 'Editar Especialidad' : 'Nueva Especialidad',
         textoGuardar: guardando ? 'Guardando...' : 'Guardar Especialidad',
         contenido: formularioEspecialidad,
