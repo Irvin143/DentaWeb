@@ -11,6 +11,8 @@ const FORM_INICIAL = {
   descripcion: '',
 };
 
+const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
+
 // Convierte lo que devuelve el backend a lo que muestra la tabla
 const mapearPaquete = (p) => ({
   id: p.id_paquete,
@@ -45,7 +47,10 @@ export default function PaquetesPage() {
   }, [cargar]);
 
   const handleChange = (campo) => (e) =>
-    setForm((prev) => ({ ...prev, [campo]: e.target.value }));
+    setForm((prev) => ({
+      ...prev,
+      [campo]: e.target.value.toLocaleUpperCase('es-MX'),
+    }));
 
   const resetFormulario = () => {
     setForm(FORM_INICIAL);
@@ -69,8 +74,8 @@ export default function PaquetesPage() {
       setError(null);
 
       const payload = {
-        nombre: form.nombre.trim(),
-        descripcion: form.descripcion.trim() || null,
+        nombre: mayus(form.nombre),
+        descripcion: form.descripcion.trim() ? mayus(form.descripcion) : null,
       };
 
       if (editandoId) {
@@ -97,8 +102,8 @@ export default function PaquetesPage() {
     setEditandoId(id);
     setError(null);
     setForm({
-      nombre: p.nombre ?? '',
-      descripcion: p.descripcion ?? '',
+      nombre: (p.nombre ?? '').toLocaleUpperCase('es-MX'),
+      descripcion: (p.descripcion ?? '').toLocaleUpperCase('es-MX'),
     });
   };
 

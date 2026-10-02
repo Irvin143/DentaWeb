@@ -13,6 +13,8 @@ const FORM_INICIAL = {
 };
 
 // Acepta un arreglo directo o la lista envuelta en un objeto
+const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
+
 const comoLista = (resp, clave) =>
   Array.isArray(resp) ? resp : resp?.[clave] ?? resp?.data ?? [];
 
@@ -71,8 +73,13 @@ export default function ServiciosPage() {
     [clinicas, form.idclinica]
   );
 
-  const handleChange = (campo) => (e) =>
-    setForm((prev) => ({ ...prev, [campo]: e.target.value }));
+  const handleChange = (campo) => (e) => {
+    const valor =
+      campo === 'nombre' || campo === 'descripcion'
+        ? e.target.value.toLocaleUpperCase('es-MX')
+        : e.target.value;
+    setForm((prev) => ({ ...prev, [campo]: valor }));
+  };
 
   const resetFormulario = () => {
     setForm(FORM_INICIAL);
@@ -100,8 +107,8 @@ export default function ServiciosPage() {
       setError(null);
 
       const payload = {
-        nombre: form.nombre.trim(),
-        descripcion: form.descripcion.trim() || null,
+        nombre: mayus(form.nombre),
+        descripcion: form.descripcion.trim() ? mayus(form.descripcion) : null,
         idclinica: Number(form.idclinica),
       };
       console.log('Payload a enviar:', payload);
@@ -129,8 +136,8 @@ export default function ServiciosPage() {
     setEditandoId(id);
     setError(null);
     setForm({
-      nombre: s.nombre ?? '',
-      descripcion: s.descripcion ?? '',
+      nombre: (s.nombre ?? '').toLocaleUpperCase('es-MX'),
+      descripcion: (s.descripcion ?? '').toLocaleUpperCase('es-MX'),
       idclinica: s.id_clinica != null ? String(s.id_clinica) : '',
     });
   };
