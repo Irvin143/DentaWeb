@@ -85,6 +85,17 @@ const etiquetaDesdeClave = (key) => ETIQUETAS_COLUMNA[key] ?? key.replaceAll('_'
 const etiquetaColumna = (label) =>
   label ? label.charAt(0).toUpperCase() + label.slice(1) : '';
 
+function FlechaOrden({ activa, direccion }) {
+  const Icono = direccion === 'asc' ? ArrowUp : ArrowDown;
+  return (
+    <Icono
+      size={14}
+      aria-hidden="true"
+      className={`shrink-0 text-slate-500 ${activa ? '' : 'invisible'}`}
+    />
+  );
+}
+
 function Interruptor({ activo, onClick }) {
   return (
     <button
@@ -212,6 +223,11 @@ export function CatalogoPage({
 
   // Paginación
   const totalRegistros = datosFiltrados.length;
+  // No. 5rem, Alta 7rem, cada dato 12rem, Acciones 11rem. El contenido de la página no entra en la cuenta.
+  const anchoTablaRem =
+    (cols.length > 0 ? 5 + 7 : 0) +
+    cols.length * 12 +
+    (totalRegistros >= 1 ? 11 : 0);
   const totalPaginas = Math.max(1, Math.ceil(totalRegistros / REGISTROS_POR_PAGINA));
   const paginaActual = Math.min(pagina, totalPaginas);
   const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
@@ -415,11 +431,14 @@ export function CatalogoPage({
           <figure className="m-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             {/* Escritorio: tabla */}
             <section className="hidden overflow-x-auto md:block">
-              <table className="w-full text-left text-sm text-slate-600">
+              <table
+                className="min-w-full table-fixed border-separate border-spacing-0 text-left text-sm text-slate-600"
+                style={{ width: `max(100%, ${anchoTablaRem}rem)` }}
+              >
                 <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
                   <tr>
                     {cols.length > 0 && (
-                      <th scope="col" className="px-5 py-3 normal-case">
+                      <th scope="col" className="w-20 px-5 py-3 whitespace-nowrap normal-case">
                         No.
                       </th>
                     )}
@@ -433,7 +452,7 @@ export function CatalogoPage({
                               ? 'ascending'
                               : 'descending'
                         }
-                        className="w-px p-0 whitespace-nowrap"
+                        className="w-28 p-0 whitespace-nowrap"
                       >
                         <button
                           type="button"
@@ -446,12 +465,10 @@ export function CatalogoPage({
                           className="flex w-full cursor-pointer items-center gap-1.5 px-5 py-3 text-left uppercase transition-colors hover:bg-slate-100 hover:text-slate-700"
                         >
                           Alta
-                          {ordenandoPorRecientes &&
-                            (orden.direccion === 'asc' ? (
-                              <ArrowUp size={14} className="shrink-0 text-slate-500" />
-                            ) : (
-                              <ArrowDown size={14} className="shrink-0 text-slate-500" />
-                            ))}
+                          <FlechaOrden
+                            activa={ordenandoPorRecientes}
+                            direccion={orden.direccion}
+                          />
                         </button>
                       </th>
                     )}
@@ -466,7 +483,7 @@ export function CatalogoPage({
                           aria-sort={
                             !activa ? 'none' : orden.direccion === 'asc' ? 'ascending' : 'descending'
                           }
-                          className="p-0"
+                          className="w-48 p-0"
                         >
                           <button
                             type="button"
@@ -474,19 +491,17 @@ export function CatalogoPage({
                             aria-label={`${etiquetaColumna(col.label)}, orden ${siguiente}`}
                             className="flex w-full cursor-pointer items-center gap-1.5 px-5 py-3 text-left uppercase transition-colors hover:bg-slate-100 hover:text-slate-700"
                           >
-                            {col.label}
-                            {activa &&
-                              (orden.direccion === 'asc' ? (
-                                <ArrowUp size={14} className="shrink-0 text-slate-500" />
-                              ) : (
-                                <ArrowDown size={14} className="shrink-0 text-slate-500" />
-                              ))}
+                            <span className="min-w-0">{col.label}</span>
+                            <FlechaOrden activa={activa} direccion={orden.direccion} />
                           </button>
                         </th>
                       );
                     })}
                     {totalRegistros >= 1 && (
-                      <th scope="col" className="px-5 py-3 text-right">
+                      <th
+                        scope="col"
+                        className="sticky right-0 z-20 w-44 border-l border-slate-200 bg-slate-50 px-5 py-3 text-right whitespace-nowrap"
+                      >
                         Acciones
                       </th>
                     )}
@@ -517,26 +532,32 @@ export function CatalogoPage({
                         key={fila.id ?? rowIndex}
                         className={
                           estaInactiva(fila)
-                            ? 'bg-slate-50 transition-colors'
-                            : 'transition-colors hover:bg-slate-50/50'
+                            ? 'group bg-slate-50 transition-colors'
+                            : 'group transition-colors hover:bg-slate-50/50'
                         }
                       >
                         <td
-                          className={`px-5 py-3 align-top ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
+                          className={`w-20 px-5 py-3 align-top whitespace-nowrap ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
                         >
                           {inicio + rowIndex + 1}
                         </td>
-                        <td className="w-px p-0 whitespace-nowrap" />
+                        <td className="w-28 p-0" />
                         {cols.map((col) => (
                           <td
                             key={col.key}
-                            className={`px-5 py-3 align-top ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
+                            className={`w-48 break-words px-5 py-3 align-top ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
                           >
                             {col.render ? col.render(fila[col.key], fila) : fila[col.key]}
                           </td>
                         ))}
                         {hayAcciones && (
-                          <td className="px-5 py-3 align-top">
+                          <td
+                            className={`sticky right-0 z-10 w-44 border-l border-slate-200 px-5 py-3 align-top whitespace-nowrap ${
+                              estaInactiva(fila)
+                                ? 'bg-slate-50'
+                                : 'bg-white group-hover:bg-slate-50'
+                            }`}
+                          >
                             <div className="flex items-center justify-end gap-2">
                               {onEditar && (
                                 <button
