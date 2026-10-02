@@ -193,22 +193,20 @@ export default function PacientesPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas desactivar este paciente? Podrás reactivarlo después.')) return;
     try {
       await pacientesApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al desactivar el paciente');
+      setError(err.message || 'Error al desactivar al paciente');
     }
   };
 
   const handleReactivar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas reactivar este paciente?')) return;
     try {
       await pacientesApi.reactivar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al reactivar el paciente');
+      setError(err.message || 'Error al reactivar al paciente');
     }
   };
 

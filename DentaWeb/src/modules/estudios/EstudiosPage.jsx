@@ -101,22 +101,20 @@ export default function EstudiosPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas desactivar este estudio? Podrás reactivarlo después.')) return;
     try {
       await estudiosApi.eliminar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al desactivar el estudio');
+      setError(err.message || 'Error al desactivar el estudio');
     }
   };
 
   const handleReactivar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas reactivar este estudio?')) return;
     try {
       await estudiosApi.reactivar(id);
       await cargar();
     } catch (err) {
-      alert(err.message || 'Error al reactivar el estudio');
+      setError(err.message || 'Error al reactivar el estudio');
     }
   };
 
