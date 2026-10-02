@@ -22,14 +22,15 @@ const validarContrasena = (contrasena) => {
     return null;
 };
 
-// Valida y normaliza correo + idpaquete (se usa en POST y PUT)
 const validarDatosBase = (body = {}) => {
     const correo = body.correo?.toString().trim().toLowerCase();
     const idpaquete = body.idpaquete ?? null;
+    const idtipousuario = body.idtipousuario ?? null;
 
     if (!correo) return { error: 'El correo es obligatorio' };
     if (correo.length > 150) return { error: 'El correo no puede exceder 150 caracteres' };
     if (!REGEX_CORREO.test(correo)) return { error: 'El correo no es válido' };
+    if (!idValido(idtipousuario)) return { error: 'idtipousuario es obligatorio y debe ser un entero positivo' };
     if (idpaquete !== null && !idValido(idpaquete)) {
         return { error: 'idpaquete debe ser un entero positivo' };
     }
@@ -37,6 +38,7 @@ const validarDatosBase = (body = {}) => {
     return {
         datos: {
             correo,
+            idtipousuario: Number(idtipousuario),
             idpaquete: idpaquete === null ? null : Number(idpaquete),
         },
     };
@@ -75,7 +77,7 @@ export const crear = async (req, res) => {
 
     try {
         const usuario = await usuarioService.crearUsuario({
-            ...datos,
+            ...datos, // correo, idtipousuario, idpaquete (ya validados y convertidos)
             contrasena: req.body.contrasena,
         });
         res.status(201).json(usuario);
