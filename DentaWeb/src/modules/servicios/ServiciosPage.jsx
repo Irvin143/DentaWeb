@@ -1,25 +1,32 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { CatalogoPage } from '../../components/CatalogoPage';
-import { serviciosApi } from '../../services/api.js'; // agrega serviciosApi en este archivo
+import { serviciosApi, clinicasApi } from '../../services/api.js'; // agrega serviciosApi en este archivo
 
 const inputClass =
-  'w-full rounded-xl border border-slate-200 p-3 outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500';
+  'w-full rounded-xl border border-slate-200 bg-white p-3 outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500';
 
 const FORM_INICIAL = {
   nombre: '',
   descripcion: '',
+  idclinica: '',
 };
+
+// Acepta un arreglo directo o la lista envuelta en un objeto
+const comoLista = (resp, clave) =>
+  Array.isArray(resp) ? resp : resp?.[clave] ?? resp?.data ?? [];
 
 // Convierte lo que devuelve el backend a lo que muestra la tabla
 const mapearServicio = (s) => ({
   id: s.id_servicio,
   nombre: s.nombre,
   descripcion: s.descripcion || '—',
+  clinica: s.nombre_clinica ?? 'Sin clínica',
   estado: s.activo ? 'Activo' : 'Inactivo',
 });
 
 export default function ServiciosPage() {
   const [servicios, setServicios] = useState([]); // datos crudos del backend
+  const [clinicas, setClinicas] = useState([]); // para el select de clínica
   const [cargando, setCargando] = useState(true);
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
@@ -30,7 +37,7 @@ export default function ServiciosPage() {
     try {
       setCargando(true);
       const data = await serviciosApi.listar();
-      setServicios(data?.servicios ?? (Array.isArray(data) ? data : []));
+      setServicios(comoLista(data, 'servicios'));
     } catch (err) {
       setError(err.message || 'No se pudieron cargar los servicios');
     } finally {
@@ -38,9 +45,29 @@ export default function ServiciosPage() {
     }
   }, []);
 
+  // Catálogo para el select (si falla, la página sigue funcionando)
+  const cargarCatalogos = useCallback(async () => {
+    const [resClinicas] = await Promise.allSettled([clinicasApi.listar()]);
+    if (resClinicas.status === 'fulfilled') {
+      setClinicas(comoLista(resClinicas.value, 'clinicas'));
+    } else {
+      console.error('Error al cargar clínicas:', resClinicas.reason);
+    }
+  }, []);
+
   useEffect(() => {
     cargar();
-  }, [cargar]);
+    cargarCatalogos();
+  }, [cargar, cargarCatalogos]);
+
+  // Clínicas activas (más la que ya tiene el servicio que se está editando)
+  const opcionesClinica = useMemo(
+    () =>
+      clinicas.filter(
+        (c) => c.activo !== false || String(c.id_clinica) === String(form.idclinica)
+      ),
+    [clinicas, form.idclinica]
+  );
 
   const handleChange = (campo) => (e) =>
     setForm((prev) => ({ ...prev, [campo]: e.target.value }));
@@ -61,6 +88,10 @@ export default function ServiciosPage() {
       setError('El nombre no puede exceder 100 caracteres');
       return false;
     }
+    if (!form.idclinica) {
+      setError('La clínica es obligatoria');
+      return false;
+    }
 
     try {
       setGuardando(true);
@@ -69,6 +100,7 @@ export default function ServiciosPage() {
       const payload = {
         nombre: form.nombre.trim(),
         descripcion: form.descripcion.trim() || null,
+        idclinica: Number(form.idclinica),
       };
 
       if (editandoId) {
@@ -97,24 +129,27 @@ export default function ServiciosPage() {
     setForm({
       nombre: s.nombre ?? '',
       descripcion: s.descripcion ?? '',
+      idclinica: s.id_clinica != null ? String(s.id_clinica) : '',
     });
   };
 
   const handleEliminar = async (id) => {
+    if (!window.confirm('¿Seguro que deseas desactivar este servicio? Podrás reactivarlo después.')) return;
     try {
       await serviciosApi.eliminar(id);
       await cargar();
     } catch (err) {
-      setError(err.message || 'Error al desactivar el servicio');
+      alert(err.message || 'Error al desactivar el servicio');
     }
   };
 
   const handleReactivar = async (id) => {
+    if (!window.confirm('¿Seguro que deseas reactivar este servicio?')) return;
     try {
       await serviciosApi.reactivar(id);
       await cargar();
     } catch (err) {
-      setError(err.message || 'Error al reactivar el servicio');
+      alert(err.message || 'Error al reactivar el servicio');
     }
   };
 
@@ -124,7 +159,26 @@ export default function ServiciosPage() {
         <p className="rounded-xl bg-red-50 p-3 text-sm text-red-600">{error}</p>
       )}
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">Nombre:</label>
+        <label className="mb-1 block text-sm font-medium text-slate-700">
+          Clínica:<span className="ml-0.5 text-red-500">*</span>
+        </label>
+        <select
+          className={inputClass}
+          value={form.idclinica}
+          onChange={handleChange('idclinica')}
+        >
+          <option value="">Selecciona una clínica</option>
+          {opcionesClinica.map((c) => (
+            <option key={c.id_clinica} value={c.id_clinica}>
+              {c.nombre}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-700">
+          Nombre:<span className="ml-0.5 text-red-500">*</span>
+        </label>
         <input
           type="text"
           maxLength={100}
@@ -150,9 +204,9 @@ export default function ServiciosPage() {
   return (
     <CatalogoPage
       titulo="Servicios"
-      subtitulo="Gestiona los servicios que ofrece la red médica."
+      subtitulo="Gestiona los servicios que ofrece cada clínica."
       textoBotonNuevo="Agregar servicio"
-      placeholderBusqueda="Buscar por nombre o descripción..."
+      placeholderBusqueda="Buscar por nombre, descripción o clínica..."
       datos={servicios.map(mapearServicio)}
       cargando={cargando}
       onEditar={handleEditar}
@@ -165,6 +219,7 @@ export default function ServiciosPage() {
         contenido: formularioServicio,
         onGuardar: handleGuardar,
         onCerrar: resetFormulario,
+        guardando,
       }}
     />
   );
