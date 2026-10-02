@@ -31,8 +31,7 @@ export async function actualizar(req, res, next) {
 
         const { nombre, ape_pat, ape_mat, telefono, id_odontologo} = req.body ?? {};
 
-        if (!esOpcional(nombre, 100) || !esOpcional(ape_pat, 100) ||
-            !esOpcional(ape_mat, 100) || !esOpcional(telefono, 20)) {
+        if (!esOpcional(nombre, 100) || !esOpcional(ape_pat, 100)) {
         return res.status(400).json({ error: 'Datos inválidos' });
         }
         if ([nombre, ape_pat, ape_mat, telefono].every((v) => v == null)) {

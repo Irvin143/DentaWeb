@@ -34,7 +34,7 @@ const mapearPaciente = (p) => ({
   ape_mat: p.ape_mat ?? 'N/A',
   telefono: p.telefono ?? '—',
   correo: p.correo ?? '—',
-  odontologo: p.id_odontologo ? p.nombre_odontologo : 'Sin asignar',
+  odontologo: p.nombre_odontologo,
   estado: p.activo ? 'Activo' : 'Inactivo',
 });
 
@@ -74,6 +74,8 @@ export default function PacientesPage() {
       setCargando(true);
       const data = await pacientesApi.listar();
       setPacientes(comoLista(data, 'pacientes'));
+      
+console.log('mapearPaciente:', pacientes);
     } catch (err) {
       console.error('Error al listar pacientes:', err);
       setPacientes([]);

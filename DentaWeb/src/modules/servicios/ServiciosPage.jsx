@@ -20,7 +20,7 @@ const mapearServicio = (s) => ({
   id: s.id_servicio,
   nombre: s.nombre,
   descripcion: s.descripcion || '—',
-  clinica: s.nombre_clinica ?? 'Sin clínica',
+  clinica: s.nombre ?? 'Sin clínica',
   estado: s.activo ? 'Activo' : 'Inactivo',
 });
 
@@ -102,7 +102,7 @@ export default function ServiciosPage() {
         descripcion: form.descripcion.trim() || null,
         idclinica: Number(form.idclinica),
       };
-
+      console.log('Payload a enviar:', payload);
       if (editandoId) {
         await serviciosApi.actualizar(editandoId, payload);
       } else {

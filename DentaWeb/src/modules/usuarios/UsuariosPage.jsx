@@ -269,6 +269,7 @@ export default function UsuariosPage() {
           contrasena: form.contrasena,
         });
       } else {
+        console.warn('Tipo de usuario desconocido, se crea solo la cuenta:', form.idtipousuario);
         // Admin: solo la cuenta
         await usuariosApi.crear({
           correo,
