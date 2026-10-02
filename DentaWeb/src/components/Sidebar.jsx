@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Building2, BriefcaseMedical, CalendarCheck, CalendarClock, DoorOpen, GraduationCap, IdCard, LayoutGrid, LogOut, Menu, Package, Scan, Shield, Stethoscope, UserCog, Users, X } from 'lucide-react';
+import { Building2, BriefcaseMedical, CalendarCheck, CalendarClock, DoorOpen, GraduationCap, IdCard, KeyRound, LayoutGrid, LogOut, Menu, Package, Scan, Shield, Stethoscope, UserCog, Users, X } from 'lucide-react';
 import { getAuth, puedeVer, primeraRutaPermitida } from '../config/permisos'; // ajusta la ruta a donde guardes permisos.js
-//hola
+import ModalCambiarPassword from './ModalCambiarPassword';
+
 const navItems = [
   { path: '/panel', label: 'Panel Principal', icon: LayoutGrid },
   { path: '/panel-paciente', label: 'Mi panel', icon: CalendarCheck },
@@ -112,6 +113,7 @@ export function Sidebar() {
   const usuario = getAuth()?.usuario;
   const [abierto, setAbierto] = useState(false);
   const [confirmarSalida, setConfirmarSalida] = useState(false);
+  const [modalPasswordAbierto, setModalPasswordAbierto] = useState(false);
   const confirmarSalidaRef = useRef(false);
   confirmarSalidaRef.current = confirmarSalida;
 
@@ -254,12 +256,27 @@ export function Sidebar() {
             <LogOut size={18} aria-hidden="true" />
             Cerrar sesión
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              setModalPasswordAbierto(true);
+              setAbierto(false); 
+            }}
+            className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
+          >
+            <KeyRound size={18} aria-hidden="true" />
+            Cambiar contraseña
+          </button>
         </footer>
       </aside>
 
       {confirmarSalida && (
         <DialogoCerrarSesion onCancelar={cancelarCierre} onConfirmar={cerrarSesion} />
       )}
+      <ModalCambiarPassword 
+        isOpen={modalPasswordAbierto} 
+        onClose={() => setModalPasswordAbierto(false)} 
+      />
     </>
   );
 }
