@@ -14,11 +14,14 @@ const idValido = (valor) => Number.isInteger(Number(valor)) && Number(valor) > 0
 const validarBody = (body = {}) => {
     const nombre = body.nombre?.toString().trim();
     const descripcion = body.descripcion?.toString().trim() || null;
+    const idclinica = body.idclinica ?? null;
+
+    if (!idclinica) return { error: 'La clínica es obligatoria' };
 
     if (!nombre) return { error: 'El nombre es obligatorio' };
     if (nombre.length > 100) return { error: 'El nombre no puede exceder 100 caracteres' };
 
-    return { datos: { nombre, descripcion } };
+    return { datos: { nombre, descripcion, idclinica } };
 };
 
 export const listar = async (req, res) => {
