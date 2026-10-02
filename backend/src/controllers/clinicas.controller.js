@@ -51,12 +51,47 @@ export const listar = async (req, res) => {
     }
 };
 
+const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const mayus = (v) => v?.toString().trim().toLocaleUpperCase('es-MX') || '';
 
 export const crear = async (req, res) => {
-    const { datos, error } = validarBody(req.body);
-    if (error) return res.status(400).json({ error });
+    const body = req.body ?? {};
+
+    // Cuenta de acceso
+    const correo = body.correo?.toString().trim().toLowerCase();
+    if (!correo) return res.status(400).json({ error: 'El correo es obligatorio' });
+    if (correo.length > 150) {
+        return res.status(400).json({ error: 'El correo no puede exceder 150 caracteres' });
+    }
+    if (!REGEX_CORREO.test(correo)) {
+        return res.status(400).json({ error: 'El correo no es válido' });
+    }
+
+    const contrasena = body.contrasena;
+    if (typeof contrasena !== 'string' || contrasena.length < 8) {
+        return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
+    }
+    if (Buffer.byteLength(contrasena, 'utf8') > 72) {
+        return res.status(400).json({ error: 'La contraseña no puede exceder 72 bytes' });
+    }
+
+    // Datos de la clínica
+    const nombre = mayus(body.nombre);
+    const direccion = mayus(body.direccion) || null;
+    const identificacion_fiscal = mayus(body.identificacion_fiscal) || null;
+
+    if (!nombre) return res.status(400).json({ error: 'El nombre es obligatorio' });
+    if (nombre.length > 150) {
+        return res.status(400).json({ error: 'El nombre no puede exceder 150 caracteres' });
+    }
+    if (identificacion_fiscal && identificacion_fiscal.length > 50) {
+        return res.status(400).json({ error: 'La identificación fiscal no puede exceder 50 caracteres' });
+    }
+
     try {
-        const clinica = await clinicaService.crearClinica(datos);
+        const clinica = await clinicaService.crearClinica({
+            correo, contrasena, nombre, direccion, identificacion_fiscal,
+        });
         res.status(201).json(clinica);
     } catch (err) {
         responderError(res, err);
