@@ -1,16 +1,16 @@
 // Qué paquetes/roles pueden ver cada catálogo.
 // No importan mayúsculas, acentos ni espacios extra: "Odontólogo" = "odontologo".
 export const PERMISOS_RUTAS = {
-  '/pacientes':      ['admin', 'clinica', 'odontologo', 'paciente'], 
-  '/odontologos':    ['admin', 'clinica', 'paciente'],
-  '/clinicas':       ['admin', 'paciente'],
-  '/consultorios':   ['admin', 'clinica'],
-  '/servicios':      ['admin', 'clinica'],
-  '/especialidades': ['admin'],
-  '/estudios':       ['admin', 'clinica', 'odontologo'],
-  '/tipos-cita':     ['admin', 'clinica'],
-  '/paquetes':       ['admin'],
-  '/roles':          ['admin'],
+    '/pacientes':      ['admin', 'clinica', 'odontologo', 'paciente'], 
+    '/odontologos':    ['admin', 'clinica', 'paciente'],
+    '/clinicas':       ['admin', 'paciente','paciente'],
+    '/consultorios':   ['admin', 'clinica','paciente'],
+    '/servicios':      ['admin', 'clinica', 'paciente'],
+    '/especialidades': ['admin', 'paciente'],
+    '/estudios':       ['admin', 'clinica', 'odontologo', 'paciente'],
+    '/tipos-cita':     ['admin', 'clinica', 'paciente'],
+    '/paquetes':       ['admin', 'paciente'],
+    '/roles':          ['admin', 'paciente'],
     '/tipos-usuario':  ['admin', 'paciente'],
 };
 
