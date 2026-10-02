@@ -30,7 +30,7 @@ export const actualizarPaciente = async (id, { nombre, ape_pat, ape_mat, telefon
             ape_pat  = COALESCE($3, ape_pat),
             ape_mat  = COALESCE($4, ape_mat),
             telefono = COALESCE($5, telefono)
-        WHERE idPaciente = $1
+        WHERE idPaciente = $1 and idUsuario IN (SELECT idUsuario FROM Usuarios WHERE activo)    
         RETURNING idPaciente AS id_paciente, nombre, ape_pat, ape_mat, telefono;
     `;
 
