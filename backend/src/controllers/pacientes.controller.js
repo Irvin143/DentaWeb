@@ -29,7 +29,7 @@ export async function actualizar(req, res, next) {
         const id = leerId(req);
         if (!id) return res.status(400).json({ error: 'ID inválido' });
 
-        const { nombre, ape_pat, ape_mat, telefono } = req.body ?? {};
+        const { nombre, ape_pat, ape_mat, telefono, id_odontologo} = req.body ?? {};
 
         if (!esOpcional(nombre, 100) || !esOpcional(ape_pat, 100) ||
             !esOpcional(ape_mat, 100) || !esOpcional(telefono, 20)) {
@@ -44,6 +44,7 @@ export async function actualizar(req, res, next) {
         ape_pat: ape_pat?.trim() ?? null,
         ape_mat: ape_mat?.trim() ?? null,
         telefono: telefono?.trim() ?? null,
+        idOdontologo: id_odontologo ?? null,
         });
 
         if (!paciente) return res.status(404).json({ error: 'Paciente no encontrado o inactivo' });

@@ -22,19 +22,26 @@ export const obtenerPacientes = async () => {
     const { rows } = await conexion.query(query);
     return rows;
 };
-
-export const actualizarPaciente = async (id, { nombre, ape_pat, ape_mat, telefono }) => {
+export const actualizarPaciente = async (
+    id,
+    { nombre, ape_pat, ape_mat, telefono, idOdontologo }
+) => {
     const query = `
         UPDATE Pacientes
-        SET nombre   = COALESCE($2, nombre),
-            ape_pat  = COALESCE($3, ape_pat),
-            ape_mat  = COALESCE($4, ape_mat),
-            telefono = COALESCE($5, telefono)
-        WHERE idPaciente = $1  
-        RETURNING idPaciente AS id_paciente, nombre, ape_pat, ape_mat, telefono;
+        SET nombre       = COALESCE($2, nombre),
+            ape_pat      = COALESCE($3, ape_pat),
+            ape_mat      = COALESCE($4, ape_mat),
+            telefono     = COALESCE($5, telefono),
+            idOdontologo = COALESCE($6, idOdontologo)
+        WHERE idPaciente = $1
+        RETURNING idPaciente AS id_paciente,
+                  nombre, ape_pat, ape_mat, telefono,
+                  idOdontologo AS id_odontologo;
     `;
 
-    const { rows } = await conexion.query(query, [id, nombre, ape_pat, ape_mat, telefono]);
+    const { rows } = await conexion.query(query, [
+        id, nombre, ape_pat, ape_mat, telefono, idOdontologo,
+    ]);
     return rows[0] ?? null; // null = no existe
 };
 
