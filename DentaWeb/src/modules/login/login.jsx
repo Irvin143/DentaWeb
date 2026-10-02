@@ -6,17 +6,14 @@ import {
   Lock,
   ArrowRight,
   Smartphone,
-  Stethoscope,
-  User,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../../services/api.js";
-import { useNavigate } from "react-router-dom";
+import { primeraRutaPermitida } from "../../config/permisos.js";
 
 const DentalWebLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [activeTab, setActiveTab] = useState("paciente");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,6 +43,13 @@ const DentalWebLogin = () => {
       };
       const response = await authApi.login(payload);
 
+      const destino = primeraRutaPermitida(response.usuario);
+      if (!destino) {
+        sessionStorage.removeItem("clinicware_auth");
+        setErrorMessage("Tu cuenta no tiene acceso a ninguna pantalla.");
+        return;
+      }
+
       sessionStorage.setItem(
         "clinicware_auth",
         JSON.stringify({
@@ -53,7 +57,7 @@ const DentalWebLogin = () => {
           usuario: response.usuario,
         }),
       );
-      navigate("/pacientes", { replace: true });
+      navigate(destino, { replace: true });
     } catch (error) {
       console.error("Login falló:", error?.status, error?.message, error?.data);
       if (error?.status === 400 || error?.status === 401) {
@@ -102,25 +106,6 @@ const DentalWebLogin = () => {
           </p>
         </div>
 
-        <div className="mb-6 flex rounded-full bg-login-input p-1">
-          <button
-            type="button"
-            onClick={() => setActiveTab("paciente")}
-            className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full px-1 py-2.5 text-xs font-semibold leading-none transition-all duration-200 sm:gap-2 sm:px-2 sm:text-sm ${activeTab === "paciente" ? "bg-login-active text-on-primary shadow-login-tab" : "text-login-muted"}`}
-          >
-            <User size={16} />
-            Paciente
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("clinica")}
-            className={`flex min-w-0 flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-full px-1 py-2.5 text-xs font-semibold leading-none transition-all duration-200 sm:gap-2 sm:px-2 sm:text-sm ${activeTab === "clinica" ? "bg-login-active text-on-primary shadow-login-tab" : "text-login-muted"}`}
-          >
-            <Stethoscope size={16} />
-            Personal de clínica
-          </button>
-        </div>
-
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Email Field */}
@@ -137,11 +122,7 @@ const DentalWebLogin = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder={
-                  activeTab === "clinica"
-                    ? "ejemplo@clinicware.tech"
-                    : "ejemplo@correo.com"
-                }
+                placeholder="ejemplo@correo.com"
                 className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
             </div>
@@ -246,24 +227,13 @@ const DentalWebLogin = () => {
 
         {/* Register Link */}
         <p className="mt-6 text-center text-sm text-login-muted">
-          {activeTab === "clinica"
-            ? "¿Necesitas acceso? "
-            : "¿Aún no tienes cuenta? "}
-          {activeTab === "clinica" ? (
-            <Link
-              to="/solicitar-acceso"
-              className="font-semibold text-primary-container transition-colors hover:text-login-active"
-            >
-              Solicitar acceso institucional
-            </Link>
-          ) : (
-            <Link
-              to="/registro"
-              className="font-semibold text-primary-container transition-colors hover:text-login-active"
-            >
-              Regístrate aquí
-            </Link>
-          )}
+          ¿Aún no tienes cuenta?{" "}
+          <Link
+            to="/registro"
+            className="font-semibold text-primary-container transition-colors hover:text-login-active"
+          >
+            Regístrate aquí
+          </Link>
         </p>
       </div>
 

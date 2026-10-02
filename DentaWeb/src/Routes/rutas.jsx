@@ -4,7 +4,6 @@ import ProtectedLayout from "../layouts/ProtectedLayout.jsx";
 
 import Login from "../modules/login/login.jsx";
 import Register from "../modules/login/register.jsx";
-import InstitutionalAccess from "../modules/login/institutionalAccess.jsx";
 import ForgotPassword from "../modules/login/forgotPassword.jsx";
 import Terms from "../modules/legal/terminos.jsx";
 import Privacy from "../modules/legal/privacidad.jsx";
@@ -29,7 +28,6 @@ export default function App() {
         {/* Públicas */}
         <Route path="/" element={<Login />} />
         <Route path="/registro" element={<Register />} />
-        <Route path="/solicitar-acceso" element={<InstitutionalAccess />} />
         <Route path="/recuperar-contrasena" element={<ForgotPassword />} />
         <Route path="/legal/terminos" element={<Terms />} />
         <Route path="/legal/privacidad" element={<Privacy />} />
