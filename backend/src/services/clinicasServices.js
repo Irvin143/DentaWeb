@@ -1,5 +1,7 @@
 import conexion from '../services/conexion.js'; // la misma ruta que usas en los demás services
+import bcrypt from 'bcrypt';
 
+const SALT_ROUNDS = 12;
 const errorHttp = (status, mensaje) => {
     const error = new Error(mensaje);
     error.status = status;
@@ -39,20 +41,29 @@ export const obtenerClinicas = async ({ filtroActivo = 'todos' } = {}) => {
     return rows;
 };
 
+export const crearClinica = async ({
+    correo, contrasena, nombre, direccion = null, identificacion_fiscal = null,
+}) => {
+    const hash = await bcrypt.hash(contrasena, SALT_ROUNDS);
 
-// ---------- CREAR ----------
-export const crearClinica = async ({ nombre, direccion, identificacion_fiscal, idusuario }) => {
     try {
         const { rows } = await conexion.query(
-            `INSERT INTO Clinicas (nombre, direccion, identificacion_fiscal, idUsuario)
-             VALUES ($1, $2, $3, $4)
-             RETURNING idClinica AS id_clinica, nombre, activo, direccion,
-                       identificacion_fiscal, idUsuario AS id_usuario`,
-            [nombre, direccion, identificacion_fiscal, idusuario]
+            'SELECT * FROM fn_registrar_clinica($1, $2, $3, $4, $5)',
+            [correo, hash, nombre, direccion, identificacion_fiscal]
         );
-        return rows[0];
+        return rows[0]; // { id_usuario, id_clinica, correo }
     } catch (err) {
-        manejarErrorPg(err);
+        if (err.code === '23505') {
+            const duplicadaFiscal = String(err.message).includes('identificación fiscal');
+            const error = new Error(
+                duplicadaFiscal
+                    ? 'La identificación fiscal ya está registrada'
+                    : 'El correo ya está registrado'
+            );
+            error.status = 409;
+            throw error;
+        }
+        throw err;
     }
 };
 
