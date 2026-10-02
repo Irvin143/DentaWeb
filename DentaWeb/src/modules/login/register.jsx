@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  Circle,
   Eye,
   EyeOff,
   Lock,
@@ -15,23 +16,42 @@ import { authApi } from "../../services/api.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const REGLAS_CONTRASENA = [
+  {
+    id: "longitud",
+    label: "Entre 8 y 72 caracteres",
+    mensaje: "La contraseña debe tener entre 8 y 72 caracteres.",
+    cumple: (contrasena) => contrasena.length >= 8 && contrasena.length <= 72,
+  },
+  {
+    id: "mayuscula",
+    label: "Una mayúscula",
+    mensaje: "La contraseña debe incluir al menos una mayúscula.",
+    cumple: (contrasena) => /\p{Lu}/u.test(contrasena),
+  },
+  {
+    id: "minuscula",
+    label: "Una minúscula",
+    mensaje: "La contraseña debe incluir al menos una minúscula.",
+    cumple: (contrasena) => /\p{Ll}/u.test(contrasena),
+  },
+  {
+    id: "numero",
+    label: "Un número",
+    mensaje: "La contraseña debe incluir al menos un número.",
+    cumple: (contrasena) => /\p{Nd}/u.test(contrasena),
+  },
+  {
+    id: "especial",
+    label: "Un carácter especial",
+    mensaje: "La contraseña debe incluir al menos un carácter especial.",
+    cumple: (contrasena) => /[^\p{L}\p{N}]/u.test(contrasena),
+  },
+];
+
 function errorContrasena(contrasena) {
-  if (contrasena.length < 8 || contrasena.length > 72) {
-    return "La contraseña debe tener entre 8 y 72 caracteres.";
-  }
-  if (!/\p{Lu}/u.test(contrasena)) {
-    return "La contraseña debe incluir al menos una mayúscula.";
-  }
-  if (!/\p{Ll}/u.test(contrasena)) {
-    return "La contraseña debe incluir al menos una minúscula.";
-  }
-  if (!/\p{Nd}/u.test(contrasena)) {
-    return "La contraseña debe incluir al menos un número.";
-  }
-  if (!/[^\p{L}\p{N}]/u.test(contrasena)) {
-    return "La contraseña debe incluir al menos un carácter especial.";
-  }
-  return null;
+  const fallo = REGLAS_CONTRASENA.find((regla) => !regla.cumple(contrasena));
+  return fallo ? fallo.mensaje : null;
 }
 
 const Register = () => {
@@ -266,11 +286,12 @@ const Register = () => {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="Mínimo 8 caracteres, una mayúscula, un número y un símbolo"
+                placeholder="Crea una contraseña"
                 autoComplete="new-password"
                 minLength={8}
                 maxLength={72}
                 required
+                aria-describedby="register-password-rules"
                 className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-12 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
               <button
@@ -288,6 +309,24 @@ const Register = () => {
                 )}
               </button>
             </div>
+            <ul id="register-password-rules" className="mt-2 flex flex-col gap-1">
+              {REGLAS_CONTRASENA.map((regla) => {
+                const cumplida = regla.cumple(password);
+                return (
+                  <li
+                    key={regla.id}
+                    className={`flex items-center gap-2 text-xs ${cumplida ? "text-login-active" : "text-login-muted"}`}
+                  >
+                    {cumplida ? (
+                      <Check className="shrink-0 text-login-active" size={14} strokeWidth={2.5} />
+                    ) : (
+                      <Circle className="shrink-0 text-login-icon" size={14} />
+                    )}
+                    {regla.label}
+                  </li>
+                );
+              })}
+            </ul>
           </div>
 
           <div>
