@@ -147,8 +147,8 @@ export default function TiposCitaPage() {
       onReactivar={handleReactivar}
       modal={{
         icono: <CalendarClock />,
-        titulo: editandoId ? 'Editar Tipo de Cita' : 'Nuevo Tipo de Cita',
-        textoGuardar: guardando ? 'Guardando...' : 'Guardar Tipo de Cita',
+        titulo: editandoId ? 'Editar Tipo de cita' : 'Nuevo Tipo de cita',
+        textoGuardar: guardando ? 'Guardando...' : 'Guardar Tipo de cita',
         contenido: formularioTipoCita,
         onGuardar: handleGuardar,
         onCerrar: resetFormulario,

@@ -147,8 +147,8 @@ export default function TiposUsuarioPage() {
       onReactivar={handleReactivar}
       modal={{
         icono: <IdCard />,
-        titulo: editandoId ? 'Editar Tipo de Usuario' : 'Nuevo Tipo de Usuario',
-        textoGuardar: guardando ? 'Guardando...' : 'Guardar Tipo de Usuario',
+        titulo: editandoId ? 'Editar Tipo de usuario' : 'Nuevo Tipo de usuario',
+        textoGuardar: guardando ? 'Guardando...' : 'Guardar Tipo de usuario',
         contenido: formularioTipoUsuario,
         onGuardar: handleGuardar,
         onCerrar: resetFormulario,
