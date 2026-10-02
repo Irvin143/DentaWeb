@@ -175,7 +175,7 @@ export default function ConsultoriosPage() {
 
       const payload = {
         nombre: mayus(form.nombre),
-        id_clinica: form.id_clinica ? Number(form.id_clinica) : null,
+        idclinica: form.id_clinica ? Number(form.id_clinica) : null,
       };
 
       if (editandoId) {
