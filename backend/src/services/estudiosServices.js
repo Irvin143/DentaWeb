@@ -47,7 +47,7 @@ export const actualizarEstudio = async (id, { nombre, descripcion }) => {
         const { rows } = await conexion.query(
         `UPDATE Estudios
         SET nombre = $2, descripcion = $3
-        WHERE idEstudio = $1 AND activo
+        WHERE idEstudio = $1 
         RETURNING idEstudio AS id_estudio, nombre, descripcion, activo`,
         [id, nombre, descripcion]
         );

@@ -113,7 +113,7 @@ export const actualizarOdontologo = async (
                 UPDATE odontologos
                 SET nombre = $2, ape_pat = $3, ape_mat = $4, telefono = $5,
                     cedula = $6, idUsuario = $7, idClinica = $8
-                WHERE idOdontologo = $1 AND activo
+                WHERE idOdontologo = $1
                 RETURNING *
             )
             SELECT ${COLUMNAS}

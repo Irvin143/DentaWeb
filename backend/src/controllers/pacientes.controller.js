@@ -46,7 +46,7 @@ export async function actualizar(req, res, next) {
         telefono: telefono?.trim() ?? null,
         });
 
-        if (!paciente) return res.status(404).json({ error: 'Paciente no encontrado' });
+        if (!paciente) return res.status(404).json({ error: 'Paciente no encontrado o inactivo' });
 
         res.status(200).json(paciente);
     } catch (err) {

@@ -81,7 +81,7 @@ export const actualizarConsultorio = async (id, { nombre, idclinica }) => {
             `WITH c AS (
                 UPDATE Consultorio
                 SET nombre = $2, idClinica = $3
-                WHERE idConsultorio = $1 AND activo
+                WHERE idConsultorio = $1 
                 RETURNING *
             )
             SELECT ${COLUMNAS}

@@ -99,7 +99,7 @@ export const actualizarUsuario = async (id, { correo, idpaquete, idtipousuario }
             `WITH u AS (
                 UPDATE usuarios
                 SET correo = $2, idPaquete = $3, idTipoUsuario = $4
-                WHERE idUsuario = $1 AND activo
+                WHERE idUsuario = $1 
                 RETURNING *
             )
             SELECT ${COLUMNAS}

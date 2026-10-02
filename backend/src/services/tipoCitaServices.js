@@ -60,7 +60,7 @@ export const actualizarTipoCita = async (id, { nombre }) => {
         const { rows } = await conexion.query(
             `UPDATE tipo_cita
              SET nombre = $2
-             WHERE idTipo = $1 AND activo
+             WHERE idTipo = $1
              RETURNING idTipo AS id_tipo, nombre, activo`,
             [id, nombre]
         );

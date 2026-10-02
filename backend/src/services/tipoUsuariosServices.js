@@ -64,7 +64,7 @@ export const actualizarTipoUsuario = async (id, { nombre }) => {
         const { rows } = await conexion.query(
             `UPDATE tipo_usuario
              SET nombre = $2
-             WHERE idTipoUsuario = $1 AND activo
+             WHERE idTipoUsuario = $1 
              RETURNING ${COLUMNAS}`,
             [id, nombre]
         );

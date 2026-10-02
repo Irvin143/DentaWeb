@@ -62,7 +62,7 @@ export const actualizarPaquete = async (id, { nombre, descripcion }) => {
         const { rows } = await conexion.query(
             `UPDATE paquetes_roles
              SET nombre = $2, descripcion = $3
-             WHERE idPaquete = $1 AND activo
+             WHERE idPaquete = $1
              RETURNING idPaquete AS id_paquete, nombre, descripcion, activo`,
             [id, nombre, descripcion]
         );

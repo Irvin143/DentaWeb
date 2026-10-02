@@ -62,7 +62,7 @@ export const actualizarRol = async (id, { nombre, descripcion }) => {
         const { rows } = await conexion.query(
             `UPDATE Roles
              SET nombre = $2, descripcion = $3
-             WHERE idRol = $1 AND activo
+             WHERE idRol = $1 
              RETURNING idRol AS id_rol, nombre, descripcion, activo`,
             [id, nombre, descripcion]
         );

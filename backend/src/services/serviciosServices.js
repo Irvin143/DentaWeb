@@ -111,7 +111,7 @@ export const actualizarServicio = async (id, { nombre, descripcion, idclinica })
             const { rows } = await cliente.query(
                 `UPDATE Servicios
                  SET nombre = $2, descripcion = $3
-                 WHERE idServicio = $1 AND activo
+                 WHERE idServicio = $1 
                  ${RETURNING_SERVICIO}`,
                 [id, nombre, descripcion]
             );
@@ -122,7 +122,7 @@ export const actualizarServicio = async (id, { nombre, descripcion, idclinica })
                 const { rowCount } = await cliente.query(
                     `UPDATE Clinica_Servicio
                      SET idClinica = $2
-                     WHERE idServicio = $1 AND activo`,
+                     WHERE idServicio = $1 `,
                     [id, idclinica]
                 );
                 if (rowCount === 0) {

@@ -75,7 +75,7 @@ export const actualizarClinica = async (id, { nombre, direccion, identificacion_
         const { rows } = await conexion.query(
             `UPDATE Clinicas
              SET nombre = $2, direccion = $3, identificacion_fiscal = $4, idUsuario = $5
-             WHERE idClinica = $1 AND activo
+             WHERE idClinica = $1 
              RETURNING idClinica AS id_clinica, nombre, activo, direccion,
                        identificacion_fiscal, idUsuario AS id_usuario`,
             [id, nombre, direccion, identificacion_fiscal, idusuario]
