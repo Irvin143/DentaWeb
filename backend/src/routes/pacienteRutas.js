@@ -9,6 +9,6 @@ router.put('/:id', pacientesController.actualizar);
 router.delete('/:id', pacientesController.eliminar);
 router.put('/:id/reactivar', pacientesController.reactivar);
 router.post('/', pacientesController.crearPaciente);
-router.delete('/:id/forzar', pacientesController.eliminarPacientePermanente);
+// router.delete('/:id/forzar', pacientesController.eliminarPacientePermanente);
 
 export default router;
