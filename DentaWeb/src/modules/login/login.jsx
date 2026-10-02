@@ -29,7 +29,7 @@ const DentalWebLogin = () => {
 
     const normalizedEmail = email.trim();
 
-    if (!normalizedEmail || !password) {
+    if (!normalizedEmail || !password.trim()) {
       setErrorMessage("El correo y la contraseña son obligatorios.");
       return;
     }

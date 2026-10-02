@@ -18,6 +18,12 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const REGLAS_CONTRASENA = [
   {
+    id: "espacios",
+    label: "No puede ser solo espacios",
+    mensaje: "La contraseña no puede ser solo espacios.",
+    cumple: (contrasena) => contrasena.trim().length > 0,
+  },
+  {
     id: "longitud",
     label: "Entre 8 y 72 caracteres",
     mensaje: "La contraseña debe tener entre 8 y 72 caracteres.",
@@ -45,7 +51,7 @@ const REGLAS_CONTRASENA = [
     id: "especial",
     label: "Un carácter especial",
     mensaje: "La contraseña debe incluir al menos un carácter especial.",
-    cumple: (contrasena) => /[^\p{L}\p{N}]/u.test(contrasena),
+    cumple: (contrasena) => /[^\p{L}\p{N}\s]/u.test(contrasena),
   },
 ];
 
