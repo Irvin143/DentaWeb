@@ -91,11 +91,36 @@ export const reactivarPaciente = async (id) => {
 
 
 export const eliminarPacientePermanente = async (id) => {
-    const query = `
-        DELETE FROM Pacientes
-        WHERE idPaciente = $1
-        RETURNING idPaciente AS id_paciente;
-    `;
-    const { rows } = await conexion.query(query, [id]);
-    return rows[0] ?? null; // null = no existe
+    const cliente = await conexion.connect(); // una conexión dedicada para la transacción
+    try {
+        await cliente.query('BEGIN');
+
+        // 1. Primero el expediente (depende del paciente)
+        await cliente.query('DELETE FROM Expediente WHERE idPaciente = $1', [id]);
+
+        // 2. Luego el paciente
+        const { rows } = await cliente.query(
+            `DELETE FROM Pacientes
+             WHERE idPaciente = $1
+             RETURNING idPaciente AS id_paciente;`,
+            [id]
+        );
+
+        await cliente.query('COMMIT');
+        return rows[0] ?? null; // null = no existe
+    } catch (err) {
+        await cliente.query('ROLLBACK');
+
+        if (err.code === '23503') {
+            // Aún hay otros registros ligados (citas, pagos, etc.)
+            const e = new Error(
+                'No se puede eliminar: el paciente tiene otros registros relacionados. Desactívalo en su lugar.'
+            );
+            e.status = 409;
+            throw e;
+        }
+        throw err;
+    } finally {
+        cliente.release(); // siempre devolver la conexión al pool
+    }
 };
