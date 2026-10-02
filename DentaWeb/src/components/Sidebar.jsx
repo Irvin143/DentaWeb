@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Building2, Stethoscope, Users, Calendar, Menu, X, LogOut } from 'lucide-react';
 import { getAuth, puedeVer } from '../config/permisos'; // ajusta la ruta a donde guardes permisos.js
-
+//hola
 const navItems = [
   // { path: "/panel", label: "Panel Principal", icon: LayoutGrid },
   { path: '/pacientes', label: 'Pacientes', icon: Users },
