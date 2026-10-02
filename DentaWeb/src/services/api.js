@@ -46,15 +46,25 @@ export async function apiRequest(endpoint, options = {}) {
 
   const token = obtenerToken();
 
-  const response = await fetch(url, {
-    ...requestOptions,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...headers,
-    },
-    body: requestBody,
-  });
+  let response;
+  try {
+    response = await fetch(url, {
+      ...requestOptions,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...headers,
+      },
+      body: requestBody,
+    });
+  } catch (err) {
+    if (err instanceof TypeError) {
+      throw new ApiError(
+        "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo."
+      );
+    }
+    throw err;
+  }
 
   const responseText = await response.text();
   let data = null;
