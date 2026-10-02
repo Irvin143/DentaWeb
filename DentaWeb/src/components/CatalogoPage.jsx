@@ -51,6 +51,7 @@ const ACCIONES = {
 };
 
 // Ordena por id (numérico, ascendente). Si no hay id, conserva el orden original.
+const ORDEN_RECIENTES = 'id';
 const porId = (a, b) => (Number(a.id) || 0) - (Number(b.id) || 0);
 const estaInactiva = (fila) => /^inactiv[oa]$/i.test(String(fila.estado ?? '').trim());
 const ambosNumeros = (a, b) =>
@@ -60,6 +61,26 @@ const compararValores = (a, b) =>
   ambosNumeros(a, b)
     ? a - b
     : String(a ?? '').localeCompare(String(b ?? ''), 'es', { numeric: true, sensitivity: 'base' });
+
+const ETIQUETAS_COLUMNA = {
+  nombre: 'Nombre',
+  ape_pat: 'Apellido Paterno',
+  ape_mat: 'Apellido Materno',
+  telefono: 'Teléfono',
+  correo: 'Correo',
+  correo_usuario: 'Correo',
+  cedula: 'Cédula',
+  descripcion: 'Descripción',
+  direccion: 'Dirección',
+  identificacion_fiscal: 'Identificación Fiscal',
+  odontologo: 'Odontólogo',
+  clinica: 'Clínica',
+  tipo: 'Tipo',
+  paquete: 'Paquete',
+  estado: 'Estado',
+};
+
+const etiquetaDesdeClave = (key) => ETIQUETAS_COLUMNA[key] ?? key.replaceAll('_', ' ');
 
 const etiquetaColumna = (label) =>
   label ? label.charAt(0).toUpperCase() + label.slice(1) : '';
@@ -155,16 +176,19 @@ export function CatalogoPage({
         ? []
         : Object.keys(datos[0]).map((key) => ({
             key,
-            label: key.replaceAll('_', ' '),
+            label: etiquetaDesdeClave(key),
           }));
     return base.filter((col) => col.key !== 'id');
   }, [columnas, datos]);
 
-  const columnaOrden = cols.some((col) => col.key === orden.columna)
-    ? orden.columna
-    : cols[0]?.key;
+  const ordenandoPorRecientes = orden.columna === ORDEN_RECIENTES;
+  const columnaOrden = ordenandoPorRecientes
+    ? null
+    : cols.some((col) => col.key === orden.columna)
+      ? orden.columna
+      : cols[0]?.key;
 
-  const totalColumnas = cols.length + 1 + (hayAcciones ? 1 : 0);
+  const totalColumnas = cols.length + (cols.length > 0 ? 2 : 1) + (hayAcciones ? 1 : 0);
 
   // Filtro del buscador y, después, orden de la lista ya cargada
   const datosFiltrados = useMemo(() => {
@@ -178,6 +202,7 @@ export function CatalogoPage({
       : datos;
     const factor = orden.direccion === 'desc' ? -1 : 1;
     return [...filtrados].sort((a, b) => {
+      if (orden.columna === ORDEN_RECIENTES) return porId(a, b) * factor;
       const resultado = columnaOrden
         ? compararValores(a[columnaOrden], b[columnaOrden]) * factor
         : 0;
@@ -199,7 +224,12 @@ export function CatalogoPage({
 
   const ordenarPor = (key) => {
     setOrden((prev) => {
-      const actual = cols.some((col) => col.key === prev.columna) ? prev.columna : cols[0]?.key;
+      const actual =
+        prev.columna === ORDEN_RECIENTES
+          ? ORDEN_RECIENTES
+          : cols.some((col) => col.key === prev.columna)
+            ? prev.columna
+            : cols[0]?.key;
       return actual === key
         ? { columna: key, direccion: prev.direccion === 'asc' ? 'desc' : 'asc' }
         : { columna: key, direccion: 'asc' };
@@ -208,7 +238,19 @@ export function CatalogoPage({
   };
 
   const elegirColumna = (key) => {
-    setOrden((prev) => (prev.columna === key ? prev : { columna: key, direccion: 'asc' }));
+    setOrden((prev) => {
+      if (prev.columna === key) return prev;
+      return { columna: key, direccion: key === ORDEN_RECIENTES ? 'desc' : 'asc' };
+    });
+    setPagina(1);
+  };
+
+  const ordenarPorRecientes = () => {
+    setOrden((prev) =>
+      prev.columna === ORDEN_RECIENTES
+        ? { columna: ORDEN_RECIENTES, direccion: prev.direccion === 'desc' ? 'asc' : 'desc' }
+        : { columna: ORDEN_RECIENTES, direccion: 'desc' }
+    );
     setPagina(1);
   };
 
@@ -338,7 +380,7 @@ export function CatalogoPage({
           <div className="flex shrink-0 items-center gap-2 md:hidden">
             <select
               aria-label="Ordenar por"
-              value={columnaOrden ?? ''}
+              value={ordenandoPorRecientes ? ORDEN_RECIENTES : (columnaOrden ?? '')}
               onChange={(e) => elegirColumna(e.target.value)}
               className="cursor-pointer rounded-xl bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition-all focus:ring-2 focus:ring-teal-500/20"
             >
@@ -347,11 +389,20 @@ export function CatalogoPage({
                   {col.label}
                 </option>
               ))}
+              <option value={ORDEN_RECIENTES}>Más recientes</option>
             </select>
             <button
               type="button"
               onClick={alternarDireccion}
-              aria-label={orden.direccion === 'asc' ? 'Orden ascendente' : 'Orden descendente'}
+              aria-label={
+                ordenandoPorRecientes
+                  ? orden.direccion === 'desc'
+                    ? 'Más recientes'
+                    : 'Más antiguos'
+                  : orden.direccion === 'asc'
+                    ? 'Orden ascendente'
+                    : 'Orden descendente'
+              }
               className="cursor-pointer rounded-xl bg-slate-50 p-2.5 text-slate-500 outline-none transition-all hover:text-slate-700 focus:ring-2 focus:ring-teal-500/20"
             >
               {orden.direccion === 'asc' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
@@ -370,6 +421,38 @@ export function CatalogoPage({
                     {cols.length > 0 && (
                       <th scope="col" className="px-5 py-3 normal-case">
                         No.
+                      </th>
+                    )}
+                    {cols.length > 0 && (
+                      <th
+                        scope="col"
+                        aria-sort={
+                          !ordenandoPorRecientes
+                            ? 'none'
+                            : orden.direccion === 'asc'
+                              ? 'ascending'
+                              : 'descending'
+                        }
+                        className="w-px p-0 whitespace-nowrap"
+                      >
+                        <button
+                          type="button"
+                          onClick={ordenarPorRecientes}
+                          aria-label={
+                            ordenandoPorRecientes && orden.direccion === 'desc'
+                              ? 'Alta, orden ascendente'
+                              : 'Alta, orden descendente'
+                          }
+                          className="flex w-full cursor-pointer items-center gap-1.5 px-5 py-3 text-left uppercase transition-colors hover:bg-slate-100 hover:text-slate-700"
+                        >
+                          Alta
+                          {ordenandoPorRecientes &&
+                            (orden.direccion === 'asc' ? (
+                              <ArrowUp size={14} className="shrink-0 text-slate-500" />
+                            ) : (
+                              <ArrowDown size={14} className="shrink-0 text-slate-500" />
+                            ))}
+                        </button>
                       </th>
                     )}
                     {cols.map((col) => {
@@ -443,6 +526,7 @@ export function CatalogoPage({
                         >
                           {inicio + rowIndex + 1}
                         </td>
+                        <td className="w-px p-0 whitespace-nowrap" />
                         {cols.map((col) => (
                           <td
                             key={col.key}
