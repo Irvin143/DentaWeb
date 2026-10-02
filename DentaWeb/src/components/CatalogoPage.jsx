@@ -426,7 +426,7 @@ export function CatalogoPage({
                                   onClick={() => handleEditar(fila)}
                                   title="Editar"
                                   aria-label="Editar"
-                                  className={`${botonIcono} hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600 cursor-pointer transition-colors`}
+                                  className={`${botonIcono} hover:border-slate-300 hover:bg-slate-100 hover:text-slate-800 cursor-pointer transition-colors`}
                                 >
                                   <Pencil size={16} />
                                 </button>
@@ -496,7 +496,7 @@ export function CatalogoPage({
                           <button
                             type="button"
                             onClick={() => handleEditar(fila)}
-                            className={`${botonIcono} flex cursor-pointer items-center gap-1.5 px-3 text-xs font-medium hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600`}
+                            className={`${botonIcono} flex cursor-pointer items-center gap-1.5 px-3 text-xs font-medium hover:border-slate-300 hover:bg-slate-100 hover:text-slate-800`}
                           >
                             <Pencil size={14} />
                             Editar
