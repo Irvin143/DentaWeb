@@ -35,7 +35,7 @@ const SELECT_BASE = `
 export const obtenerClinicas = async ({ filtroActivo = 'todos' } = {}) => {
     const query = `
         ${SELECT_BASE}
-        WHERE ($1::text = 'todos' OR c.activo = ($1::text = 'true'))
+        WHERE ($1::text = 'todos' OR u.activo = ($1::text = 'true'))
         ORDER BY c.nombre, c.idClinica;
     `;
     const { rows } = await conexion.query(query, [filtroActivo]);
@@ -72,15 +72,19 @@ export const crearClinica = async ({
 // Reemplaza todos los campos editables
 export const actualizarClinica = async (id, { nombre, direccion, identificacion_fiscal, idusuario }) => {
     try {
-        const { rows } = await conexion.query(
+        const { rowCount } = await conexion.query(
             `UPDATE Clinicas
              SET nombre = $2, direccion = $3, identificacion_fiscal = $4, idUsuario = $5
-             WHERE idClinica = $1 
-             RETURNING idClinica AS id_clinica, nombre, activo, direccion,
-                       identificacion_fiscal, idUsuario AS id_usuario`,
+             WHERE idClinica = $1`,
             [id, nombre, direccion, identificacion_fiscal, idusuario]
         );
-        return rows[0] ?? null; // null = no existe o está desactivada
+        if (rowCount === 0) return null; // no existe
+
+        const { rows } = await conexion.query(
+            `${SELECT_BASE} WHERE c.idClinica = $1`,
+            [id]
+        );
+        return rows[0] ?? null;
     } catch (err) {
         manejarErrorPg(err);
     }
@@ -89,34 +93,31 @@ export const actualizarClinica = async (id, { nombre, direccion, identificacion_
 // ---------- ELIMINAR (lógico) ----------
 export const eliminarClinica = async (id) => {
     const { rowCount } = await conexion.query(
-        'UPDATE Clinicas SET activo = false WHERE idClinica = $1 AND activo',
+        `UPDATE Usuarios
+         SET activo = false
+         WHERE idUsuario = (SELECT idUsuario FROM Clinicas WHERE idClinica = $1)
+           AND activo`,
         [id]
     );
     return rowCount > 0; // false = no existe o ya estaba desactivada
 };
-
 // ---------- REACTIVAR ----------
 export const reactivarClinica = async (id) => {
     try {
-        const { rows } = await conexion.query(
-            `WITH c AS (
-                UPDATE Clinicas
-                SET activo = true
-                WHERE idClinica = $1 AND NOT activo
-                RETURNING idClinica, nombre, activo, direccion,
-                          identificacion_fiscal, idUsuario
-            ),
-            u AS (
-                UPDATE usuarios
-                SET activo = true
-                WHERE idUsuario IN (SELECT idUsuario FROM c)
-            )
-            SELECT idClinica AS id_clinica, nombre, activo, direccion,
-                   identificacion_fiscal, idUsuario AS id_usuario
-            FROM c`,
+        const { rowCount } = await conexion.query(
+            `UPDATE Usuarios
+             SET activo = true
+             WHERE idUsuario = (SELECT idUsuario FROM Clinicas WHERE idClinica = $1)
+               AND NOT activo`,
             [id]
         );
-        return rows[0] ?? null; // null = no existe o ya estaba activa
+        if (rowCount === 0) return null; // no existe o ya estaba activa
+
+        const { rows } = await conexion.query(
+            `${SELECT_BASE} WHERE c.idClinica = $1`,
+            [id]
+        );
+        return rows[0] ?? null;
     } catch (err) {
         manejarErrorPg(err);
     }
