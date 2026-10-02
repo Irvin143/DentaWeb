@@ -49,7 +49,7 @@ export function CatalogoPage({
   const [pagina, setPagina] = useState(1);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false); // para el texto de la notificación
-  const [orden, setOrden] = useState({ columna: 'id', direccion: 'asc' });
+  const [orden, setOrden] = useState({ columna: null, direccion: 'asc' });
   const [confirmacion, setConfirmacion] = useState({
     isOpen: false,
     id: null,
@@ -88,32 +88,43 @@ export function CatalogoPage({
     setTimeout(() => cerrarToast(id), DURACION_TOAST);
   }, [cerrarToast]);
 
-  // Columnas: las definidas o las derivadas de los atributos del primer registro
+  // Columnas visibles: las definidas o las derivadas del primer registro, sin el id real
   const cols = useMemo(() => {
-    if (columnas) return columnas;
-    if (datos.length === 0) return [];
-    return Object.keys(datos[0]).map((key) => ({
-      key,
-      label: key.replaceAll('_', ' '),
-    }));
+    const base = columnas
+      ? columnas
+      : datos.length === 0
+        ? []
+        : Object.keys(datos[0]).map((key) => ({
+            key,
+            label: key.replaceAll('_', ' '),
+          }));
+    return base.filter((col) => col.key !== 'id');
   }, [columnas, datos]);
 
-  const totalColumnas = cols.length + (hayAcciones ? 1 : 0);
+  const columnaOrden = cols.some((col) => col.key === orden.columna)
+    ? orden.columna
+    : cols[0]?.key;
+
+  const totalColumnas = cols.length + 1 + (hayAcciones ? 1 : 0);
 
   // Filtro del buscador y, después, orden de la lista ya cargada
   const datosFiltrados = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
     const filtrados = q
       ? datos.filter((fila) =>
-          Object.values(fila).some((v) => String(v).toLowerCase().includes(q))
+          Object.entries(fila).some(
+            ([clave, valor]) => clave !== 'id' && String(valor).toLowerCase().includes(q)
+          )
         )
       : datos;
     const factor = orden.direccion === 'desc' ? -1 : 1;
     return [...filtrados].sort((a, b) => {
-      const resultado = compararValores(a[orden.columna], b[orden.columna]) * factor;
+      const resultado = columnaOrden
+        ? compararValores(a[columnaOrden], b[columnaOrden]) * factor
+        : 0;
       return resultado !== 0 ? resultado : porId(a, b);
     });
-  }, [datos, busqueda, orden]);
+  }, [datos, busqueda, orden, columnaOrden]);
 
   // Paginación
   const totalRegistros = datosFiltrados.length;
@@ -128,11 +139,12 @@ export function CatalogoPage({
   };
 
   const ordenarPor = (key) => {
-    setOrden((prev) =>
-      prev.columna === key
+    setOrden((prev) => {
+      const actual = cols.some((col) => col.key === prev.columna) ? prev.columna : cols[0]?.key;
+      return actual === key
         ? { columna: key, direccion: prev.direccion === 'asc' ? 'desc' : 'asc' }
-        : { columna: key, direccion: 'asc' }
-    );
+        : { columna: key, direccion: 'asc' };
+    });
     setPagina(1);
   };
 
@@ -280,7 +292,7 @@ export function CatalogoPage({
           <div className="flex shrink-0 items-center gap-2 md:hidden">
             <select
               aria-label="Ordenar por"
-              value={cols.some((col) => col.key === orden.columna) ? orden.columna : ''}
+              value={columnaOrden ?? ''}
               onChange={(e) => elegirColumna(e.target.value)}
               className="cursor-pointer rounded-xl bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition-all focus:ring-2 focus:ring-teal-500/20"
             >
@@ -309,8 +321,13 @@ export function CatalogoPage({
               <table className="w-full text-left text-sm text-slate-600">
                 <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
                   <tr>
+                    {cols.length > 0 && (
+                      <th scope="col" className="px-5 py-3 normal-case">
+                        No.
+                      </th>
+                    )}
                     {cols.map((col) => {
-                      const activa = orden.columna === col.key;
+                      const activa = columnaOrden === col.key;
                       const siguiente =
                         activa && orden.direccion === 'asc' ? 'descendente' : 'ascendente';
                       return (
@@ -369,6 +386,11 @@ export function CatalogoPage({
                             : 'transition-colors hover:bg-slate-50/50'
                         }
                       >
+                        <td
+                          className={`px-5 py-3 align-top ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
+                        >
+                          {inicio + rowIndex + 1}
+                        </td>
                         {cols.map((col) => (
                           <td
                             key={col.key}
@@ -440,6 +462,16 @@ export function CatalogoPage({
                     className={estaInactiva(fila) ? 'bg-slate-50 px-4 py-4' : 'px-4 py-4'}
                   >
                     <dl className="m-0 grid gap-2">
+                      <div className="grid grid-cols-[6.5rem_1fr] gap-3 text-sm">
+                        <dt
+                          className={`text-xs font-semibold tracking-wider normal-case ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-500'}`}
+                        >
+                          No.
+                        </dt>
+                        <dd className={`m-0 break-words ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}>
+                          {inicio + rowIndex + 1}
+                        </dd>
+                      </div>
                       {cols.map((col) => (
                         <div key={col.key} className="grid grid-cols-[6.5rem_1fr] gap-3 text-sm">
                           <dt

@@ -22,6 +22,7 @@ import TipoCitaPage from "../modules/tipoCita/TipoCItaPage.jsx";
 import TiposUsuarioPage from "../modules/tiposUsuarios/TiposUsuariosPage.jsx";
 import UsuariosPage from "../modules/usuarios/UsuariosPage.jsx";
 import PanelPage from "../modules/panel/PanelPage.jsx";
+import PanelPacientePage from "../modules/panel/PanelPacientePage.jsx";
 
 export default function App() {
   return (
@@ -39,6 +40,7 @@ export default function App() {
         {/* Protegidas: comparten MainLayout + Sidebar */}
         <Route element={<ProtectedLayout />}>
           <Route path="/panel" element={<PanelPage />} />
+          <Route path="/panel-paciente" element={<PanelPacientePage />} />
           <Route path="/clinicas" element={<ClinicasPage />} />
           <Route path="/pacientes" element={<PacientesPage />} />
           <Route path="/odontologos" element={<OdontologosPage />} />
