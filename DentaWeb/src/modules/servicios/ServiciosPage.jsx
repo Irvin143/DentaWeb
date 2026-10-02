@@ -20,7 +20,7 @@ const mapearServicio = (s) => ({
   id: s.id_servicio,
   nombre: s.nombre,
   descripcion: s.descripcion || '—',
-  clinica: s.nombre ?? 'Sin clínica',
+  clinica: s.nombre_clinica ?? 'Sin clínica',
   estado: s.activo ? 'Activo' : 'Inactivo',
 });
 
@@ -37,6 +37,7 @@ export default function ServiciosPage() {
     try {
       setCargando(true);
       const data = await serviciosApi.listar();
+      console.log('Servicios cargados:', data);
       setServicios(comoLista(data, 'servicios'));
     } catch (err) {
       setError(err.message || 'No se pudieron cargar los servicios');

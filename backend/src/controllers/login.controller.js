@@ -40,6 +40,9 @@ export async function registro(req, res, next) {
         if (!esTexto(nombre, 100) || !esTexto(ape_pat, 100)) {
         return res.status(400).json({ error: 'Nombre y apellido paterno son obligatorios' });
         }
+        if(telefono !== 10 && telefono !== 0 && telefono !== null) {
+            return res.status(400).json({ error: 'El teléfono debe tener 10 dígitos o no tener valor' });
+        }
 
         // 2. Llamar al service
         const data = await authService.registrarPaciente({
