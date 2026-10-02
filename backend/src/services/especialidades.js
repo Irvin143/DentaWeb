@@ -3,7 +3,7 @@ import conexion from '../services/conexion.js';
 export const obtenerEspecialidades = async ({ limite, offset }) => {
     const [datos, conteo] = await Promise.all([
         conexion.query(
-        `SELECT idEspecialidad AS id_especialidad, nombre
+        `SELECT idEspecialidad AS id_especialidad, nombre, activo
         FROM Especialidades
         ORDER BY nombre, idEspecialidad
         LIMIT $1 OFFSET $2`,
@@ -79,4 +79,43 @@ export const eliminarEspecialidad = async (id) => {
             [id]
     );
     return rowCount > 0;
+};
+
+export const reactivarEspecialidad = async (id) => {
+    const { rows } = await conexion.query(
+        'SELECT nombre, activo FROM Especialidades WHERE idEspecialidad = $1',
+        [id]
+    );
+    const actual = rows[0];
+    if (!actual || actual.activo) return null;
+
+    const conflicto = await conexion.query(
+        `SELECT 1 FROM Especialidades
+         WHERE activo AND idEspecialidad <> $1 AND lower(nombre) = lower($2)
+         LIMIT 1`,
+        [id, actual.nombre]
+    );
+    if (conflicto.rowCount > 0) {
+        const error = new Error('Ya existe una especialidad activa con ese nombre');
+        error.status = 409;
+        throw error;
+    }
+
+    try {
+        const { rows: actualizadas } = await conexion.query(
+            `UPDATE Especialidades
+             SET activo = true
+             WHERE idEspecialidad = $1 AND NOT activo
+             RETURNING idEspecialidad AS id_especialidad, nombre, activo`,
+            [id]
+        );
+        return actualizadas[0] ?? null;
+    } catch (err) {
+        if (err.code === '23505') {
+            const error = new Error('Ya existe una especialidad activa con ese nombre');
+            error.status = 409;
+            throw error;
+        }
+        throw err;
+    }
 };

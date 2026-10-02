@@ -80,3 +80,17 @@ export async function eliminarEspecialidad(req, res, next) {
         next(err);
     }
 }
+
+export async function reactivarEspecialidad(req, res, next) {
+    try {
+        const id = leerId(req);
+        if (!id) return res.status(400).json({ error: 'ID inválido' });
+
+        const data = await especialidadesService.reactivarEspecialidad(id);
+        if (!data) return res.status(404).json({ error: 'Especialidad no encontrada o ya está activa' });
+
+        res.status(200).json(data);
+    } catch (err) {
+        next(err);
+    }
+}

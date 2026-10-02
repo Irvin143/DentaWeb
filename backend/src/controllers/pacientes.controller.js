@@ -68,6 +68,20 @@ export async function eliminar(req, res, next) {
     }
 }
 
+export async function reactivar(req, res, next) {
+    try {
+        const id = leerId(req);
+        if (!id) return res.status(400).json({ error: 'ID inválido' });
+
+        const reactivado = await pacientesService.reactivarPaciente(id);
+        if (!reactivado) return res.status(404).json({ error: 'Paciente no encontrado o ya está activo' });
+
+        res.status(200).json({ mensaje: 'Paciente reactivado correctamente' });
+    } catch (err) {
+        next(err);
+    }
+}
+
 import * as loginServices from '../services/loginServices.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

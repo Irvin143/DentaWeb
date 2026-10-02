@@ -7,6 +7,7 @@ router.get('/', pacientesController.obtenerPacientes);
 
 router.put('/:id', pacientesController.actualizar);
 router.delete('/:id', pacientesController.eliminar);
+router.put('/:id/reactivar', pacientesController.reactivar);
 router.post('/', pacientesController.crearPaciente);
 
 export default router;

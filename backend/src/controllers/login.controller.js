@@ -3,6 +3,25 @@ import * as authService from '../services/loginServices.js';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const esTexto = (v, max) => typeof v === 'string' && v.trim().length > 0 && v.length <= max;
 
+function errorContrasena(contrasena) {
+    if (typeof contrasena !== 'string' || contrasena.length < 8 || contrasena.length > 72) {
+        return 'La contraseña debe tener entre 8 y 72 caracteres.';
+    }
+    if (!/\p{Lu}/u.test(contrasena)) {
+        return 'La contraseña debe incluir al menos una mayúscula.';
+    }
+    if (!/\p{Ll}/u.test(contrasena)) {
+        return 'La contraseña debe incluir al menos una minúscula.';
+    }
+    if (!/\p{Nd}/u.test(contrasena)) {
+        return 'La contraseña debe incluir al menos un número.';
+    }
+    if (!/[^\p{L}\p{N}]/u.test(contrasena)) {
+        return 'La contraseña debe incluir al menos un carácter especial.';
+    }
+    return null;
+}
+
 export async function registro(req, res, next) {
     try {
         const { correo, contrasena, nombre, ape_pat, ape_mat = null, telefono = null } = req.body ?? {};
@@ -11,9 +30,9 @@ export async function registro(req, res, next) {
         if (!esTexto(correo, 150) || !EMAIL_RE.test(correo.trim())) {
         return res.status(400).json({ error: 'Correo inválido' });
         }
-        // bcrypt solo usa los primeros 72 bytes
-        if (typeof contrasena !== 'string' || contrasena.length < 8 || contrasena.length > 72) {
-        return res.status(400).json({ error: 'La contraseña debe tener entre 8 y 72 caracteres' });
+        const errorClave = errorContrasena(contrasena);
+        if (errorClave) {
+        return res.status(400).json({ error: errorClave });
         }
         if (!esTexto(nombre, 100) || !esTexto(ape_pat, 100)) {
         return res.status(400).json({ error: 'Nombre y apellido paterno son obligatorios' });

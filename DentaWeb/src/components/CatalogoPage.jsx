@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Plus, ChevronLeft, ChevronRight, Pencil, Trash2, RotateCcw } from 'lucide-react';
+import { Search, Plus, ChevronLeft, ChevronRight, Pencil, Trash2, RotateCcw, ArrowUp, ArrowDown } from 'lucide-react';
 import { MainLayout } from '../layouts/MainLayout';
 import { ModalGenerico } from './ModalGenerico';
 
@@ -8,6 +8,16 @@ const REGISTROS_POR_PAGINA = 10;
 // Ordena por id (numérico, ascendente). Si no hay id, conserva el orden original.
 const porId = (a, b) => (Number(a.id) || 0) - (Number(b.id) || 0);
 const estaInactiva = (fila) => /^inactiv[oa]$/i.test(String(fila.estado ?? '').trim());
+const ambosNumeros = (a, b) =>
+  typeof a === 'number' && typeof b === 'number' && Number.isFinite(a) && Number.isFinite(b);
+
+const compararValores = (a, b) =>
+  ambosNumeros(a, b)
+    ? a - b
+    : String(a ?? '').localeCompare(String(b ?? ''), 'es', { numeric: true, sensitivity: 'base' });
+
+const etiquetaColumna = (label) =>
+  label ? label.charAt(0).toUpperCase() + label.slice(1) : '';
 
 export function CatalogoPage({
   // Encabezado
@@ -32,6 +42,7 @@ export function CatalogoPage({
   const [busqueda, setBusqueda] = useState('');
   const [pagina, setPagina] = useState(1);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [orden, setOrden] = useState({ columna: 'id', direccion: 'asc' });
 
   const hayAcciones = Boolean(onEditar || onEliminar || onReactivar);
 
@@ -47,7 +58,7 @@ export function CatalogoPage({
 
   const totalColumnas = cols.length + (hayAcciones ? 1 : 0);
 
-  // Filtro del buscador (sobre todos los valores de la fila), siempre ordenado por id
+  // Filtro del buscador y, después, orden de la lista ya cargada
   const datosFiltrados = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
     const filtrados = q
@@ -55,8 +66,12 @@ export function CatalogoPage({
           Object.values(fila).some((v) => String(v).toLowerCase().includes(q))
         )
       : datos;
-    return [...filtrados].sort(porId);
-  }, [datos, busqueda]);
+    const factor = orden.direccion === 'desc' ? -1 : 1;
+    return [...filtrados].sort((a, b) => {
+      const resultado = compararValores(a[orden.columna], b[orden.columna]) * factor;
+      return resultado !== 0 ? resultado : porId(a, b);
+    });
+  }, [datos, busqueda, orden]);
 
   // Paginación
   const totalRegistros = datosFiltrados.length;
@@ -67,6 +82,28 @@ export function CatalogoPage({
 
   const handleBusqueda = (e) => {
     setBusqueda(e.target.value);
+    setPagina(1);
+  };
+
+  const ordenarPor = (key) => {
+    setOrden((prev) =>
+      prev.columna === key
+        ? { columna: key, direccion: prev.direccion === 'asc' ? 'desc' : 'asc' }
+        : { columna: key, direccion: 'asc' }
+    );
+    setPagina(1);
+  };
+
+  const elegirColumna = (key) => {
+    setOrden((prev) => (prev.columna === key ? prev : { columna: key, direccion: 'asc' }));
+    setPagina(1);
+  };
+
+  const alternarDireccion = () => {
+    setOrden((prev) => ({
+      ...prev,
+      direccion: prev.direccion === 'asc' ? 'desc' : 'asc',
+    }));
     setPagina(1);
   };
 
@@ -140,6 +177,29 @@ export function CatalogoPage({
               className="w-full rounded-xl bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/20"
             />
           </label>
+
+          <div className="flex shrink-0 items-center gap-2 md:hidden">
+            <select
+              aria-label="Ordenar por"
+              value={cols.some((col) => col.key === orden.columna) ? orden.columna : ''}
+              onChange={(e) => elegirColumna(e.target.value)}
+              className="cursor-pointer rounded-xl bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition-all focus:ring-2 focus:ring-teal-500/20"
+            >
+              {cols.map((col) => (
+                <option key={col.key} value={col.key}>
+                  {col.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={alternarDireccion}
+              aria-label={orden.direccion === 'asc' ? 'Orden ascendente' : 'Orden descendente'}
+              className="cursor-pointer rounded-xl bg-slate-50 p-2.5 text-slate-500 outline-none transition-all hover:text-slate-700 focus:ring-2 focus:ring-teal-500/20"
+            >
+              {orden.direccion === 'asc' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
+            </button>
+          </div>
         </search>
 
         {/* Tabla */}
@@ -150,11 +210,36 @@ export function CatalogoPage({
               <table className="w-full text-left text-sm text-slate-600">
                 <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
                   <tr>
-                    {cols.map((col) => (
-                      <th key={col.key} scope="col" className="px-5 py-3">
-                        {col.label}
-                      </th>
-                    ))}
+                    {cols.map((col) => {
+                      const activa = orden.columna === col.key;
+                      const siguiente =
+                        activa && orden.direccion === 'asc' ? 'descendente' : 'ascendente';
+                      return (
+                        <th
+                          key={col.key}
+                          scope="col"
+                          aria-sort={
+                            !activa ? 'none' : orden.direccion === 'asc' ? 'ascending' : 'descending'
+                          }
+                          className="p-0"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => ordenarPor(col.key)}
+                            aria-label={`${etiquetaColumna(col.label)}, orden ${siguiente}`}
+                            className="flex w-full cursor-pointer items-center gap-1.5 px-5 py-3 text-left uppercase transition-colors hover:bg-slate-100 hover:text-slate-700"
+                          >
+                            {col.label}
+                            {activa &&
+                              (orden.direccion === 'asc' ? (
+                                <ArrowUp size={14} className="shrink-0 text-slate-500" />
+                              ) : (
+                                <ArrowDown size={14} className="shrink-0 text-slate-500" />
+                              ))}
+                          </button>
+                        </th>
+                      );
+                    })}
                     {totalRegistros >= 1 && (
                       <th scope="col" className="px-5 py-3 text-right">
                         Acciones

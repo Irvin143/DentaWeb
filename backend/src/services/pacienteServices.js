@@ -50,3 +50,22 @@ export const eliminarPaciente = async (id) => {
     const { rowCount } = await conexion.query(query, [id]);
     return rowCount > 0; // false = no existe
 };
+
+export const reactivarPaciente = async (id) => {
+    const { rows } = await conexion.query(
+        `SELECT u.activo
+         FROM Pacientes p
+         JOIN Usuarios u ON p.idUsuario = u.idUsuario
+         WHERE p.idPaciente = $1`,
+        [id]
+    );
+    if (!rows[0] || rows[0].activo) return null;
+
+    const { rowCount } = await conexion.query(
+        `UPDATE Usuarios
+         SET activo = true
+         WHERE idUsuario = (SELECT idUsuario FROM Pacientes WHERE idPaciente = $1)`,
+        [id]
+    );
+    return rowCount > 0;
+};
