@@ -51,6 +51,20 @@ const limpiar = (s) =>
 // Normaliza a mayúsculas lo que se manda al backend
 const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
 
+const limitarTelefono = (valor) => String(valor ?? '').replace(/\D/g, '').slice(0, 10);
+const digitosTelefono = (valor) => String(valor ?? '').replace(/\D/g, '');
+
+const mensajeTelefono = (valor) => {
+  if (!String(valor ?? '').trim()) return null;
+  const digitos = digitosTelefono(valor);
+  if (digitos && !/^\d+$/.test(digitos)) return 'El teléfono solo puede contener números';
+  if (!/^\d{10}$/.test(digitos)) return 'El teléfono debe tener exactamente 10 dígitos';
+  return null;
+};
+
+const telefonoRepetido = (digitos, lista) =>
+  lista.some((p) => digitosTelefono(p.telefono) === digitos);
+
 const nombreOdontologo = (o) =>
   o.nombre_completo ?? [o.nombre, o.ape_pat, o.ape_mat].filter(Boolean).join(' ');
 
@@ -172,8 +186,10 @@ export default function UsuariosPage() {
     [odontologos]
   );
 
-  const handleChange = (campo) => (e) =>
-    setForm((prev) => ({ ...prev, [campo]: e.target.value }));
+  const handleChange = (campo) => (e) => {
+    const valor = campo === 'telefono' ? limitarTelefono(e.target.value) : e.target.value;
+    setForm((prev) => ({ ...prev, [campo]: valor }));
+  };
 
   const resetFormulario = () => {
     setForm(FORM_INICIAL);
@@ -189,6 +205,10 @@ export default function UsuariosPage() {
     if (creando && esPersona) {
       if (!form.nombre.trim()) return 'El nombre es obligatorio';
       if (!form.ape_pat.trim()) return 'El apellido paterno es obligatorio';
+      if (esPaciente) {
+        const errTel = mensajeTelefono(form.telefono);
+        if (errTel) return errTel;
+      }
       if (esOdontologo && !form.idclinica) return 'La clínica es obligatoria';
     }
     if (creando && esClinica) {
@@ -249,12 +269,21 @@ export default function UsuariosPage() {
           contrasena: form.contrasena,
         });
       } else if (esPaciente) {
+        const telefono = String(form.telefono).trim() ? digitosTelefono(form.telefono) : '';
+        if (telefono) {
+          const data = await pacientesApi.listar();
+          const lista = comoLista(data, 'pacientes');
+          if (telefonoRepetido(telefono, lista)) {
+            setError('Ya existe un paciente con ese teléfono');
+            return false;
+          }
+        }
         // Crea usuario (tipo paciente) + registro de paciente + expediente
         await pacientesApi.crear({
           nombre: mayus(form.nombre),
           ape_pat: mayus(form.ape_pat),
           ape_mat: mayus(form.ape_mat) || null,
-          telefono: form.telefono.trim() || null,
+          telefono: telefono || null,
           id_odontologo: form.id_odontologo ? Number(form.id_odontologo) : null,
           correo,
           contrasena: form.contrasena,
@@ -396,6 +425,8 @@ export default function UsuariosPage() {
               <Etiqueta>Teléfono:</Etiqueta>
               <input
                 type="tel"
+                inputMode="numeric"
+                maxLength={10}
                 placeholder="Ej. 6671234567"
                 className={inputClass}
                 value={form.telefono}

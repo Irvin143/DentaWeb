@@ -28,13 +28,12 @@ const REGEX_PASSWORD = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 // Filtros en tiempo real
 const LIMPIAR_NOMBRE = /[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s'.-]/g;
-const LIMPIAR_TELEFONO = /[^\d\s()-]/g;
+const limitarTelefono = (valor) => String(valor ?? '').replace(/\D/g, '').slice(0, 10);
 const LIMPIAR_CEDULA = /[^\d]/g;
 const LIMPIAR_CORREO = /[^A-Za-z0-9@._+-]/g;
 
 // Longitudes máximas según el DER
 const MAX_NOMBRE = 100;
-const MAX_TELEFONO = 20;   // varchar(20)
 const MAX_CEDULA = 50;     // varchar(50)
 const MAX_CORREO = 150;
 
@@ -279,7 +278,7 @@ export default function OdontologosPage() {
         valor = valor.replace(LIMPIAR_NOMBRE, '').toUpperCase();
         break;
       case 'telefono':
-        valor = valor.replace(LIMPIAR_TELEFONO, '');
+        valor = limitarTelefono(valor);
         break;
       case 'cedula':
         valor = valor.replace(LIMPIAR_CEDULA, '');
@@ -462,7 +461,7 @@ export default function OdontologosPage() {
             <Etiqueta>Teléfono:</Etiqueta>
             <input
               type="tel"
-              maxLength={MAX_TELEFONO}
+              maxLength={10}
               placeholder="Ej. 6671234567"
               className={claseConError('telefono')}
               value={form.telefono}
