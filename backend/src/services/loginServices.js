@@ -7,25 +7,30 @@ const DUMMY_HASH = bcrypt.hashSync('dummy-password', SALT_ROUNDS);
 
 export async function registrarPaciente({
     correo, contrasena, nombre, ape_pat, ape_mat, telefono, id_odontologo = null,
-    }) {
+}) {
     const hash = await bcrypt.hash(contrasena, SALT_ROUNDS);
+    const tel = telefono?.toString().trim() || null;
 
     try {
         const { rows } = await conexion.query(
-        'SELECT * FROM fn_registrar_paciente($1, $2, $3, $4, $5, $6, $7)',
-        [correo, hash, nombre, ape_pat, ape_mat, telefono, id_odontologo]
+            'SELECT * FROM fn_registrar_paciente($1, $2, $3, $4, $5, $6, $7)',
+            [correo, hash, nombre, ape_pat, ape_mat, tel, id_odontologo]
         );
         return rows[0];
     } catch (err) {
         if (err.code === '23505') {
-        const error = new Error('El correo ya está registrado');
-        error.status = 409;
-        throw error;
+            const error = new Error(
+                err.constraint === 'ux_pacientes_telefono'
+                    ? 'Ya existe un paciente con ese teléfono'
+                    : 'El correo ya está registrado'
+            );
+            error.status = 409;
+            throw error;
         }
         if (err.code === '23503') { // el odontólogo no existe
-        const error = new Error('El odontólogo indicado no existe');
-        error.status = 400;
-        throw error;
+            const error = new Error('El odontólogo indicado no existe');
+            error.status = 400;
+            throw error;
         }
         throw err;
     }

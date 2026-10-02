@@ -39,12 +39,24 @@ export const actualizarPaciente = async (
                   idOdontologo AS id_odontologo;
     `;
 
-    const { rows } = await conexion.query(query, [
-        id, nombre, ape_pat, ape_mat, telefono, idOdontologo,
-    ]);
-    return rows[0] ?? null; // null = no existe
-};
+    // Normaliza: sin espacios; vacío cuenta como "no cambiar"
+    const tel = telefono?.toString().trim() || null;
 
+    try {
+        const { rows } = await conexion.query(query, [
+            id, nombre, ape_pat, ape_mat, tel, idOdontologo,
+        ]);
+        return rows[0] ?? null; // null = no existe
+    } catch (err) {
+        if (err.code === '23505') {
+            // violación de unicidad (teléfono repetido)
+            const e = new Error('Ya existe un paciente con ese teléfono');
+            e.status = 409;
+            throw e;
+        }
+        throw err;
+    }
+};
 // Eliminación lógica: desactiva la cuenta (el login ya rechaza activo = false)
 export const eliminarPaciente = async (id) => {
     const query = `
