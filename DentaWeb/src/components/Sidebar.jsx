@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Building2, Stethoscope, Users, Calendar, Menu, X, LogOut } from 'lucide-react';
 import { getAuth, puedeVer } from '../config/permisos'; // ajusta la ruta a donde guardes permisos.js
@@ -18,6 +19,75 @@ const navItems = [
   { path: '/tipos-usuario', label: 'Tipos de Usuario', icon: Calendar },
   // { path: "/agenda", label: "Agenda", icon: Calendar },
 ];
+
+function DialogoCerrarSesion({ onCancelar, onConfirmar }) {
+  const cancelarRef = useRef(null);
+
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
+      onCancelar();
+    };
+    document.addEventListener('keydown', onKeyDown, true);
+    cancelarRef.current?.focus();
+    return () => document.removeEventListener('keydown', onKeyDown, true);
+  }, [onCancelar]);
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 p-4"
+      onClick={onCancelar}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="titulo-cerrar-sesion"
+        aria-describedby="texto-cerrar-sesion"
+        onClick={(event) => event.stopPropagation()}
+        className="w-full max-w-lg rounded-2xl bg-white shadow-xl"
+      >
+        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+          <h2 id="titulo-cerrar-sesion" className="text-lg font-bold text-slate-800">
+            Cerrar sesión
+          </h2>
+          <button
+            type="button"
+            onClick={onCancelar}
+            aria-label="Cerrar"
+            className="rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+          >
+            ✕
+          </button>
+        </div>
+
+        <p id="texto-cerrar-sesion" className="px-6 py-5 text-sm text-slate-600">
+          ¿Seguro que quieres salir de ClinicWare?
+        </p>
+
+        <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4">
+          <button
+            ref={cancelarRef}
+            type="button"
+            onClick={onCancelar}
+            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={onConfirmar}
+            className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
 
 function Marca() {
   return (
@@ -39,6 +109,9 @@ export function Sidebar() {
   const navigate = useNavigate();
   const usuario = getAuth()?.usuario;
   const [abierto, setAbierto] = useState(false);
+  const [confirmarSalida, setConfirmarSalida] = useState(false);
+  const confirmarSalidaRef = useRef(false);
+  confirmarSalidaRef.current = confirmarSalida;
 
   // Solo se muestran las opciones a las que el usuario tiene acceso
   const itemsVisibles = navItems.filter((item) => puedeVer(item.path, usuario));
@@ -51,10 +124,14 @@ export function Sidebar() {
     navigate('/', { replace: true });
   };
 
+  const cancelarCierre = useCallback(() => setConfirmarSalida(false), []);
+
   // Cerrar con Escape y bloquear el scroll del fondo mientras está abierto (mobile)
   useEffect(() => {
     if (!abierto) return;
-    const onKeyDown = (e) => e.key === 'Escape' && setAbierto(false);
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape' && !confirmarSalidaRef.current) setAbierto(false);
+    };
     document.addEventListener('keydown', onKeyDown);
     document.body.style.overflow = 'hidden';
     return () => {
@@ -169,7 +246,7 @@ export function Sidebar() {
           </div>
           <button
             type="button"
-            onClick={cerrarSesion}
+            onClick={() => setConfirmarSalida(true)}
             className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
           >
             <LogOut size={18} aria-hidden="true" />
@@ -177,6 +254,10 @@ export function Sidebar() {
           </button>
         </footer>
       </aside>
+
+      {confirmarSalida && (
+        <DialogoCerrarSesion onCancelar={cancelarCierre} onConfirmar={cerrarSesion} />
+      )}
     </>
   );
 }
