@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Eye,
   EyeOff,
@@ -7,7 +7,7 @@ import {
   ArrowRight,
   Smartphone,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { authApi } from "../../services/api.js";
 import { borrarSesion, getAuth, guardarSesion, primeraRutaPermitida } from "../../config/permisos.js";
 
@@ -21,11 +21,6 @@ const DentalWebLogin = () => {
   const [successMessage, setSuccessMessage] = useState("");
 
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const destino = primeraRutaPermitida(getAuth()?.usuario);
-    if (destino) navigate(destino, { replace: true });
-  }, [navigate]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -68,6 +63,11 @@ const DentalWebLogin = () => {
       setIsSubmitting(false);
     }
   };
+
+  const destinoSesion = primeraRutaPermitida(getAuth()?.usuario);
+  if (destinoSesion) {
+    return <Navigate to={destinoSesion} replace />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-login-background px-4 py-8">
