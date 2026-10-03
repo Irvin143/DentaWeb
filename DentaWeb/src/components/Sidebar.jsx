@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Building2, BriefcaseMedical, CalendarCheck, CalendarClock, DoorOpen, GraduationCap, IdCard, KeyRound, LayoutGrid, LogOut, Menu, Package, Scan, Shield, Stethoscope, UserCog, Users, X } from 'lucide-react';
+import { Building2, BriefcaseMedical, CalendarCheck, CalendarClock, ChevronLeft, ChevronRight, DoorOpen, GraduationCap, IdCard, KeyRound, LayoutGrid, LogOut, Menu, Package, Scan, Shield, Stethoscope, UserCog, Users, X } from 'lucide-react';
 import { getAuth, puedeVer, primeraRutaPermitida } from '../config/permisos'; // ajusta la ruta a donde guardes permisos.js
 import ModalCambiarPassword from './ModalCambiarPassword';
 
@@ -112,9 +112,12 @@ export function Sidebar() {
   const navigate = useNavigate();
   const usuario = getAuth()?.usuario;
   const [abierto, setAbierto] = useState(false);
+  const [colapsada, setColapsada] = useState(false);
+  const [menuUsuario, setMenuUsuario] = useState(false);
   const [confirmarSalida, setConfirmarSalida] = useState(false);
   const [modalPasswordAbierto, setModalPasswordAbierto] = useState(false);
   const confirmarSalidaRef = useRef(false);
+  const tarjetaRef = useRef(null);
   confirmarSalidaRef.current = confirmarSalida;
 
   // Solo se muestran las opciones a las que el usuario tiene acceso
@@ -155,6 +158,15 @@ export function Sidebar() {
     };
   }, [abierto]);
 
+  useEffect(() => {
+    if (!menuUsuario) return;
+    const cerrarSiEsFuera = (event) => {
+      if (!tarjetaRef.current?.contains(event.target)) setMenuUsuario(false);
+    };
+    document.addEventListener('pointerdown', cerrarSiEsFuera);
+    return () => document.removeEventListener('pointerdown', cerrarSiEsFuera);
+  }, [menuUsuario]);
+
   return (
     <>
       {/* Barra superior (solo mobile) */}
@@ -183,12 +195,23 @@ export function Sidebar() {
         />
       )}
 
+      <button
+        type="button"
+        onClick={() => setColapsada((valor) => !valor)}
+        aria-label={colapsada ? 'Mostrar menú' : 'Ocultar menú'}
+        className={`fixed top-5 z-[60] hidden h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-700 md:flex ${
+          colapsada ? 'left-2' : 'left-64 -translate-x-1/2'
+        }`}
+      >
+        {colapsada ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+      </button>
+
       {/* Sidebar: panel deslizante en mobile, fijo en escritorio */}
       <aside
         id="menu-lateral"
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 min-h-0 flex-col justify-between overflow-hidden border-r border-slate-100 bg-white p-4 shadow-sm transition-[transform,visibility] duration-200 md:visible md:static md:h-full md:translate-x-0 ${
-          abierto ? 'translate-x-0' : '-translate-x-full invisible'
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 min-h-0 flex-col justify-between overflow-hidden border-r border-slate-100 bg-white p-4 shadow-sm transition-[transform,visibility] duration-200 md:h-full md:translate-x-0 ${
+          colapsada ? 'md:hidden' : 'md:visible md:static'
+        } ${abierto ? 'translate-x-0' : '-translate-x-full invisible'}`}
       >
         <section className="min-h-0 flex-1 overflow-y-auto">
           <header className="mb-8 flex items-center justify-between">
@@ -246,8 +269,13 @@ export function Sidebar() {
         </section>
 
         {/* Perfil de usuario y cierre de sesión */}
-        <footer className="mt-4 shrink-0 border-t border-slate-100 pt-4">
-          <div className="flex items-center gap-3 px-2 py-2">
+        <footer ref={tarjetaRef} className="mt-4 shrink-0 border-t border-slate-100 pt-4">
+          <button
+            type="button"
+            onClick={() => setMenuUsuario((valor) => !valor)}
+            aria-expanded={menuUsuario}
+            className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-slate-50"
+          >
             <span
               aria-hidden="true"
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 font-bold text-slate-600"
@@ -258,26 +286,34 @@ export function Sidebar() {
               <strong className="truncate text-sm font-bold text-slate-800">{nombre}</strong>
               <small className="truncate text-xs text-slate-500">{etiquetaRol}</small>
             </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setConfirmarSalida(true)}
-            className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
-          >
-            <LogOut size={18} aria-hidden="true" />
-            Cerrar sesión
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setModalPasswordAbierto(true);
-              setAbierto(false); 
-            }}
-            className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
-          >
-            <KeyRound size={18} aria-hidden="true" />
-            Cambiar contraseña
-          </button>
+          {menuUsuario && (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuUsuario(false);
+                  setConfirmarSalida(true);
+                }}
+                className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
+              >
+                <LogOut size={18} aria-hidden="true" />
+                Cerrar sesión
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuUsuario(false);
+                  setModalPasswordAbierto(true);
+                  setAbierto(false);
+                }}
+                className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
+              >
+                <KeyRound size={18} aria-hidden="true" />
+                Cambiar contraseña
+              </button>
+            </>
+          )}
         </footer>
       </aside>
 
