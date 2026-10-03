@@ -188,10 +188,10 @@ const mapearOdontologo = (o) => ({
   nombre:
     o.nombre_completo ??
     [o.nombre, o.ape_pat, o.ape_mat].filter(Boolean).join(' '),
-  cedula: o.cedula ?? 'Sin cedula',
-  telefono: o.telefono ?? 'Sin telefono',
-  correo_usuario: o.correo_usuario ?? 'Sin usuario',
-  clinica: o.nombre_clinica ?? 'Sin clínica',
+  cedula: o.cedula,
+  telefono: o.telefono,
+  correo_usuario: o.correo_usuario,
+  clinica: o.nombre_clinica,
   estado: o.activo ? 'Activo' : 'Inactivo',
 });
 

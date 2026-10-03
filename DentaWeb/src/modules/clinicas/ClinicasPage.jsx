@@ -141,9 +141,9 @@ const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
 const mapearClinica = (c) => ({
   id: c.id_clinica,
   nombre: c.nombre,
-  direccion: c.direccion ?? '—',
-  identificacion_fiscal: c.identificacion_fiscal ?? '—',
-  correo_usuario: c.correo_usuario ?? 'Sin correo',
+  direccion: c.direccion,
+  identificacion_fiscal: c.identificacion_fiscal,
+  correo_usuario: c.correo_usuario,
   estado: c.activo ? 'Activa' : 'Inactiva',
 });
 

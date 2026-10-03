@@ -17,7 +17,7 @@ const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
 const mapearRol = (r) => ({
   id: r.id_rol,
   nombre: r.nombre,
-  descripcion: r.descripcion || '—',
+  descripcion: r.descripcion,
   estado: r.activo ? 'Activo' : 'Inactivo',
 });
 

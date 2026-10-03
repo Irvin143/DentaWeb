@@ -74,8 +74,8 @@ const nombreOdontologo = (o) =>
 const mapearUsuario = (u) => ({
   id: u.id_usuario,
   correo: u.correo,
-  tipo: u.tipo ?? 'Sin tipo',
-  paquete: u.nombre_paquete ?? 'Sin paquete',
+  tipo: u.tipo,
+  paquete: u.nombre_paquete,
   estado: u.activo ? 'Activo' : 'Inactivo',
 });
 

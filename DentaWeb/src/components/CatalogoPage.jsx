@@ -57,10 +57,13 @@ const estaInactiva = (fila) => /^inactiv[oa]$/i.test(String(fila.estado ?? '').t
 const ambosNumeros = (a, b) =>
   typeof a === 'number' && typeof b === 'number' && Number.isFinite(a) && Number.isFinite(b);
 
+const esVacio = (valor) => valor == null || String(valor).trim() === '';
+const textoOrden = (valor) => (esVacio(valor) ? '' : String(valor));
+
 const compararValores = (a, b) =>
   ambosNumeros(a, b)
     ? a - b
-    : String(a ?? '').localeCompare(String(b ?? ''), 'es', { numeric: true, sensitivity: 'base' });
+    : textoOrden(a).localeCompare(textoOrden(b), 'es', { numeric: true, sensitivity: 'base' });
 
 const ETIQUETAS_COLUMNA = {
   nombre: 'Nombre',
@@ -207,7 +210,8 @@ export function CatalogoPage({
     const filtrados = q
       ? datos.filter((fila) =>
           Object.entries(fila).some(
-            ([clave, valor]) => clave !== 'id' && String(valor).toLowerCase().includes(q)
+            ([clave, valor]) =>
+              clave !== 'id' && !esVacio(valor) && String(valor).toLowerCase().includes(q)
           )
         )
       : datos;
@@ -561,7 +565,13 @@ export function CatalogoPage({
                             key={col.key}
                             className={`w-auto min-w-48 break-words px-5 py-3 align-top ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
                           >
-                            {col.render ? col.render(fila[col.key], fila) : fila[col.key]}
+                            {esVacio(fila[col.key]) ? (
+                              <span className="text-slate-400">—</span>
+                            ) : col.render ? (
+                              col.render(fila[col.key], fila)
+                            ) : (
+                              fila[col.key]
+                            )}
                           </td>
                         ))}
                         {hayAcciones && (
@@ -656,7 +666,13 @@ export function CatalogoPage({
                           <dd
                             className={`m-0 break-words ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
                           >
-                            {col.render ? col.render(fila[col.key], fila) : fila[col.key]}
+                            {esVacio(fila[col.key]) ? (
+                              <span className="text-slate-400">—</span>
+                            ) : col.render ? (
+                              col.render(fila[col.key], fila)
+                            ) : (
+                              fila[col.key]
+                            )}
                           </dd>
                         </div>
                       ))}

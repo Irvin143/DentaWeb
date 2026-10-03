@@ -103,9 +103,7 @@ export default function ConsultoriosPage() {
     return {
       id: c.id_consultorio,
       nombre: c.nombre,
-      clinica: c.id_clinica
-        ? c.nombre_clinica ?? clinica?.nombre ?? '—'
-        : 'Sin asignar',
+      clinica: c.id_clinica ? c.nombre_clinica ?? clinica?.nombre : null,
       estado: c.activo ? 'Activo' : 'Inactivo',
     };
   };

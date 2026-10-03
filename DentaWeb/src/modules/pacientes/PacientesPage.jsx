@@ -49,11 +49,11 @@ const telefonoRepetido = (digitos, lista, idActual) =>
 // Convierte lo que devuelve el backend a lo que muestra la tabla
 const mapearPaciente = (p) => ({
   id: p.id_paciente,
-  nombre: p.nombre ?? '—',
-  ape_pat: p.ape_pat ?? '',
-  ape_mat: p.ape_mat ?? 'N/A',
-  telefono: p.telefono ?? '—',
-  correo: p.correo ?? '—',
+  nombre: p.nombre,
+  ape_pat: p.ape_pat,
+  ape_mat: p.ape_mat,
+  telefono: p.telefono,
+  correo: p.correo,
   odontologo: p.nombre_odontologo,
   estado: p.activo ? 'Activo' : 'Inactivo',
 });

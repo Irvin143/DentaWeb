@@ -22,8 +22,8 @@ const comoLista = (resp, clave) =>
 const mapearServicio = (s) => ({
   id: s.id_servicio,
   nombre: s.nombre,
-  descripcion: s.descripcion || '—',
-  clinica: s.nombre_clinica ?? 'Sin clínica',
+  descripcion: s.descripcion,
+  clinica: s.nombre_clinica,
   estado: s.activo ? 'Activo' : 'Inactivo',
 });
 

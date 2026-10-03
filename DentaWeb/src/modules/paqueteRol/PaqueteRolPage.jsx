@@ -17,7 +17,7 @@ const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
 const mapearPaquete = (p) => ({
   id: p.id_paquete,
   nombre: p.nombre,
-  descripcion: p.descripcion || '—',
+  descripcion: p.descripcion,
   estado: p.activo ? 'Activo' : 'Inactivo',
 });
 

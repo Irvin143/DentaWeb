@@ -96,7 +96,7 @@ const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
 const mapearEstudio = (e) => ({
   id: e.id_estudio,
   nombre: e.nombre,
-  descripcion: e.descripcion || '—',
+  descripcion: e.descripcion,
   estado: e.activo ? 'Activo' : 'Inactivo',
 });
 
