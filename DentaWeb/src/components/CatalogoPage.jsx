@@ -199,7 +199,7 @@ export function CatalogoPage({
       ? orden.columna
       : cols[0]?.key;
 
-  const totalColumnas = cols.length + (cols.length > 0 ? 2 : 1) + (hayAcciones ? 1 : 0);
+  const totalColumnas = cols.length + 1 + (hayAcciones ? 1 : 0);
 
   // Filtro del buscador y, después, orden de la lista ya cargada
   const datosFiltrados = useMemo(() => {
@@ -228,11 +228,24 @@ export function CatalogoPage({
 
   // Paginación
   const totalRegistros = datosFiltrados.length;
-  // No. 5rem, Alta 7rem, cada dato 12rem, Acciones 11rem. El contenido de la página no entra en la cuenta.
+  // Botón de ícono 1.875rem, interruptor 2.75rem, hueco 0.5rem, padding derecho 1.25rem.
+  const anchoAccionesRem = hayAcciones
+    ? 0.5 +
+      (onEditar ? 1.875 : 0) +
+      (onEliminar || onReactivar ? 2.75 : 0) +
+      (onBorrar ? 1.875 : 0) +
+      0.5 *
+        ((onEditar ? 1 : 0) +
+          (onEliminar || onReactivar ? 1 : 0) +
+          (onBorrar ? 1 : 0) -
+          1) +
+      1.25
+    : 0;
+  // No. 5rem, cada dato 12rem. Acciones solo ocupa sus controles.
   const anchoTablaRem =
-    (cols.length > 0 ? 5 + 7 : 0) +
+    (cols.length > 0 ? 5 : 0) +
     cols.length * 12 +
-    (totalRegistros >= 1 ? 11 : 0);
+    (totalRegistros >= 1 ? anchoAccionesRem : 0);
   const totalPaginas = Math.max(1, Math.ceil(totalRegistros / REGISTROS_POR_PAGINA));
   const paginaActual = Math.min(pagina, totalPaginas);
   const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
@@ -358,7 +371,15 @@ export function CatalogoPage({
     }
   };
 
-  const botonIcono = 'rounded-lg border border-slate-200 p-1.5 text-slate-600 transition-colors';
+  const botonIcono = 'shrink-0 rounded-lg border border-slate-200 p-1.5 text-slate-600 transition-colors';
+  const medidaAcciones =
+    anchoAccionesRem > 0
+      ? {
+          width: `${anchoAccionesRem}rem`,
+          minWidth: `${anchoAccionesRem}rem`,
+          maxWidth: `${anchoAccionesRem}rem`,
+        }
+      : undefined;
   const configConfirmacion = ACCIONES[confirmacion.accion] ?? ACCIONES.eliminar;
 
   return (
@@ -397,6 +418,24 @@ export function CatalogoPage({
               className="w-full rounded-xl bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/20"
             />
           </label>
+
+          <button
+            type="button"
+            onClick={ordenarPorRecientes}
+            aria-pressed={ordenandoPorRecientes}
+            aria-label={
+              ordenandoPorRecientes && orden.direccion === 'asc' ? 'Más antiguos' : 'Más recientes'
+            }
+            className={`hidden shrink-0 cursor-pointer items-center gap-1.5 rounded-xl px-3 py-2.5 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/20 md:flex ${
+              ordenandoPorRecientes
+                ? 'bg-teal-50 text-teal-700'
+                : 'bg-slate-50 text-slate-700 hover:text-slate-800'
+            }`}
+          >
+            {ordenandoPorRecientes && orden.direccion === 'asc' ? 'Más antiguos' : 'Más recientes'}
+            {ordenandoPorRecientes &&
+              (orden.direccion === 'asc' ? <ArrowUp size={16} /> : <ArrowDown size={16} />)}
+          </button>
 
           <div className="flex shrink-0 items-center gap-2 md:hidden">
             <select
@@ -447,36 +486,6 @@ export function CatalogoPage({
                         No.
                       </th>
                     )}
-                    {cols.length > 0 && (
-                      <th
-                        scope="col"
-                        aria-sort={
-                          !ordenandoPorRecientes
-                            ? 'none'
-                            : orden.direccion === 'asc'
-                              ? 'ascending'
-                              : 'descending'
-                        }
-                        className="w-28 p-0 whitespace-nowrap"
-                      >
-                        <button
-                          type="button"
-                          onClick={ordenarPorRecientes}
-                          aria-label={
-                            ordenandoPorRecientes && orden.direccion === 'desc'
-                              ? 'Alta, orden ascendente'
-                              : 'Alta, orden descendente'
-                          }
-                          className="flex w-full cursor-pointer items-center gap-1.5 px-5 py-3 text-left uppercase transition-colors hover:bg-slate-100 hover:text-slate-700"
-                        >
-                          Alta
-                          <FlechaOrden
-                            activa={ordenandoPorRecientes}
-                            direccion={orden.direccion}
-                          />
-                        </button>
-                      </th>
-                    )}
                     {cols.map((col) => {
                       const activa = columnaOrden === col.key;
                       const siguiente =
@@ -488,7 +497,7 @@ export function CatalogoPage({
                           aria-sort={
                             !activa ? 'none' : orden.direccion === 'asc' ? 'ascending' : 'descending'
                           }
-                          className="w-48 p-0"
+                          className="w-auto min-w-48 p-0"
                         >
                           <button
                             type="button"
@@ -505,7 +514,8 @@ export function CatalogoPage({
                     {totalRegistros >= 1 && (
                       <th
                         scope="col"
-                        className="sticky right-0 z-20 w-44 border-l border-slate-200 bg-slate-50 px-5 py-3 text-right whitespace-nowrap"
+                        style={medidaAcciones}
+                        className="sticky right-0 z-20 bg-slate-50 py-3 pl-2 pr-5 text-right whitespace-nowrap"
                       >
                         Acciones
                       </th>
@@ -546,24 +556,24 @@ export function CatalogoPage({
                         >
                           {inicio + rowIndex + 1}
                         </td>
-                        <td className="w-28 p-0" />
                         {cols.map((col) => (
                           <td
                             key={col.key}
-                            className={`w-48 break-words px-5 py-3 align-top ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
+                            className={`w-auto min-w-48 break-words px-5 py-3 align-top ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
                           >
                             {col.render ? col.render(fila[col.key], fila) : fila[col.key]}
                           </td>
                         ))}
                         {hayAcciones && (
                           <td
-                            className={`sticky right-0 z-10 w-44 border-l border-slate-200 px-5 py-3 align-top whitespace-nowrap ${
+                            style={medidaAcciones}
+                            className={`sticky right-0 z-10 py-3 pl-2 pr-5 align-top whitespace-nowrap ${
                               estaInactiva(fila)
                                 ? 'bg-slate-50'
                                 : 'bg-white group-hover:bg-slate-50'
                             }`}
                           >
-                            <div className="flex items-center justify-end gap-2">
+                            <div className="flex w-full items-center justify-end gap-2">
                               {onEditar && (
                                 <button
                                   type="button"
