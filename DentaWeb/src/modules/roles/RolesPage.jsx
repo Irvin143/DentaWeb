@@ -134,7 +134,7 @@ export default function RolesPage() {
         <input
           type="text"
           maxLength={50}
-          placeholder="Ej. Administrador"
+          placeholder="Ej. ADMINISTRADOR"
           className={inputClass}
           value={form.nombre}
           onChange={handleChange('nombre')}

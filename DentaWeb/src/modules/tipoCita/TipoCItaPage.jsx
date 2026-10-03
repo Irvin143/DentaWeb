@@ -130,7 +130,7 @@ export default function TiposCitaPage() {
         <input
           type="text"
           maxLength={50}
-          placeholder="Ej. Primera consulta"
+          placeholder="Ej. PRIMERA CONSULTA"
           className={inputClass}
           value={form.nombre}
           onChange={handleChange('nombre')}

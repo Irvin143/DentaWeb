@@ -130,7 +130,7 @@ export default function TiposUsuarioPage() {
         <input
           type="text"
           maxLength={50}
-          placeholder="Ej. odontologo"
+          placeholder="Ej. ODONTOLOGO"
           className={inputClass}
           value={form.nombre}
           onChange={handleChange('nombre')}

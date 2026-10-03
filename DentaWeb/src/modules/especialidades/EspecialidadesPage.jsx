@@ -239,7 +239,7 @@ export default function EspecialidadesPage() {
         <input
           type="text"
           maxLength={MAX_NOMBRE}
-          placeholder="Ej. Ortodoncia"
+          placeholder="Ej. ORTODONCIA"
           className={claseConError('nombre')}
           value={form.nombre}
           onChange={handleChange('nombre')}

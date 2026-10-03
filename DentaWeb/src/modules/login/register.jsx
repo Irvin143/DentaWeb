@@ -205,7 +205,7 @@ const Register = () => {
                 onChange={(event) =>
                   setNombre(event.target.value.toLocaleUpperCase("es-MX"))
                 }
-                placeholder="Ana"
+                placeholder="ANA"
                 autoComplete="given-name"
                 maxLength={100}
                 required
@@ -228,7 +228,7 @@ const Register = () => {
               onChange={(event) =>
                 setApePat(event.target.value.toLocaleUpperCase("es-MX"))
               }
-              placeholder="Pérez"
+              placeholder="PÉREZ"
               autoComplete="family-name"
               maxLength={100}
               required
@@ -251,7 +251,7 @@ const Register = () => {
               onChange={(event) =>
                 setApeMat(event.target.value.toLocaleUpperCase("es-MX"))
               }
-              placeholder="García"
+              placeholder="GARCÍA"
               autoComplete="additional-name"
               className="h-12 w-full rounded-xl border border-transparent bg-login-input px-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
             />

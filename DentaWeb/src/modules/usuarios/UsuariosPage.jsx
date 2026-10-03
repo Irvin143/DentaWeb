@@ -425,7 +425,7 @@ export default function UsuariosPage() {
               <Etiqueta requerido>Nombre(s):</Etiqueta>
               <input
                 type="text"
-                placeholder="Ej. Laura"
+                placeholder="Ej. LAURA"
                 className={inputClass}
                 value={form.nombre}
                 onChange={handleChange('nombre')}
@@ -447,7 +447,7 @@ export default function UsuariosPage() {
               <Etiqueta requerido>Apellido paterno:</Etiqueta>
               <input
                 type="text"
-                placeholder="Ej. Gómez"
+                placeholder="Ej. GÓMEZ"
                 className={inputClass}
                 value={form.ape_pat}
                 onChange={handleChange('ape_pat')}
@@ -457,7 +457,7 @@ export default function UsuariosPage() {
               <Etiqueta>Apellido materno:</Etiqueta>
               <input
                 type="text"
-                placeholder="Ej. Ríos"
+                placeholder="Ej. RÍOS"
                 className={inputClass}
                 value={form.ape_mat}
                 onChange={handleChange('ape_mat')}
@@ -530,7 +530,7 @@ export default function UsuariosPage() {
               <input
                 type="text"
                 maxLength={150}
-                placeholder="Ej. Clínica Dental Sonrisa"
+                placeholder="Ej. CLÍNICA DENTAL SONRISA"
                 className={inputClass}
                 value={form.clinica_nombre}
                 onChange={handleChange('clinica_nombre')}
@@ -551,7 +551,7 @@ export default function UsuariosPage() {
               <Etiqueta>Dirección:</Etiqueta>
               <textarea
                 rows={2}
-                placeholder="Calle, número, colonia, ciudad"
+                placeholder="CALLE, NÚMERO, COLONIA, CIUDAD"
                 className={`${inputClass} resize-none`}
                 value={form.direccion}
                 onChange={handleChange('direccion')}

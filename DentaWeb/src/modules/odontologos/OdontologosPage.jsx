@@ -448,7 +448,7 @@ export default function OdontologosPage() {
             <input
               type="text"
               maxLength={MAX_NOMBRE}
-              placeholder="Ej. Laura"
+              placeholder="Ej. LAURA"
               className={claseConError('nombre')}
               value={form.nombre}
               onChange={handleChange('nombre')}
@@ -483,7 +483,7 @@ export default function OdontologosPage() {
             <input
               type="text"
               maxLength={MAX_NOMBRE}
-              placeholder="Ej. Gómez"
+              placeholder="Ej. GÓMEZ"
               className={claseConError('ape_pat')}
               value={form.ape_pat}
               onChange={handleChange('ape_pat')}
@@ -500,7 +500,7 @@ export default function OdontologosPage() {
             <input
               type="text"
               maxLength={MAX_NOMBRE}
-              placeholder="Ej. Ríos"
+              placeholder="Ej. RÍOS"
               className={claseConError('ape_mat')}
               value={form.ape_mat}
               onChange={handleChange('ape_mat')}

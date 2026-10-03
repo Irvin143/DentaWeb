@@ -135,7 +135,7 @@ export default function PaquetesPage() {
         <input
           type="text"
           maxLength={50}
-          placeholder="Ej. Paquete de limpieza dental"
+          placeholder="Ej. PAQUETE DE LIMPIEZA DENTAL"
           className={inputClass}
           value={form.nombre}
           onChange={handleChange('nombre')}

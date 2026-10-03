@@ -360,7 +360,7 @@ export default function ClinicasPage() {
             <input
               type="text"
               maxLength={MAX_NOMBRE}
-              placeholder="Ej. Clínica Centro"
+              placeholder="Ej. CLÍNICA CENTRO"
               className={claseConError('nombre')}
               value={form.nombre}
               onChange={handleChange('nombre')}
@@ -394,7 +394,7 @@ export default function ClinicasPage() {
             <input
               type="text"
               maxLength={MAX_DIRECCION}
-              placeholder="Calle, Número, Ciudad"
+              placeholder="CALLE, NÚMERO, CIUDAD"
               className={claseConError('direccion')}
               value={form.direccion}
               onChange={handleChange('direccion')}

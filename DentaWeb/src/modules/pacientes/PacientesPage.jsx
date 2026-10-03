@@ -262,7 +262,7 @@ console.log('mapearPaciente:', pacientes);
             <Etiqueta requerido>Nombre(s):</Etiqueta>
             <input
               type="text"
-              placeholder="Ej. María Fernanda"
+              placeholder="Ej. MARÍA FERNANDA"
               className={inputClass}
               value={form.nombre}
               onChange={handleChange('nombre')}
@@ -284,7 +284,7 @@ console.log('mapearPaciente:', pacientes);
             <Etiqueta requerido>Apellido paterno:</Etiqueta>
             <input
               type="text"
-              placeholder="Ej. López"
+              placeholder="Ej. LÓPEZ"
               className={inputClass}
               value={form.ape_pat}
               onChange={handleChange('ape_pat')}
@@ -294,7 +294,7 @@ console.log('mapearPaciente:', pacientes);
             <Etiqueta>Apellido materno:</Etiqueta>
             <input
               type="text"
-              placeholder="Ej. Ramírez"
+              placeholder="Ej. RAMÍREZ"
               className={inputClass}
               value={form.ape_mat}
               onChange={handleChange('ape_mat')}

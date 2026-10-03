@@ -189,7 +189,7 @@ export default function ServiciosPage() {
         <input
           type="text"
           maxLength={100}
-          placeholder="Ej. Limpieza dental"
+          placeholder="Ej. LIMPIEZA DENTAL"
           className={inputClass}
           value={form.nombre}
           onChange={handleChange('nombre')}
