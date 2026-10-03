@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Eye,
   EyeOff,
@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../../services/api.js";
-import { primeraRutaPermitida } from "../../config/permisos.js";
+import { borrarSesion, getAuth, guardarSesion, primeraRutaPermitida } from "../../config/permisos.js";
 
 const DentalWebLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,6 +21,11 @@ const DentalWebLogin = () => {
   const [successMessage, setSuccessMessage] = useState("");
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const destino = primeraRutaPermitida(getAuth()?.usuario);
+    if (destino) navigate(destino, { replace: true });
+  }, [navigate]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -45,18 +50,12 @@ const DentalWebLogin = () => {
 
       const destino = primeraRutaPermitida(response.usuario);
       if (!destino) {
-        sessionStorage.removeItem("clinicware_auth");
+        borrarSesion();
         setErrorMessage("Tu cuenta no tiene acceso a ninguna pantalla.");
         return;
       }
 
-      sessionStorage.setItem(
-        "clinicware_auth",
-        JSON.stringify({
-          token: response.token,
-          usuario: response.usuario,
-        }),
-      );
+      guardarSesion({ token: response.token, usuario: response.usuario }, rememberMe);
       navigate(destino, { replace: true });
     } catch (error) {
       console.error("Login falló:", error?.status, error?.message, error?.data);
@@ -191,7 +190,7 @@ const DentalWebLogin = () => {
                 )}
               </span>
               <span className="whitespace-nowrap text-xs text-login-muted sm:text-sm">
-                Recordar mis datos
+                Mantener sesión iniciada
               </span>
             </label>
             <Link

@@ -1,3 +1,5 @@
+import { getAuth } from "../config/permisos.js";
+
 const API_URL = (
   import.meta.env.VITE_API_URL || "http://localhost:3001"
 ).replace(/\/+$/, "");
@@ -12,12 +14,7 @@ export class ApiError extends Error {
 }
 
 function obtenerToken() {
-  try {
-    const auth = JSON.parse(sessionStorage.getItem("clinicware_auth") || "null");
-    return auth?.token ?? null;
-  } catch {
-    return null;
-  }
+  return getAuth()?.token ?? null;
 }
 
 export async function apiRequest(endpoint, options = {}) {

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Building2, BriefcaseMedical, CalendarCheck, CalendarClock, ChevronLeft, ChevronRight, DoorOpen, GraduationCap, IdCard, KeyRound, LayoutGrid, LogOut, Menu, Package, Scan, Shield, Stethoscope, UserCog, Users, X } from 'lucide-react';
-import { getAuth, puedeVer, primeraRutaPermitida } from '../config/permisos'; // ajusta la ruta a donde guardes permisos.js
+import { borrarSesion, getAuth, puedeVer, primeraRutaPermitida } from '../config/permisos'; // ajusta la ruta a donde guardes permisos.js
 import ModalCambiarPassword from './ModalCambiarPassword';
 
 const navItems = [
@@ -138,7 +138,7 @@ export function Sidebar() {
     }[clavePaquete] ?? usuario?.paquete ?? '';
 
   const cerrarSesion = () => {
-    sessionStorage.removeItem('clinicware_auth');
+    borrarSesion();
     navigate('/', { replace: true });
   };
 

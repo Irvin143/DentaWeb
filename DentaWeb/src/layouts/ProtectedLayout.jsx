@@ -1,14 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { MainLayout } from "../layouts/MainLayout";
-import { PERMISOS_RUTAS, puedeVer, primeraRutaPermitida } from "../config/permisos.js";
-
-export const getAuth = () => {
-  try {
-    return JSON.parse(sessionStorage.getItem("clinicware_auth"));
-  } catch {
-    return null;
-  }
-};
+import { PERMISOS_RUTAS, puedeVer, primeraRutaPermitida, getAuth } from "../config/permisos.js";
 
 export default function ProtectedLayout() {
   const auth = getAuth();
