@@ -425,7 +425,7 @@ const Register = () => {
           )}
 
           {successMessage && (
-            <p className="rounded-xl bg-secondary-container px-4 py-3 text-sm text-on-secondary-container" role="status" aria-live="polite">
+            <p className="rounded-xl bg-login-active/10 px-4 py-3 text-sm text-primary" role="status" aria-live="polite">
               {successMessage}
             </p>
           )}

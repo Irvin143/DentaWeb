@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Eye,
   EyeOff,
@@ -21,9 +21,17 @@ const DentalWebLogin = () => {
   const [successMessage, setSuccessMessage] = useState("");
 
   const navigate = useNavigate();
+  const redireccion = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (redireccion.current) clearTimeout(redireccion.current);
+    };
+  }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (isSubmitting) return;
     setErrorMessage("");
     setSuccessMessage("");
 
@@ -51,7 +59,10 @@ const DentalWebLogin = () => {
       }
 
       guardarSesion({ token: response.token, usuario: response.usuario }, rememberMe);
-      navigate(destino, { replace: true });
+      setSuccessMessage("Sesión iniciada correctamente.");
+      redireccion.current = setTimeout(() => {
+        navigate(destino, { replace: true });
+      }, 1000);
     } catch (error) {
       console.error("Login falló:", error?.status, error?.message, error?.data);
       if (error?.status === 400 || error?.status === 401) {
@@ -60,12 +71,12 @@ const DentalWebLogin = () => {
         setErrorMessage("No fue posible iniciar sesión. Inténtalo de nuevo.");
       }
     } finally {
-      setIsSubmitting(false);
+      if (!redireccion.current) setIsSubmitting(false);
     }
   };
 
   const destinoSesion = primeraRutaPermitida(getAuth()?.usuario);
-  if (destinoSesion) {
+  if (destinoSesion && !successMessage) {
     return <Navigate to={destinoSesion} replace />;
   }
 
@@ -208,7 +219,7 @@ const DentalWebLogin = () => {
           )}
 
           {successMessage && (
-            <p className="rounded-xl bg-secondary-container px-4 py-3 text-sm text-on-secondary-container" role="status" aria-live="polite">
+            <p className="rounded-xl bg-login-active/10 px-4 py-3 text-sm text-primary" role="status" aria-live="polite">
               {successMessage}
             </p>
           )}
@@ -216,7 +227,7 @@ const DentalWebLogin = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || Boolean(successMessage)}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
           >
             {isSubmitting ? "Iniciando sesión..." : "Iniciar sesión"}
