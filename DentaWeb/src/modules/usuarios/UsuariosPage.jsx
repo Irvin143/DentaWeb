@@ -346,7 +346,6 @@ export default function UsuariosPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas desactivar este usuario? Podrás reactivarlo después.')) return;
     try {
       await usuariosApi.eliminar(id);
       await cargar();
@@ -356,7 +355,6 @@ export default function UsuariosPage() {
   };
 
   const handleReactivar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas reactivar este usuario?')) return;
     try {
       await usuariosApi.reactivar(id);
       await cargar();

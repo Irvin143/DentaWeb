@@ -212,7 +212,12 @@ export function CatalogoPage({
         )
       : datos;
     const factor = orden.direccion === 'desc' ? -1 : 1;
+    const ordenandoPorEstado = columnaOrden === 'estado';
     return [...filtrados].sort((a, b) => {
+      if (!ordenandoPorEstado) {
+        const grupo = Number(estaInactiva(a)) - Number(estaInactiva(b));
+        if (grupo !== 0) return grupo;
+      }
       if (orden.columna === ORDEN_RECIENTES) return porId(a, b) * factor;
       const resultado = columnaOrden
         ? compararValores(a[columnaOrden], b[columnaOrden]) * factor
