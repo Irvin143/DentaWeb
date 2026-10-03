@@ -372,9 +372,8 @@ export default function UsuariosPage() {
         </p>
       )}
 
-      {/* Tipo de usuario (define qué se pide después) */}
-      <Seccion titulo="Tipo de usuario">
-        <div className={`grid grid-cols-1 gap-3 md:gap-5 ${mostrarPaquete ? 'md:grid-cols-2' : ''}`}>
+      {/* El tipo define qué campos se piden después */}
+      <div className={`grid grid-cols-1 gap-3 md:gap-5 ${mostrarPaquete ? 'md:grid-cols-2' : ''}`}>
           <div>
             <Etiqueta requerido>Tipo de usuario:</Etiqueta>
             <select
@@ -414,8 +413,7 @@ export default function UsuariosPage() {
               </select>
             </div>
           )}
-        </div>
-      </Seccion>
+      </div>
 
       {/* Odontólogo y paciente: datos personales */}
       {creando && esPersona && (
