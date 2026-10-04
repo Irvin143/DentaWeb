@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Building2, KeyRound } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
 import { ChecklistContrasena, errorContrasena } from '../../components/ChecklistContrasena';
 import { clinicasApi } from '../../services/api.js';
@@ -7,6 +8,11 @@ import { clinicasApi } from '../../services/api.js';
 const inputClass =
   'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500 md:rounded-xl md:px-4 md:py-3 md:text-base';
 
+/* ============================================================
+   VALIDACIONES
+   ============================================================ */
+
+// Correo
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Nombre / dirección: letras, números, espacios y signos comunes de dirección
@@ -121,26 +127,23 @@ const FORM_INICIAL = {
   nombre: '',
   direccion: '',
   identificacion_fiscal: '',
-  idusuario: '', // solo se conserva al editar (no se muestra)
-  correo: '', // llave de acceso (solo al crear)
+  idusuario: '',
+  correo: '',
   contrasena: '',
   confirmarContrasena: '',
 };
 
-// Acepta un arreglo directo o la lista envuelta en un objeto ({ data: [...] }, { clinicas: [...] })
 const comoLista = (resp, clave) =>
   Array.isArray(resp) ? resp : resp?.[clave] ?? resp?.data ?? [];
 
-// Normaliza a mayúsculas lo que se manda al backend
 const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
 
-// Convierte lo que devuelve el backend a lo que muestra la tabla
 const mapearClinica = (c) => ({
   id: c.id_clinica,
   nombre: c.nombre,
-  direccion: c.direccion ?? '—',
-  identificacion_fiscal: c.identificacion_fiscal ?? '—',
-  correo_usuario: c.correo_usuario ?? 'Sin correo',
+  direccion: c.direccion,
+  identificacion_fiscal: c.identificacion_fiscal,
+  correo_usuario: c.correo_usuario,
   estado: c.activo ? 'Activa' : 'Inactiva',
 });
 
@@ -151,7 +154,6 @@ const Etiqueta = ({ children, requerido }) => (
   </label>
 );
 
-// Sección con título: el título solo se ve en desktop, en mobile queda compacto
 const Seccion = ({ titulo, children }) => (
   <section className="flex flex-col gap-3 md:gap-5">
     <h3 className="hidden border-b border-slate-100 pb-2 text-sm font-semibold text-slate-800 md:block">
@@ -161,12 +163,17 @@ const Seccion = ({ titulo, children }) => (
   </section>
 );
 
+/* ============================================================
+   COMPONENTE
+   ============================================================ */
+
 export default function ClinicasPage() {
-  const [clinicas, setClinicas] = useState([]); // datos crudos del backend
+  const [clinicas, setClinicas] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState(null);
+  const [erroresCampos, setErroresCampos] = useState({});
   const [guardando, setGuardando] = useState(false);
 
   const creando = editandoId === null;
@@ -189,35 +196,67 @@ export default function ClinicasPage() {
     cargar();
   }, [cargar]);
 
-  const handleChange = (campo) => (e) =>
-    setForm((prev) => ({ ...prev, [campo]: e.target.value }));
+  /* ------------------------------------------------------------
+     HANDLE CHANGE con filtros en tiempo real
+     ------------------------------------------------------------ */
+  const handleChange = (campo) => (e) => {
+    let valor = e.target.value;
+
+    switch (campo) {
+      case 'nombre':
+        valor = valor.replace(LIMPIAR_NOMBRE, '').toUpperCase();
+        break;
+      case 'direccion':
+        valor = valor.replace(LIMPIAR_DIRECCION, '').toUpperCase();
+        break;
+      case 'identificacion_fiscal':
+        valor = valor.replace(LIMPIAR_RFC, '').toUpperCase();
+        break;
+      case 'correo':
+        valor = valor.replace(LIMPIAR_CORREO, '').toLowerCase();
+        break;
+      case 'contrasena':
+      case 'confirmarContrasena':
+        break;
+      default:
+        break;
+    }
+
+    setForm((prev) => ({ ...prev, [campo]: valor }));
+
+    setErroresCampos((prev) => {
+      if (!prev[campo]) return prev;
+      const copia = { ...prev };
+      delete copia[campo];
+      return copia;
+    });
+  };
+
+  /* ------------------------------------------------------------
+     HANDLE BLUR para validar un campo al salir
+     ------------------------------------------------------------ */
+  const handleBlur = (campo) => () => {
+    const todos = validarFormulario(form, creando, clinicas);
+    setErroresCampos((prev) => {
+      const copia = { ...prev };
+      if (todos[campo]) copia[campo] = todos[campo];
+      else delete copia[campo];
+      return copia;
+    });
+  };
 
   const resetFormulario = () => {
     setForm(FORM_INICIAL);
     setEditandoId(null);
     setError(null);
+    setErroresCampos({});
   };
 
-  // Devuelve un mensaje de error o null si todo está bien
-  const validar = () => {
-    if (!form.nombre.trim()) return 'El nombre es obligatorio';
-    if (form.nombre.trim().length > 150) return 'El nombre no puede exceder 150 caracteres';
-    if (form.identificacion_fiscal.trim().length > 50) {
-      return 'La identificación fiscal no puede exceder 50 caracteres';
-    }
-
-    const errores = {};
-
-    if (form.contrasena) {
-      const error = errorContrasena(form.contrasena);
-      if (error) errores.contrasena = error;
-    }
-
-    if (form.confirmarContrasena) {
-      if (form.contrasena !== form.confirmarContrasena) {
-        errores.confirmarContrasena = 'Las contraseñas no coinciden';
-      }
-    }
+  /* ------------------------------------------------------------
+     GUARDAR
+     ------------------------------------------------------------ */
+  const handleGuardar = async () => {
+    const errores = validarFormulario(form, creando, clinicas);
 
     if (Object.keys(errores).length > 0) {
       setErroresCampos(errores);
@@ -232,6 +271,7 @@ export default function ClinicasPage() {
     try {
       setGuardando(true);
       setError(null);
+      setErroresCampos({});
 
       const datosBase = {
         nombre: mayus(form.nombre),
@@ -240,14 +280,12 @@ export default function ClinicasPage() {
       };
 
       if (editandoId) {
-        // Al editar se conserva el usuario que ya tiene; no se tocan las credenciales
-         clinicasApi.actualizar(editandoId, {
+        await clinicasApi.actualizar(editandoId, {
           ...datosBase,
           idusuario: form.idusuario ? Number(form.idusuario) : null,
         });
       } else {
-        // Al crear, el backend genera el usuario (tipo clínica) con estas credenciales
-        clinicasApi.crear({
+        await clinicasApi.crear({
           ...datosBase,
           correo: form.correo.trim().toLowerCase(),
           contrasena: form.contrasena,
@@ -255,7 +293,7 @@ export default function ClinicasPage() {
       }
 
       resetFormulario();
-      cargar();
+       cargar();
       return true;
     } catch (err) {
       setError(err.message || 'Error al guardar la clínica');
@@ -265,17 +303,17 @@ export default function ClinicasPage() {
     }
   };
 
-  // Carga los datos de la fila en el formulario antes de abrir el modal
   const handleEditar = (id) => {
     const c = clinicas.find((x) => x.id_clinica === id);
     if (!c) return;
     setEditandoId(id);
     setError(null);
+    setErroresCampos({});
     setForm({
       ...FORM_INICIAL,
-      nombre: c.nombre ?? '',
-      direccion: c.direccion ?? '',
-      identificacion_fiscal: c.identificacion_fiscal ?? '',
+      nombre: (c.nombre ?? '').toUpperCase(),
+      direccion: (c.direccion ?? '').toUpperCase(),
+      identificacion_fiscal: (c.identificacion_fiscal ?? '').toUpperCase(),
       idusuario: c.id_usuario != null ? String(c.id_usuario) : '',
     });
   };
@@ -298,7 +336,15 @@ export default function ClinicasPage() {
     }
   };
 
-  // max-h + overflow: si no cabe, solo el formulario hace scroll
+  // Clase para marcar el input en rojo si tiene error
+  const claseConError = (campo) =>
+    erroresCampos[campo]
+      ? `${inputClass} border-red-400 focus:border-red-500 focus:ring-red-500`
+      : inputClass;
+
+  /* ------------------------------------------------------------
+     FORMULARIO (misma vista, solo agregamos clases y mensajes)
+     ------------------------------------------------------------ */
   const formularioClinica = (
     <div className="flex max-h-[65vh] flex-col gap-3 overflow-y-auto pr-1 md:max-h-[72vh] md:gap-7 md:px-2">
       {error && (
@@ -307,49 +353,66 @@ export default function ClinicasPage() {
         </p>
       )}
 
-      {/* Datos de la clínica */}
       <Seccion titulo="Datos de la clínica">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
           <div>
             <Etiqueta requerido>Nombre de la clínica:</Etiqueta>
             <input
               type="text"
-              maxLength={150}
-              placeholder="Ej. Clínica Centro"
-              className={inputClass}
+              maxLength={MAX_NOMBRE}
+              placeholder="Ej. CLÍNICA CENTRO"
+              className={claseConError('nombre')}
               value={form.nombre}
               onChange={handleChange('nombre')}
+              onBlur={handleBlur('nombre')}
             />
+            {erroresCampos.nombre && (
+              <p className="mt-1 text-xs text-red-600">
+                {erroresCampos.nombre}
+              </p>
+            )}
           </div>
           <div>
             <Etiqueta>Identificación fiscal:</Etiqueta>
             <input
               type="text"
-              maxLength={50}
+              maxLength={MAX_RFC}
               placeholder="RFC / NIT / RUC"
-              className={inputClass}
+              className={claseConError('identificacion_fiscal')}
               value={form.identificacion_fiscal}
               onChange={handleChange('identificacion_fiscal')}
+              onBlur={handleBlur('identificacion_fiscal')}
             />
+            {erroresCampos.identificacion_fiscal && (
+              <p className="mt-1 text-xs text-red-600">
+                {erroresCampos.identificacion_fiscal}
+              </p>
+            )}
           </div>
           <div className="md:col-span-2">
             <Etiqueta>Dirección completa:</Etiqueta>
             <input
               type="text"
-              placeholder="Calle, Número, Ciudad"
-              className={inputClass}
+              maxLength={MAX_DIRECCION}
+              placeholder="CALLE, NÚMERO, CIUDAD"
+              className={claseConError('direccion')}
               value={form.direccion}
               onChange={handleChange('direccion')}
+              onBlur={handleBlur('direccion')}
             />
+            {erroresCampos.direccion && (
+              <p className="mt-1 text-xs text-red-600">
+                {erroresCampos.direccion}
+              </p>
+            )}
           </div>
         </div>
       </Seccion>
 
-      {/* Llave de acceso: solo al crear, genera el usuario de la clínica */}
       {creando && (
         <fieldset className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 pb-3 pt-1 md:gap-5 md:rounded-xl md:px-5 md:pb-5 md:pt-2">
-          <legend className="px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm">
-            🔑 Crear llave de acceso
+          <legend className="inline-flex items-center gap-1 px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm">
+            <KeyRound size={14} aria-hidden="true" /> Crear llave de acceso
           </legend>
           <p className="hidden text-sm text-slate-500 md:block">
             Con estos datos la clínica iniciará sesión en el sistema.
@@ -360,12 +423,18 @@ export default function ClinicasPage() {
             <input
               type="email"
               autoComplete="off"
-              maxLength={150}
+              maxLength={MAX_CORREO}
               placeholder="clinica@correo.com"
-              className={inputClass}
+              className={claseConError('correo')}
               value={form.correo}
               onChange={handleChange('correo')}
+              onBlur={handleBlur('correo')}
             />
+            {erroresCampos.correo && (
+              <p className="mt-1 text-xs text-red-600">
+                {erroresCampos.correo}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
@@ -389,12 +458,17 @@ export default function ClinicasPage() {
                 type="password"
                 autoComplete="new-password"
                 placeholder="Repite la contraseña"
-                className={inputClass}
+                className={claseConError('confirmarContrasena')}
                 value={form.confirmarContrasena}
                 onChange={handleChange('confirmarContrasena')}
                 onBlur={handleBlur('confirmarContrasena')}
                 maxLength={72}
               />
+              {erroresCampos.confirmarContrasena && (
+                <p className="mt-1 text-xs text-red-600">
+                  {erroresCampos.confirmarContrasena}
+                </p>
+              )}
             </div>
           </div>
         </fieldset>
@@ -414,7 +488,7 @@ export default function ClinicasPage() {
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}
       modal={{
-        icono: '🏥',
+        icono: <Building2 />,
         titulo: editandoId ? 'Editar Clínica' : 'Nueva Clínica',
         textoGuardar: guardando ? 'Guardando...' : 'Guardar Clínica',
         contenido: formularioClinica,

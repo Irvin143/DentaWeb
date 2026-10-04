@@ -96,7 +96,7 @@ const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
 const mapearEstudio = (e) => ({
   id: e.id_estudio,
   nombre: e.nombre,
-  descripcion: e.descripcion || '—',
+  descripcion: e.descripcion,
   estado: e.activo ? 'Activo' : 'Inactivo',
 });
 
@@ -270,7 +270,7 @@ export default function EstudiosPage() {
         <input
           type="text"
           maxLength={MAX_NOMBRE}
-          placeholder="Ej. Radiografía panorámica"
+          placeholder="Ej. RADIOGRAFÍA PANORÁMICA"
           className={claseConError('nombre')}
           value={form.nombre}
           onChange={handleChange('nombre')}

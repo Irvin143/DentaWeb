@@ -25,12 +25,59 @@ const limpiar = (valor) =>
     .replace(/[\u0300-\u036f]/g, '')
     .trim();
 
-// Lee la sesión guardada por el login
-export const getAuth = () => {
+const CLAVE_SESION = 'clinicware_auth';
+
+const leerAlmacen = (almacen) => {
   try {
-    return JSON.parse(sessionStorage.getItem('clinicware_auth'));
+    return JSON.parse(almacen.getItem(CLAVE_SESION));
   } catch {
     return null;
+  }
+};
+
+// exp del JWT, sin verificar la firma. null si no se puede leer.
+const expiracion = (token) => {
+  try {
+    const parte = String(token ?? '').split('.')[1];
+    if (!parte) return null;
+    const base64 = parte.replace(/-/g, '+').replace(/_/g, '/');
+    const conRelleno = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+    const datos = JSON.parse(atob(conRelleno));
+    return typeof datos.exp === 'number' ? datos.exp : null;
+  } catch {
+    return null;
+  }
+};
+
+export const borrarSesion = () => {
+  localStorage.removeItem(CLAVE_SESION);
+  sessionStorage.removeItem(CLAVE_SESION);
+};
+
+// Primero la sesión que sobrevive al navegador. Si el token venció, no hay sesión.
+export const getAuth = () => {
+  const local = leerAlmacen(localStorage);
+  const deSesion = leerAlmacen(sessionStorage);
+  const auth = local?.token ? local : deSesion?.token ? deSesion : null;
+  if (!auth) return null;
+
+  const exp = expiracion(auth.token);
+  if (exp == null || exp * 1000 <= Date.now()) {
+    borrarSesion();
+    return null;
+  }
+  return auth;
+};
+
+// mantener: localStorage. Si no, solo mientras el navegador siga abierto.
+export const guardarSesion = ({ token, usuario }, mantener) => {
+  const valor = JSON.stringify({ token, usuario });
+  if (mantener) {
+    localStorage.setItem(CLAVE_SESION, valor);
+    sessionStorage.removeItem(CLAVE_SESION);
+  } else {
+    sessionStorage.setItem(CLAVE_SESION, valor);
+    localStorage.removeItem(CLAVE_SESION);
   }
 };
 

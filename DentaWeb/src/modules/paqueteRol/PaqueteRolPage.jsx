@@ -17,7 +17,7 @@ const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
 const mapearPaquete = (p) => ({
   id: p.id_paquete,
   nombre: p.nombre,
-  descripcion: p.descripcion || '—',
+  descripcion: p.descripcion,
   estado: p.activo ? 'Activo' : 'Inactivo',
 });
 
@@ -135,7 +135,7 @@ export default function PaquetesPage() {
         <input
           type="text"
           maxLength={50}
-          placeholder="Ej. Paquete de limpieza dental"
+          placeholder="Ej. PAQUETE DE LIMPIEZA DENTAL"
           className={inputClass}
           value={form.nombre}
           onChange={handleChange('nombre')}

@@ -51,7 +51,7 @@ export const obtenerOdontologos = async ({ filtroActivo = 'todos', idClinica = n
         SELECT ${COLUMNAS}
         FROM odontologos o
         ${JOINS}
-        WHERE ($1::text = 'todos' OR o.activo = ($1::text = 'true'))
+        WHERE ($1::text = 'todos' OR u.activo = ($1::text = 'true'))
           AND ($2::int IS NULL OR o.idClinica = $2::int)
         ORDER BY o.ape_pat, o.ape_mat, o.nombre, o.idOdontologo;
     `;

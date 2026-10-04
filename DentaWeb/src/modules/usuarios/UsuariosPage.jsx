@@ -74,8 +74,8 @@ const nombreOdontologo = (o) =>
 const mapearUsuario = (u) => ({
   id: u.id_usuario,
   correo: u.correo,
-  tipo: u.tipo ?? 'Sin tipo',
-  paquete: u.nombre_paquete ?? 'Sin paquete',
+  tipo: u.tipo,
+  paquete: u.nombre_paquete,
   estado: u.activo ? 'Activo' : 'Inactivo',
 });
 
@@ -346,7 +346,6 @@ export default function UsuariosPage() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas desactivar este usuario? Podrás reactivarlo después.')) return;
     try {
       await usuariosApi.eliminar(id);
       await cargar();
@@ -356,7 +355,6 @@ export default function UsuariosPage() {
   };
 
   const handleReactivar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas reactivar este usuario?')) return;
     try {
       await usuariosApi.reactivar(id);
       await cargar();
@@ -374,9 +372,8 @@ export default function UsuariosPage() {
         </p>
       )}
 
-      {/* Tipo de usuario (define qué se pide después) */}
-      <Seccion titulo="Tipo de usuario">
-        <div className={`grid grid-cols-1 gap-3 md:gap-5 ${mostrarPaquete ? 'md:grid-cols-2' : ''}`}>
+      {/* El tipo define qué campos se piden después */}
+      <div className={`grid grid-cols-1 gap-3 md:gap-5 ${mostrarPaquete ? 'md:grid-cols-2' : ''}`}>
           <div>
             <Etiqueta requerido>Tipo de usuario:</Etiqueta>
             <select
@@ -416,8 +413,7 @@ export default function UsuariosPage() {
               </select>
             </div>
           )}
-        </div>
-      </Seccion>
+      </div>
 
       {/* Odontólogo y paciente: datos personales */}
       {creando && esPersona && (
@@ -427,7 +423,7 @@ export default function UsuariosPage() {
               <Etiqueta requerido>Nombre(s):</Etiqueta>
               <input
                 type="text"
-                placeholder="Ej. Laura"
+                placeholder="Ej. LAURA"
                 className={inputClass}
                 value={form.nombre}
                 onChange={handleChange('nombre')}
@@ -449,7 +445,7 @@ export default function UsuariosPage() {
               <Etiqueta requerido>Apellido paterno:</Etiqueta>
               <input
                 type="text"
-                placeholder="Ej. Gómez"
+                placeholder="Ej. GÓMEZ"
                 className={inputClass}
                 value={form.ape_pat}
                 onChange={handleChange('ape_pat')}
@@ -459,7 +455,7 @@ export default function UsuariosPage() {
               <Etiqueta>Apellido materno:</Etiqueta>
               <input
                 type="text"
-                placeholder="Ej. Ríos"
+                placeholder="Ej. RÍOS"
                 className={inputClass}
                 value={form.ape_mat}
                 onChange={handleChange('ape_mat')}
@@ -532,7 +528,7 @@ export default function UsuariosPage() {
               <input
                 type="text"
                 maxLength={150}
-                placeholder="Ej. Clínica Dental Sonrisa"
+                placeholder="Ej. CLÍNICA DENTAL SONRISA"
                 className={inputClass}
                 value={form.clinica_nombre}
                 onChange={handleChange('clinica_nombre')}
@@ -553,7 +549,7 @@ export default function UsuariosPage() {
               <Etiqueta>Dirección:</Etiqueta>
               <textarea
                 rows={2}
-                placeholder="Calle, número, colonia, ciudad"
+                placeholder="CALLE, NÚMERO, COLONIA, CIUDAD"
                 className={`${inputClass} resize-none`}
                 value={form.direccion}
                 onChange={handleChange('direccion')}

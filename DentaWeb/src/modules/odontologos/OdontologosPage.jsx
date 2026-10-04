@@ -188,10 +188,10 @@ const mapearOdontologo = (o) => ({
   nombre:
     o.nombre_completo ??
     [o.nombre, o.ape_pat, o.ape_mat].filter(Boolean).join(' '),
-  cedula: o.cedula ?? 'Sin cedula',
-  telefono: o.telefono ?? 'Sin telefono',
-  correo_usuario: o.correo_usuario ?? 'Sin usuario',
-  clinica: o.nombre_clinica ?? 'Sin clínica',
+  cedula: o.cedula,
+  telefono: o.telefono,
+  correo_usuario: o.correo_usuario,
+  clinica: o.nombre_clinica,
   estado: o.activo ? 'Activo' : 'Inactivo',
 });
 
@@ -231,6 +231,7 @@ export default function OdontologosPage() {
     try {
       setCargando(true);
       const data = await odontologosApi.listar();
+      console.log('Odontólogos cargados:', data);
       setOdontologos(comoLista(data, 'odontologos'));
     } catch (err) {
       console.error('Error al listar odontólogos:', err);
@@ -448,7 +449,7 @@ export default function OdontologosPage() {
             <input
               type="text"
               maxLength={MAX_NOMBRE}
-              placeholder="Ej. Laura"
+              placeholder="Ej. LAURA"
               className={claseConError('nombre')}
               value={form.nombre}
               onChange={handleChange('nombre')}
@@ -483,7 +484,7 @@ export default function OdontologosPage() {
             <input
               type="text"
               maxLength={MAX_NOMBRE}
-              placeholder="Ej. Gómez"
+              placeholder="Ej. GÓMEZ"
               className={claseConError('ape_pat')}
               value={form.ape_pat}
               onChange={handleChange('ape_pat')}
@@ -500,7 +501,7 @@ export default function OdontologosPage() {
             <input
               type="text"
               maxLength={MAX_NOMBRE}
-              placeholder="Ej. Ríos"
+              placeholder="Ej. RÍOS"
               className={claseConError('ape_mat')}
               value={form.ape_mat}
               onChange={handleChange('ape_mat')}

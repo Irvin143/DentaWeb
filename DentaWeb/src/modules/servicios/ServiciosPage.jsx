@@ -22,8 +22,8 @@ const comoLista = (resp, clave) =>
 const mapearServicio = (s) => ({
   id: s.id_servicio,
   nombre: s.nombre,
-  descripcion: s.descripcion || '—',
-  clinica: s.nombre_clinica ?? 'Sin clínica',
+  descripcion: s.descripcion,
+  clinica: s.nombre_clinica,
   estado: s.activo ? 'Activo' : 'Inactivo',
 });
 
@@ -189,7 +189,7 @@ export default function ServiciosPage() {
         <input
           type="text"
           maxLength={100}
-          placeholder="Ej. Limpieza dental"
+          placeholder="Ej. LIMPIEZA DENTAL"
           className={inputClass}
           value={form.nombre}
           onChange={handleChange('nombre')}
