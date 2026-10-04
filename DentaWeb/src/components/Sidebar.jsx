@@ -186,11 +186,11 @@ export function Sidebar() {
       {/* Sidebar: panel deslizante en mobile, fijo en escritorio */}
       <aside
         id="menu-lateral"
-        className={`fixed inset-y-0 left-0 z-50  flex w-64 flex-col justify-between border-r border-slate-100 bg-white p-4 shadow-sm transition-[transform,visibility] duration-200 md:visible md:static md:h-screen md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 min-h-0 flex-col justify-between overflow-hidden border-r border-slate-100 bg-white p-4 shadow-sm transition-[transform,visibility] duration-200 md:visible md:static md:h-full md:translate-x-0 ${
           abierto ? 'translate-x-0' : '-translate-x-full invisible'
         }`}
       >
-        <section>
+        <section className="min-h-0 flex-1 overflow-y-auto">
           <header className="mb-8 flex items-center justify-between">
             <Marca />
             <button
@@ -246,7 +246,7 @@ export function Sidebar() {
         </section>
 
         {/* Perfil de usuario y cierre de sesión */}
-        <footer className="mt-4 border-t border-slate-100 pt-4">
+        <footer className="mt-4 shrink-0 border-t border-slate-100 pt-4">
           <div className="flex items-center gap-3 px-2 py-2">
             <span
               aria-hidden="true"

@@ -1,12 +1,121 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { CatalogoPage } from '../../components/CatalogoPage';
-import { clinicasApi } from '../../services/api.js'; // ajusta la ruta a donde tengas tu clinicasApi
+import { ChecklistContrasena, errorContrasena } from '../../components/ChecklistContrasena';
+import { clinicasApi } from '../../services/api.js';
 
 // Mobile: compacto. Desktop (md:): más amplio y cómodo
 const inputClass =
   'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500 md:rounded-xl md:px-4 md:py-3 md:text-base';
 
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Nombre / dirección: letras, números, espacios y signos comunes de dirección
+const REGEX_NOMBRE = /^[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ][A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,#°&/-]*$/;
+const REGEX_DIRECCION = /^[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ][A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,#°&/-]*$/;
+
+// RFC / NIT / RUC: alfanumérico con guiones y puntos
+const REGEX_RFC = /^[A-Z0-9][A-Z0-9.-]*$/;
+
+// Filtros en tiempo real
+const LIMPIAR_NOMBRE = /[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,#°&/-]/g;
+const LIMPIAR_DIRECCION = /[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,#°&/-]/g;
+const LIMPIAR_RFC = /[^A-Za-z0-9.-]/g;
+const LIMPIAR_CORREO = /[^A-Za-z0-9@._+-]/g;
+
+// Longitudes máximas según el DER
+const MAX_NOMBRE = 150;
+const MAX_DIRECCION = 300;
+const MAX_RFC = 50;
+const MAX_CORREO = 150;
+
+/* ------------------------------------------------------------
+   Validadores por campo (devuelven string o null)
+   ------------------------------------------------------------ */
+
+const validarNombreClinica = (valor) => {
+  const v = valor.trim();
+  if (!v) return 'El nombre de la clínica es obligatorio';
+  if (v.length < 2) return 'El nombre debe tener al menos 2 caracteres';
+  if (v.length > MAX_NOMBRE)
+    return `El nombre no puede exceder ${MAX_NOMBRE} caracteres`;
+  if (!REGEX_NOMBRE.test(v))
+    return 'El nombre contiene caracteres no permitidos';
+  return null;
+};
+
+const validarDireccion = (valor) => {
+  const v = valor.trim();
+  if (!v) return null; // opcional
+  if (v.length > MAX_DIRECCION)
+    return `La dirección no puede exceder ${MAX_DIRECCION} caracteres`;
+  if (!REGEX_DIRECCION.test(v))
+    return 'La dirección contiene caracteres no permitidos';
+  return null;
+};
+
+const validarRFC = (valor) => {
+  const v = valor.trim();
+  if (!v) return null; // opcional
+  if (v.length < 12) return 'La identificación fiscal debe tener al menos 12 caracteres';
+  if (v.length > MAX_RFC)
+    return `La identificación fiscal no puede exceder ${MAX_RFC} caracteres`;
+  if (!REGEX_RFC.test(v))
+    return 'La identificación fiscal solo puede contener letras, números, guiones y puntos';
+  return null;
+};
+
+const validarCorreo = (valor, { obligatorio = false } = {}) => {
+  const v = valor.trim();
+  if (!v) return obligatorio ? 'El correo es obligatorio' : null;
+  if (v.length > MAX_CORREO)
+    return `El correo no puede exceder ${MAX_CORREO} caracteres`;
+  if (!REGEX_CORREO.test(v)) return 'Ingresa un correo electrónico válido';
+  return null;
+};
+
+/* ------------------------------------------------------------
+   Validador global del formulario
+   ------------------------------------------------------------ */
+
+const validarFormulario = (form, creando, clinicas = []) => {
+  const errores = {};
+
+  const errNombre = validarNombreClinica(form.nombre);
+  if (errNombre) errores.nombre = errNombre;
+
+  const errDir = validarDireccion(form.direccion);
+  if (errDir) errores.direccion = errDir;
+
+  const errRfc = validarRFC(form.identificacion_fiscal);
+  if (errRfc) errores.identificacion_fiscal = errRfc;
+
+  if (creando) {
+    const errCorreo = validarCorreo(form.correo, { obligatorio: true });
+    if (errCorreo) errores.correo = errCorreo;
+    else {
+      const duplicado = clinicas.some(
+        (c) =>
+          (c.correo_usuario ?? '').toLowerCase() ===
+          form.correo.trim().toLowerCase()
+      );
+      if (duplicado) errores.correo = 'Ya existe una clínica con ese correo';
+    }
+
+    const errPass = errorContrasena(form.contrasena);
+    if (errPass) errores.contrasena = errPass;
+
+    if (!form.confirmarContrasena)
+      errores.confirmarContrasena = 'Confirma la contraseña';
+    else if (form.contrasena !== form.confirmarContrasena)
+      errores.confirmarContrasena = 'Las contraseñas no coinciden';
+  }
+
+  return errores;
+};
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
 
 const FORM_INICIAL = {
   nombre: '',
@@ -97,22 +206,26 @@ export default function ClinicasPage() {
       return 'La identificación fiscal no puede exceder 50 caracteres';
     }
 
-    if (creando) {
-      const correo = form.correo.trim();
-      if (!correo) return 'El correo de acceso es obligatorio';
-      if (correo.length > 150) return 'El correo no puede exceder 150 caracteres';
-      if (!REGEX_CORREO.test(correo)) return 'El correo de acceso no es válido';
-      if (form.contrasena.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
-      if (form.contrasena !== form.confirmarContrasena) return 'Las contraseñas no coinciden';
-    }
-    return null;
-  };
+    const errores = {};
 
-  // Devuelve true si guardó bien (para que el modal pueda cerrarse)
-  const handleGuardar = async () => {
-    const mensaje = validar();
-    if (mensaje) {
-      setError(mensaje);
+    if (form.contrasena) {
+      const error = errorContrasena(form.contrasena);
+      if (error) errores.contrasena = error;
+    }
+
+    if (form.confirmarContrasena) {
+      if (form.contrasena !== form.confirmarContrasena) {
+        errores.confirmarContrasena = 'Las contraseñas no coinciden';
+      }
+    }
+
+    if (Object.keys(errores).length > 0) {
+      setErroresCampos(errores);
+      setError(
+        errores.contrasena ||
+          errores.confirmarContrasena ||
+          'Revisa los campos marcados antes de continuar'
+      );
       return false;
     }
 
@@ -128,13 +241,13 @@ export default function ClinicasPage() {
 
       if (editandoId) {
         // Al editar se conserva el usuario que ya tiene; no se tocan las credenciales
-        await clinicasApi.actualizar(editandoId, {
+         clinicasApi.actualizar(editandoId, {
           ...datosBase,
           idusuario: form.idusuario ? Number(form.idusuario) : null,
         });
       } else {
         // Al crear, el backend genera el usuario (tipo clínica) con estas credenciales
-        await clinicasApi.crear({
+        clinicasApi.crear({
           ...datosBase,
           correo: form.correo.trim().toLowerCase(),
           contrasena: form.contrasena,
@@ -261,11 +374,14 @@ export default function ClinicasPage() {
               <input
                 type="password"
                 autoComplete="new-password"
-                placeholder="Mínimo 8 caracteres"
-                className={inputClass}
+                placeholder="Crea una contraseña"
+                className={claseConError('contrasena')}
                 value={form.contrasena}
                 onChange={handleChange('contrasena')}
+                onBlur={handleBlur('contrasena')}
+                maxLength={72}
               />
+              <ChecklistContrasena contrasena={form.contrasena} />
             </div>
             <div>
               <Etiqueta requerido>Confirmar contraseña:</Etiqueta>
@@ -276,6 +392,8 @@ export default function ClinicasPage() {
                 className={inputClass}
                 value={form.confirmarContrasena}
                 onChange={handleChange('confirmarContrasena')}
+                onBlur={handleBlur('confirmarContrasena')}
+                maxLength={72}
               />
             </div>
           </div>

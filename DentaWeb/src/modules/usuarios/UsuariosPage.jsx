@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { KeyRound } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
+import { ChecklistContrasena, errorContrasena } from '../../components/ChecklistContrasena';
 import {
   usuariosApi,
   paquetesApi,
@@ -225,9 +226,10 @@ export default function UsuariosPage() {
     if (correo.length > 150) return 'El correo no puede exceder 150 caracteres';
     if (!REGEX_CORREO.test(correo)) return 'El correo no es válido';
 
-    // Al crear la contraseña es obligatoria; al editar solo si quiere cambiarla
+    // Al crear la contraseña es obligatoria; al editar solo si escribió una nueva
     if (creando || form.contrasena || form.confirmarContrasena) {
-      if (form.contrasena.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
+      const errorClave = errorContrasena(form.contrasena);
+      if (errorClave) return errorClave;
       if (form.contrasena !== form.confirmarContrasena) return 'Las contraseñas no coinciden';
     }
     return null;
@@ -258,6 +260,15 @@ export default function UsuariosPage() {
           await usuariosApi.cambiarContrasena(editandoId, form.contrasena);
         }
       } else if (esOdontologo) {
+        const telefono = String(form.telefono).trim() ? digitosTelefono(form.telefono) : '';
+        if (telefono) {
+          const data = await odontologosApi.listar();
+          const lista = comoLista(data, 'odontologos');
+          if (telefonoRepetido(telefono, lista)) {
+            setError('Ya existe un odontólogo con ese teléfono');
+            return false;
+          }
+        }
         // Crea usuario (tipo odontólogo) + registro de odontólogo
         await odontologosApi.crear({
           nombre: mayus(form.nombre),
@@ -586,11 +597,13 @@ export default function UsuariosPage() {
               <input
                 type="password"
                 autoComplete="new-password"
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Crea una contraseña"
+                maxLength={72}
                 className={inputClass}
                 value={form.contrasena}
                 onChange={handleChange('contrasena')}
               />
+              <ChecklistContrasena contrasena={form.contrasena} />
             </div>
             <div>
               <Etiqueta requerido={creando}>Confirmar contraseña:</Etiqueta>
