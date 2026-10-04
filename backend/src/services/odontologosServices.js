@@ -126,14 +126,20 @@ export const actualizarOdontologo = async (
         manejarErrorPg(err);
     }
 };
+// *---------- ELIMINAR (lógico) ----------*
 
-// ---------- ELIMINAR (lógico) ----------
-export const eliminarOdontologo = async (id) => {
+export const eliminarOdontologo = async (idOdontologo) => {
     const { rowCount } = await conexion.query(
-        'UPDATE odontologos SET activo = false WHERE idOdontologo = $1 AND activo',
-        [id]
+        `UPDATE usuarios u
+         SET activo = false
+         FROM odontologos o
+         WHERE o.idOdontologo = $1
+           AND o.idUsuario = u.idUsuario
+           AND u.activo = true`,
+        [idOdontologo]
     );
-    return rowCount > 0; // false = no existe o ya estaba desactivado
+
+    return rowCount > 0;
 };
 export const reactivarOdontologo = async (id) => {
     // 1. Reactiva la cuenta de usuario ligada al odontólogo
