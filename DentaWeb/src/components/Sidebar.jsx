@@ -27,6 +27,13 @@ const navItems = [
   // { path: "/agenda", label: "Agenda", icon: Calendar },
 ];
 
+function presentarPalabra(texto) {
+  const palabra = String(texto ?? '').trim().split(/\s+/)[0] ?? '';
+  if (!palabra) return '';
+  const minusculas = palabra.toLocaleLowerCase('es-MX');
+  return minusculas.charAt(0).toLocaleUpperCase('es-MX') + minusculas.slice(1);
+}
+
 function DialogoCerrarSesion({ onCancelar, onConfirmar }) {
   const cancelarRef = useRef(null);
 
@@ -152,7 +159,10 @@ export function Sidebar() {
   // Solo se muestran las opciones a las que el usuario tiene acceso
   const itemsVisibles = navItems.filter((item) => puedeVer(item.path, usuario));
 
-  const nombre = usuario?.nombre ?? usuario?.correo ?? 'Usuario';
+  const primerNombre = presentarPalabra(usuario?.nombre);
+  const primerApellido = presentarPalabra(usuario?.ape_pat);
+  const nombre =
+    [primerNombre, primerApellido].filter(Boolean).join(' ') || usuario?.correo || 'Usuario';
   const clavePaquete = String(usuario?.paquete ?? '')
     .toLowerCase()
     .normalize('NFD')

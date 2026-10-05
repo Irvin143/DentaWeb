@@ -2,7 +2,6 @@ import {
   CalendarCheck,
   CalendarClock,
   ChevronRight,
-  CircleCheck,
   FolderOpen,
   MapPin,
   MessageSquare,
@@ -29,23 +28,31 @@ const botonSecundario =
 const botonPrimario =
   'flex cursor-pointer items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-teal-600/20 transition-colors hover:bg-teal-700';
 
-function nombreVisible(usuario) {
-  return [usuario?.nombre, usuario?.ape_pat]
-    .map((parte) => String(parte ?? '').trim())
-    .filter(Boolean)
-    .join(' ');
+function presentarPalabra(texto) {
+  const palabra = String(texto ?? '').trim().split(/\s+/)[0] ?? '';
+  if (!palabra) return '';
+  const minusculas = palabra.toLocaleLowerCase('es-MX');
+  return minusculas.charAt(0).toLocaleUpperCase('es-MX') + minusculas.slice(1);
+}
+
+function saludoPorHora(fecha = new Date()) {
+  const hora = fecha.getHours();
+  if (hora < 12) return 'Buenos días';
+  if (hora < 19) return 'Buenas tardes';
+  return 'Buenas noches';
 }
 
 export default function PanelPacientePage() {
   const usuario = getAuth()?.usuario;
-  const nombre = nombreVisible(usuario);
+  const primerNombre = presentarPalabra(usuario?.nombre);
+  const saludo = saludoPorHora();
 
   return (
     <section className="flex flex-col gap-6 bg-surface p-4 md:p-8">
       <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-on-surface">
-            Buenos días{nombre ? `, ${nombre}` : ''}
+            {primerNombre ? `${saludo}, ${primerNombre}` : saludo}
           </h1>
           <p className="mt-1 text-sm text-on-surface-variant">{fechaHoy()}</p>
         </div>
@@ -73,7 +80,7 @@ export default function PanelPacientePage() {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <article className="flex items-start gap-4 rounded-2xl border border-outline-variant bg-on-primary p-5">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
             <CalendarClock size={22} aria-hidden="true" />
@@ -93,17 +100,6 @@ export default function PanelPacientePage() {
             <p className="text-xs font-semibold tracking-wider text-outline uppercase">Tratamiento activo</p>
             <p className="mt-0.5 truncate text-base font-bold text-on-surface">Ortodoncia Correctiva</p>
             <p className="mt-0.5 truncate text-xs text-on-surface-variant">Control mensual al día</p>
-          </div>
-        </article>
-
-        <article className="flex items-start gap-4 rounded-2xl border border-outline-variant bg-on-primary p-5">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface-container text-on-surface-variant">
-            <CircleCheck size={22} aria-hidden="true" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-xs font-semibold tracking-wider text-outline uppercase">Estado de cuenta</p>
-            <p className="mt-0.5 truncate text-base font-bold text-on-surface">Al día</p>
-            <p className="mt-0.5 truncate rounded bg-teal-50 text-xs font-medium text-teal-700">Sin pagos pendientes</p>
           </div>
         </article>
       </div>
@@ -143,17 +139,8 @@ export default function PanelPacientePage() {
 
           <div className="flex flex-wrap items-center gap-3">
             <button type="button" className={botonSecundario}>
-              Reprogramar
-            </button>
-            <button type="button" className={botonSecundario}>
               <MessageSquare size={16} aria-hidden="true" className="text-outline" />
               Mensaje
-            </button>
-            <button
-              type="button"
-              className={botonPrimario}
-            >
-              Gestionar cita
             </button>
           </div>
         </div>

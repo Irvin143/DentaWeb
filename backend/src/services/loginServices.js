@@ -72,7 +72,41 @@ export async function login({ correo, contrasena }) {
     if (user.nombre) usuario.nombre = user.nombre;
     if (user.ape_pat) usuario.ape_pat = user.ape_pat;
 
+    const persona = await nombreDePersona(user.id_usuario);
+    if (persona) {
+        usuario.nombre = persona.nombre;
+        if (persona.ape_pat) usuario.ape_pat = persona.ape_pat;
+        else delete usuario.ape_pat;
+    }
+
     return { token, usuario };
+}
+
+// Nombre tal como está en la base. El paciente gana sobre el odontólogo.
+async function nombreDePersona(idUsuario) {
+    const { rows } = await conexion.query(
+        `SELECT
+            p.nombre AS nombre_paciente,
+            p.ape_pat AS ape_pat_paciente,
+            o.nombre AS nombre_odontologo,
+            o.ape_pat AS ape_pat_odontologo
+         FROM usuarios u
+         LEFT JOIN pacientes p ON p.idUsuario = u.idUsuario
+         LEFT JOIN odontologos o ON o.idUsuario = u.idUsuario
+         WHERE u.idUsuario = $1`,
+        [idUsuario]
+    );
+    const fila = rows[0];
+    if (!fila) return null;
+
+    const conNombre = (nombre) => typeof nombre === 'string' && nombre.trim() !== '';
+    if (conNombre(fila.nombre_paciente)) {
+        return { nombre: fila.nombre_paciente, ape_pat: fila.ape_pat_paciente };
+    }
+    if (conNombre(fila.nombre_odontologo)) {
+        return { nombre: fila.nombre_odontologo, ape_pat: fila.ape_pat_odontologo };
+    }
+    return null;
 }
 
 // Cambia la contraseña del usuario del token. actual y nueva llegan sin trim.
