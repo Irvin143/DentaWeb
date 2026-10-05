@@ -59,7 +59,7 @@ function DialogoCerrarSesion({ onCancelar, onConfirmar }) {
             type="button"
             onClick={onCancelar}
             aria-label="Cerrar"
-            className="rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            className="cursor-pointer rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
           >
             <X size={20} aria-hidden="true" />
           </button>
@@ -74,14 +74,14 @@ function DialogoCerrarSesion({ onCancelar, onConfirmar }) {
             ref={cancelarRef}
             type="button"
             onClick={onCancelar}
-            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+            className="cursor-pointer rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
           >
             Cancelar
           </button>
           <button
             type="button"
             onClick={onConfirmar}
-            className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+            className="cursor-pointer rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
           >
             Cerrar sesión
           </button>
@@ -178,7 +178,7 @@ export function Sidebar() {
           aria-label="Abrir menú"
           aria-expanded={abierto}
           aria-controls="menu-lateral"
-          className="rounded-xl p-2 text-slate-600 transition-colors hover:bg-slate-50"
+          className="cursor-pointer rounded-xl p-2 text-slate-600 transition-colors hover:bg-slate-50"
         >
           <Menu size={22} />
         </button>
@@ -199,7 +199,7 @@ export function Sidebar() {
         type="button"
         onClick={() => setColapsada((valor) => !valor)}
         aria-label={colapsada ? 'Mostrar menú' : 'Ocultar menú'}
-        className={`fixed top-5 z-[60] hidden h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-700 md:flex ${
+        className={`fixed top-5 z-[60] hidden h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-700 md:flex ${
           colapsada ? 'left-2' : 'left-64 -translate-x-1/2'
         }`}
       >
@@ -220,7 +220,7 @@ export function Sidebar() {
               type="button"
               onClick={() => setAbierto(false)}
               aria-label="Cerrar menú"
-              className="rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-50 md:hidden"
+              className="cursor-pointer rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-50 md:hidden"
             >
               <X size={20} />
             </button>
@@ -274,7 +274,7 @@ export function Sidebar() {
             type="button"
             onClick={() => setMenuUsuario((valor) => !valor)}
             aria-expanded={menuUsuario}
-            className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-slate-50"
+            className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-slate-50"
           >
             <span
               aria-hidden="true"
@@ -295,7 +295,7 @@ export function Sidebar() {
                   setMenuUsuario(false);
                   setConfirmarSalida(true);
                 }}
-                className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
+                className="mt-1 flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
               >
                 <LogOut size={18} aria-hidden="true" />
                 Cerrar sesión
@@ -307,7 +307,7 @@ export function Sidebar() {
                   setModalPasswordAbierto(true);
                   setAbierto(false);
                 }}
-                className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
+                className="mt-1 flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
               >
                 <KeyRound size={18} aria-hidden="true" />
                 Cambiar contraseña

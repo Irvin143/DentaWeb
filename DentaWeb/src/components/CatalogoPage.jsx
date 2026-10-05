@@ -563,7 +563,7 @@ export function CatalogoPage({
                         {cols.map((col) => (
                           <td
                             key={col.key}
-                            className={`w-auto min-w-48 break-words px-5 py-3 align-top ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
+                            className={`w-auto min-w-48 break-words px-5 py-3 align-top ${col.key === 'estado' ? 'uppercase' : ''} ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
                           >
                             {esVacio(fila[col.key]) ? (
                               <span className="text-slate-400">—</span>
@@ -664,7 +664,7 @@ export function CatalogoPage({
                             {col.label}
                           </dt>
                           <dd
-                            className={`m-0 break-words ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
+                            className={`m-0 break-words ${col.key === 'estado' ? 'uppercase' : ''} ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
                           >
                             {esVacio(fila[col.key]) ? (
                               <span className="text-slate-400">—</span>

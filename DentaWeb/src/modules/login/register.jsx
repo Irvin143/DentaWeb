@@ -312,7 +312,7 @@ const Register = () => {
                 aria-label={
                   showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
                 }
-                className="absolute right-4 top-1/2 -translate-y-1/2"
+                className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
               >
                 {showPassword ? (
                   <EyeOff className="text-login-icon" size={18} />
@@ -372,7 +372,7 @@ const Register = () => {
                     ? "Ocultar confirmación de contraseña"
                     : "Mostrar confirmación de contraseña"
                 }
-                className="absolute right-4 top-1/2 -translate-y-1/2"
+                className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
               >
                 {showConfirmPassword ? (
                   <EyeOff className="text-login-icon" size={18} />
@@ -433,7 +433,7 @@ const Register = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+            className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
           >
             {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
             {!isSubmitting && <ArrowRight size={18} />}
@@ -444,7 +444,7 @@ const Register = () => {
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-primary-container transition-colors hover:text-login-active"
+            className="inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-primary-container transition-colors hover:text-login-active"
           >
             <ArrowLeft size={16} />
             Volver

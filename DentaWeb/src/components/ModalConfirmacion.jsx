@@ -48,7 +48,7 @@ export default function ModalConfirmacion({
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+            className="cursor-pointer rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
           >
             Cancelar
           </button>
@@ -61,10 +61,10 @@ export default function ModalConfirmacion({
             disabled={botonDeshabilitado}
             className={`rounded-xl px-4 py-2 text-sm font-medium text-white transition-all ${
               botonDeshabilitado 
-                ? 'bg-slate-300 cursor-not-allowed'
+                ? 'cursor-not-allowed bg-slate-300'
                 : esPeligro 
-                  ? 'bg-red-500 hover:bg-red-600' 
-                  : 'bg-teal-500 hover:bg-teal-600'
+                  ? 'cursor-pointer bg-red-500 hover:bg-red-600' 
+                  : 'cursor-pointer bg-teal-500 hover:bg-teal-600'
             }`}
           >
             {textoConfirmar}

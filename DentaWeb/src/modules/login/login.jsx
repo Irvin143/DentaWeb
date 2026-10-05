@@ -160,7 +160,7 @@ const DentalWebLogin = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2"
+                className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
               >
                 {showPassword ? (
                   <EyeOff className="text-login-icon" size={18} />
@@ -228,7 +228,7 @@ const DentalWebLogin = () => {
           <button
             type="submit"
             disabled={isSubmitting || Boolean(successMessage)}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+            className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
           >
             {isSubmitting ? "Iniciando sesión..." : "Iniciar sesión"}
             {!isSubmitting && <ArrowRight size={18} />}

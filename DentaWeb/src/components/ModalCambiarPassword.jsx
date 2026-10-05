@@ -132,7 +132,7 @@ export default function ModalCambiarPassword({ isOpen, onClose }) {
                 <button
                   type="button"
                   onClick={() => setShowPasswordActual(!showPasswordActual)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600"
                 >
                   {showPasswordActual ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -156,7 +156,7 @@ export default function ModalCambiarPassword({ isOpen, onClose }) {
                 <button
                   type="button"
                   onClick={() => setShowPasswordNueva(!showPasswordNueva)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600"
                 >
                   {showPasswordNueva ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -192,14 +192,14 @@ export default function ModalCambiarPassword({ isOpen, onClose }) {
               <button
                 type="button"
                 onClick={resetearYcerrar}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                className="cursor-pointer rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={cargando || !passwordActual || !passwordNueva}
-                className="rounded-xl bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-600 disabled:bg-slate-300"
+                className="cursor-pointer rounded-xl bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-600 disabled:cursor-not-allowed disabled:bg-slate-300"
               >
                 {cargando ? 'Guardando...' : 'Actualizar contraseña'}
               </button>
