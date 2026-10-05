@@ -6,14 +6,26 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (!email.trim()) return;
+    const correo = email.trim();
+    if (!correo) {
+      setErrorMessage("El correo electrónico es obligatorio.");
+      return;
+    }
+    if (!EMAIL_RE.test(correo)) {
+      setErrorMessage("Introduce un correo electrónico válido.");
+      return;
+    }
+    setErrorMessage("");
     setSubmitted(true);
   };
 
@@ -52,7 +64,7 @@ const ForgotPassword = () => {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form noValidate onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label
                   htmlFor="recovery-email"
@@ -68,7 +80,10 @@ const ForgotPassword = () => {
                     id="recovery-email"
                     type="email"
                     value={email}
-                    onChange={(event) => setEmail(event.target.value)}
+                    onChange={(event) => {
+                      setEmail(event.target.value);
+                      setErrorMessage("");
+                    }}
                     placeholder="ejemplo@correo.com"
                     autoComplete="email"
                     required
@@ -76,6 +91,12 @@ const ForgotPassword = () => {
                   />
                 </div>
               </div>
+
+              {errorMessage && (
+                <p className="rounded-xl bg-error-container px-4 py-3 text-sm text-on-error-container" role="alert">
+                  {errorMessage}
+                </p>
+              )}
 
               <button
                 type="submit"
