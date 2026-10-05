@@ -1,5 +1,6 @@
 import * as odontologoService from '../services/odontologosServices.js';
-import { errorContrasena } from './login.controller.js';
+import { errorContrasena, errorTelefono } from './login.controller.js';
+import { conflictoTelefono } from '../services/telefonoUnico.js';
 
 const FILTROS_VALIDOS = ['true', 'false', 'todos'];
 
@@ -33,7 +34,9 @@ const validarBody = (body = {}) => {
     const nombre = body.nombre?.toString().trim();
     const ape_pat = body.ape_pat?.toString().trim();
     const ape_mat = textoOpcional(body.ape_mat);
-    const telefono = textoOpcional(body.telefono);
+    const falloTel = errorTelefono(body.telefono);
+    if (falloTel) return { error: falloTel };
+    const telefono = String(body.telefono).replace(/\D/g, '');
     const cedula = textoOpcional(body.cedula);
     const idusuario = body.idusuario ?? null;
     const idclinica = body.idclinica ?? null;
@@ -43,7 +46,6 @@ const validarBody = (body = {}) => {
     if (!ape_pat) return { error: 'El apellido paterno es obligatorio' };
     if (ape_pat.length > 100) return { error: 'El apellido paterno no puede exceder 100 caracteres' };
     if (ape_mat && ape_mat.length > 100) return { error: 'El apellido materno no puede exceder 100 caracteres' };
-    if (telefono && telefono.length > 20) return { error: 'El teléfono no puede exceder 20 caracteres' };
     if (cedula && cedula.length > 50) return { error: 'La cédula no puede exceder 50 caracteres' };
     if (idusuario !== null && !idValido(idusuario)) {
         return { error: 'idusuario debe ser un entero positivo' };
@@ -114,6 +116,9 @@ export const crear = async (req, res) => {
     const credenciales = validarCredenciales(req.body);
     if (credenciales.error) return res.status(400).json({ error: credenciales.error });
 
+    const ocupado = await conflictoTelefono(datos.telefono);
+    if (ocupado) return res.status(409).json({ error: ocupado });
+
     try {
         const creado = await odontologoService.crearOdontologo({
             correo: credenciales.correo,
@@ -138,6 +143,8 @@ export const actualizar = async (req, res) => {
     if (!idValido(id)) return res.status(400).json({ error: 'ID inválido' });
     const { datos, error } = validarBody(req.body);
     if (error) return res.status(400).json({ error });
+    const ocupado = await conflictoTelefono(datos.telefono, { idOdontologo: Number(id) });
+    if (ocupado) return res.status(409).json({ error: ocupado });
     try {
         const odontologo = await odontologoService.actualizarOdontologo(Number(id), datos);
         if (!odontologo) return res.status(404).json({ error: 'Odontólogo no encontrado o desactivado' });

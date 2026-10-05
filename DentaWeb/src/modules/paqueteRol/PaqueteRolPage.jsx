@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Package } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
+import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../components/avisosFormulario';
 import { paquetesApi } from '../../services/api.js'; // agrega paquetesApi en este archivo
 
 const inputClass =
@@ -27,6 +28,8 @@ export default function PaquetesPage() {
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState(null);
+  const [erroresCampos, setErroresCampos] = useState({});
+  const formularioRef = useRef(null);
   const [errorCarga, setErrorCarga] = useState(null);
   const [guardando, setGuardando] = useState(false);
 
@@ -58,22 +61,24 @@ export default function PaquetesPage() {
     setForm(FORM_INICIAL);
     setEditandoId(null);
     setError(null);
+    setErroresCampos({});
   };
 
-  // Devuelve true si guardó bien (para que el modal pueda cerrarse)
   const handleGuardar = async () => {
-    if (!form.nombre.trim()) {
-      setError('El nombre es obligatorio');
-      return false;
-    }
-    if (form.nombre.trim().length > 50) {
-      setError('El nombre no puede exceder 50 caracteres');
+    const errores = {};
+    if (!form.nombre.trim()) errores.nombre = 'El nombre es obligatorio';
+    else if (form.nombre.trim().length > 50) errores.nombre = 'El nombre no puede exceder 50 caracteres';
+    if (Object.keys(errores).length > 0) {
+      setErroresCampos(errores);
+      setError(null);
+      requestAnimationFrame(() => scrollAlPrimerCampo(formularioRef.current, errores));
       return false;
     }
 
     try {
       setGuardando(true);
       setError(null);
+      setErroresCampos({});
 
       const payload = {
         nombre: mayus(form.nombre),
@@ -103,6 +108,7 @@ export default function PaquetesPage() {
     if (!p) return;
     setEditandoId(id);
     setError(null);
+    setErroresCampos({});
     setForm({
       nombre: (p.nombre ?? '').toLocaleUpperCase('es-MX'),
       descripcion: (p.descripcion ?? '').toLocaleUpperCase('es-MX'),
@@ -120,11 +126,10 @@ export default function PaquetesPage() {
   };
 
   const formularioPaquete = (
-    <div className="flex flex-col gap-4">
-      {error && (
-        <p className="rounded-xl bg-red-50 p-3 text-sm text-red-600">{error}</p>
-      )}
-      <div>
+    <>
+    <AvisoGeneral mensaje={error} />
+    <div ref={formularioRef} className="flex flex-col gap-4">
+      <div data-campo="nombre">
         <label className="mb-1 block text-sm font-medium text-slate-700">Nombre:</label>
         <input
           type="text"
@@ -134,6 +139,7 @@ export default function PaquetesPage() {
           value={form.nombre}
           onChange={handleChange('nombre')}
         />
+        <AvisoCampo mensaje={erroresCampos.nombre} />
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium text-slate-700">Descripción:</label>
@@ -146,6 +152,7 @@ export default function PaquetesPage() {
         />
       </div>
     </div>
+    </>
   );
 
   return (

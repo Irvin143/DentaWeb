@@ -37,12 +37,16 @@ export async function actualizar(req, res, next) {
         if ([nombre, ape_pat, ape_mat, telefono].every((v) => v == null)) {
         return res.status(400).json({ error: 'No se envió ningún campo para actualizar' });
         }
+        const falloTel = errorTelefono(telefono);
+        if (falloTel) return res.status(400).json({ error: falloTel });
+        const ocupado = await conflictoTelefono(String(telefono).replace(/\D/g, ''), { idPaciente: id });
+        if (ocupado) return res.status(409).json({ error: ocupado });
 
         const paciente = await pacientesService.actualizarPaciente(id, {
         nombre: nombre?.trim() ?? null,
         ape_pat: ape_pat?.trim() ?? null,
         ape_mat: ape_mat?.trim() ?? null,
-        telefono: telefono?.trim() ?? null,
+        telefono: String(telefono).replace(/\D/g, ''),
         idOdontologo: id_odontologo ?? null,
         });
 
@@ -83,7 +87,8 @@ export async function reactivar(req, res, next) {
 }
 
 import * as loginServices from '../services/loginServices.js';
-import { errorContrasena } from './login.controller.js';
+import { errorContrasena, errorTelefono } from './login.controller.js';
+import { conflictoTelefono } from '../services/telefonoUnico.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -105,6 +110,10 @@ export async function crearPaciente(req, res, next) {
         if (id_odontologo !== null && !(Number.isInteger(id_odontologo) && id_odontologo > 0)) {
         return res.status(400).json({ error: 'id_odontologo inválido' });
         }
+        const falloTel = errorTelefono(telefono);
+        if (falloTel) return res.status(400).json({ error: falloTel });
+        const ocupado = await conflictoTelefono(String(telefono).replace(/\D/g, ''));
+        if (ocupado) return res.status(409).json({ error: ocupado });
 
         const data = await loginServices.registrarPaciente({
         correo: correo.trim(),
@@ -112,7 +121,7 @@ export async function crearPaciente(req, res, next) {
         nombre: nombre.trim(),
         ape_pat: ape_pat.trim(),
         ape_mat: ape_mat?.trim() || null,
-        telefono: telefono?.trim() || null,
+        telefono: String(telefono).replace(/\D/g, ''),
         id_odontologo,
         });
 

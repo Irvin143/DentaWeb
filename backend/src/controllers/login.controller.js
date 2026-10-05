@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import * as authService from '../services/loginServices.js';
+import { conflictoTelefono } from '../services/telefonoUnico.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const esTexto = (v, max) => typeof v === 'string' && v.trim().length > 0 && v.length <= max;
@@ -26,9 +27,17 @@ export function errorContrasena(contrasena) {
     return null;
 }
 
+export function errorTelefono(telefono) {
+    const digitos = typeof telefono === 'string' ? telefono.replace(/\D/g, '') : '';
+    if (!/^\d{10}$/.test(digitos)) {
+        return 'El teléfono debe tener exactamente 10 dígitos';
+    }
+    return null;
+}
+
 export async function registro(req, res, next) {
     try {
-        const { correo, contrasena, nombre, ape_pat, ape_mat = null, telefono = null } = req.body ?? {};
+        const { correo, contrasena, nombre, ape_pat, ape_mat = null, telefono } = req.body ?? {};
 
         // 1. Validaciones
         if (!esTexto(correo, 150) || !EMAIL_RE.test(correo.trim())) {
@@ -41,9 +50,12 @@ export async function registro(req, res, next) {
         if (!esTexto(nombre, 100) || !esTexto(ape_pat, 100)) {
         return res.status(400).json({ error: 'Nombre y apellido paterno son obligatorios' });
         }
-        if(telefono !== 10 && telefono !== 0 && telefono !== null) {
-            return res.status(400).json({ error: 'El teléfono debe tener 10 dígitos o no tener valor' });
+        const falloTel = errorTelefono(telefono);
+        if (falloTel) {
+            return res.status(400).json({ error: falloTel });
         }
+        const ocupado = await conflictoTelefono(telefono.replace(/\D/g, ''));
+        if (ocupado) return res.status(409).json({ error: ocupado });
 
         // 2. Llamar al service
         const data = await authService.registrarPaciente({
@@ -52,7 +64,7 @@ export async function registro(req, res, next) {
         nombre: nombre.trim(),
         ape_pat: ape_pat.trim(),
         ape_mat: ape_mat?.trim() || null,
-        telefono: telefono?.trim() || null,
+        telefono: telefono.replace(/\D/g, ''),
         });
 
         // 3. Responder

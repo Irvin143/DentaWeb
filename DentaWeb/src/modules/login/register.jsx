@@ -8,12 +8,16 @@ import {
   EyeOff,
   Lock,
   Mail,
+  Phone,
   UserRound,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../../services/api.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const LIMPIAR_NOMBRE = /[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s'.-]/g;
+const nombrePersona = (valor) =>
+  valor.replace(LIMPIAR_NOMBRE, "").toLocaleUpperCase("es-MX");
 
 const REGLAS_CONTRASENA = [
   {
@@ -67,6 +71,7 @@ const Register = () => {
   const [nombre, setNombre] = useState("");
   const [apePat, setApePat] = useState("");
   const [apeMat, setApeMat] = useState("");
+  const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -103,6 +108,16 @@ const Register = () => {
       return;
     }
 
+    const telefonoLimpio = telefono.replace(/\D/g, "");
+    if (!telefonoLimpio) {
+      setErrorMessage("El teléfono es obligatorio.");
+      return;
+    }
+    if (!/^\d{10}$/.test(telefonoLimpio)) {
+      setErrorMessage("El teléfono debe tener exactamente 10 dígitos.");
+      return;
+    }
+
     if (correo.length > 150 || !EMAIL_RE.test(correo)) {
       setErrorMessage("Introduce un correo electrónico válido.");
       return;
@@ -130,6 +145,7 @@ const Register = () => {
       nombre: nombreLimpio,
       ape_pat: apePatLimpio,
       ape_mat: apeMatLimpio || null,
+      telefono: telefonoLimpio,
     };
 
     setIsSubmitting(true);
@@ -142,7 +158,7 @@ const Register = () => {
       }, 1200);
     } catch (error) {
       if (error?.status === 409) {
-        setErrorMessage("Este correo ya está registrado.");
+        setErrorMessage(error?.message || "Este correo ya está registrado.");
       } else if (error?.status === 400) {
         setErrorMessage(error?.message || "Revisa los datos introducidos.");
       } else {
@@ -201,9 +217,7 @@ const Register = () => {
                 id="register-name"
                 type="text"
                 value={nombre}
-                onChange={(event) =>
-                  setNombre(event.target.value.toLocaleUpperCase("es-MX"))
-                }
+                onChange={(event) => setNombre(nombrePersona(event.target.value))}
                 placeholder="ANA"
                 autoComplete="given-name"
                 maxLength={100}
@@ -224,9 +238,7 @@ const Register = () => {
               id="register-last-name"
               type="text"
               value={apePat}
-              onChange={(event) =>
-                setApePat(event.target.value.toLocaleUpperCase("es-MX"))
-              }
+              onChange={(event) => setApePat(nombrePersona(event.target.value))}
               placeholder="PÉREZ"
               autoComplete="family-name"
               maxLength={100}
@@ -247,13 +259,39 @@ const Register = () => {
               id="register-second-last-name"
               type="text"
               value={apeMat}
-              onChange={(event) =>
-                setApeMat(event.target.value.toLocaleUpperCase("es-MX"))
-              }
+              onChange={(event) => setApeMat(nombrePersona(event.target.value))}
               placeholder="GARCÍA"
               autoComplete="additional-name"
               className="h-12 w-full rounded-xl border border-transparent bg-login-input px-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
             />
+          </div>
+
+          <div>
+            <label
+              htmlFor="register-phone"
+              className="mb-1.5 block text-sm font-medium text-on-surface-variant"
+            >
+              Teléfono
+            </label>
+            <div className="relative">
+              <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2">
+                <Phone className="text-login-icon" size={18} />
+              </div>
+              <input
+                id="register-phone"
+                type="tel"
+                inputMode="numeric"
+                value={telefono}
+                onChange={(event) =>
+                  setTelefono(event.target.value.replace(/\D/g, "").slice(0, 10))
+                }
+                placeholder="6671234567"
+                autoComplete="tel"
+                maxLength={10}
+                required
+                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+              />
+            </div>
           </div>
 
           <div>

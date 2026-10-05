@@ -50,7 +50,7 @@ export const actualizarPaciente = async (
     } catch (err) {
         if (err.code === '23505') {
             // violación de unicidad (teléfono repetido)
-            const e = new Error('Ya existe un paciente con ese teléfono');
+            const e = new Error('Ese teléfono ya pertenece a un paciente.');
             e.status = 409;
             throw e;
         }

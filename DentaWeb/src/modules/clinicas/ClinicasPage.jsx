@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Building2, KeyRound } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Building2, Eye, EyeOff, KeyRound } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
 import { ChecklistContrasena, errorContrasena } from '../../components/ChecklistContrasena';
+import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../components/avisosFormulario';
 import { clinicasApi } from '../../services/api.js';
 
 // Mobile: compacto. Desktop (md:): más amplio y cómodo
@@ -176,6 +177,9 @@ export default function ClinicasPage() {
   const [errorCarga, setErrorCarga] = useState(null);
   const [erroresCampos, setErroresCampos] = useState({});
   const [guardando, setGuardando] = useState(false);
+  const formularioRef = useRef(null);
+  const [verContrasena, setVerContrasena] = useState(false);
+  const [verConfirmar, setVerConfirmar] = useState(false);
 
   const creando = editandoId === null;
 
@@ -262,11 +266,8 @@ export default function ClinicasPage() {
 
     if (Object.keys(errores).length > 0) {
       setErroresCampos(errores);
-      setError(
-        errores.contrasena ||
-          errores.confirmarContrasena ||
-          'Revisa los campos marcados antes de continuar'
-      );
+      setError(null);
+      requestAnimationFrame(() => scrollAlPrimerCampo(formularioRef.current, errores));
       return false;
     }
 
@@ -340,16 +341,13 @@ export default function ClinicasPage() {
      FORMULARIO (misma vista, solo agregamos clases y mensajes)
      ------------------------------------------------------------ */
   const formularioClinica = (
-    <div className="flex max-h-[65vh] flex-col gap-3 overflow-y-auto pr-1 md:max-h-[72vh] md:gap-7 md:px-2">
-      {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600 md:rounded-xl md:p-3 md:text-sm">
-          {error}
-        </p>
-      )}
+    <>
+    <AvisoGeneral mensaje={error} />
+    <div ref={formularioRef} className="flex max-h-[65vh] flex-col gap-3 overflow-y-auto pr-1 md:max-h-[72vh] md:gap-7 md:px-2">
 
       <Seccion titulo="Datos de la clínica">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
-          <div>
+          <div data-campo="nombre">
             <Etiqueta requerido>Nombre de la clínica:</Etiqueta>
             <input
               type="text"
@@ -366,7 +364,7 @@ export default function ClinicasPage() {
               </p>
             )}
           </div>
-          <div>
+          <div data-campo="identificacion_fiscal">
             <Etiqueta>Identificación fiscal:</Etiqueta>
             <input
               type="text"
@@ -383,7 +381,7 @@ export default function ClinicasPage() {
               </p>
             )}
           </div>
-          <div className="md:col-span-2">
+          <div data-campo="direccion" className="md:col-span-2">
             <Etiqueta>Dirección completa:</Etiqueta>
             <input
               type="text"
@@ -412,7 +410,7 @@ export default function ClinicasPage() {
             Con estos datos la clínica iniciará sesión en el sistema.
           </p>
 
-          <div>
+          <div data-campo="correo">
             <Etiqueta requerido>Correo electrónico:</Etiqueta>
             <input
               type="email"
@@ -432,32 +430,53 @@ export default function ClinicasPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
-            <div>
+            <div data-campo="contrasena">
               <Etiqueta requerido>Contraseña:</Etiqueta>
-              <input
-                type="password"
-                autoComplete="new-password"
-                placeholder="Crea una contraseña"
-                className={claseConError('contrasena')}
-                value={form.contrasena}
-                onChange={handleChange('contrasena')}
-                onBlur={handleBlur('contrasena')}
-                maxLength={72}
-              />
+              <div className="relative">
+                <input
+                  type={verContrasena ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  placeholder="Crea una contraseña"
+                  className={`${claseConError('contrasena')} pr-12! md:pr-12!`}
+                  value={form.contrasena}
+                  onChange={handleChange('contrasena')}
+                  onBlur={handleBlur('contrasena')}
+                  maxLength={72}
+                />
+                <button
+                  type="button"
+                  onClick={() => setVerContrasena((valor) => !valor)}
+                  aria-label={verContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400"
+                >
+                  {verContrasena ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               <ChecklistContrasena contrasena={form.contrasena} />
+              <AvisoCampo mensaje={erroresCampos.contrasena} />
             </div>
-            <div>
+            <div data-campo="confirmarContrasena">
               <Etiqueta requerido>Confirmar contraseña:</Etiqueta>
-              <input
-                type="password"
-                autoComplete="new-password"
-                placeholder="Repite la contraseña"
-                className={claseConError('confirmarContrasena')}
-                value={form.confirmarContrasena}
-                onChange={handleChange('confirmarContrasena')}
-                onBlur={handleBlur('confirmarContrasena')}
-                maxLength={72}
-              />
+              <div className="relative">
+                <input
+                  type={verConfirmar ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  placeholder="Repite la contraseña"
+                  className={`${claseConError('confirmarContrasena')} pr-12! md:pr-12!`}
+                  value={form.confirmarContrasena}
+                  onChange={handleChange('confirmarContrasena')}
+                  onBlur={handleBlur('confirmarContrasena')}
+                  maxLength={72}
+                />
+                <button
+                  type="button"
+                  onClick={() => setVerConfirmar((valor) => !valor)}
+                  aria-label={verConfirmar ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400"
+                >
+                  {verConfirmar ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {erroresCampos.confirmarContrasena && (
                 <p className="mt-1 text-xs text-red-600">
                   {erroresCampos.confirmarContrasena}
@@ -468,6 +487,7 @@ export default function ClinicasPage() {
         </fieldset>
       )}
     </div>
+    </>
   );
 
   return (

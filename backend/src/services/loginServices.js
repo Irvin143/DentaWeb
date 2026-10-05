@@ -21,7 +21,7 @@ export async function registrarPaciente({
         if (err.code === '23505') {
             const error = new Error(
                 err.constraint === 'ux_pacientes_telefono'
-                    ? 'Ya existe un paciente con ese teléfono'
+                    ? 'Ese teléfono ya pertenece a un paciente.'
                     : 'El correo ya está registrado'
             );
             error.status = 409;

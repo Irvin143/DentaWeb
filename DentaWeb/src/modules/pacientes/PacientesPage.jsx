@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { KeyRound, Users } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Eye, EyeOff, KeyRound, Users } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
 import { ChecklistContrasena, errorContrasena } from '../../components/ChecklistContrasena';
+import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../components/avisosFormulario';
+import { avisoTelefonoOcupado } from '../../utils/telefonoCompartido';
 import { pacientesApi, odontologosApi } from '../../services/api.js';
 
 // Mobile: compacto. Desktop (md:): más amplio y cómodo
@@ -9,6 +11,9 @@ const inputClass =
   'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500 md:rounded-xl md:px-4 md:py-3 md:text-base';
 
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const LIMPIAR_NOMBRE = /[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s'.-]/g;
+const nombrePersona = (valor) =>
+  String(valor ?? '').replace(LIMPIAR_NOMBRE, '').toLocaleUpperCase('es-MX');
 
 const FORM_INICIAL = {
   nombre: '',
@@ -31,20 +36,13 @@ const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
 const limitarTelefono = (valor) => String(valor ?? '').replace(/\D/g, '').slice(0, 10);
 const digitosTelefono = (valor) => String(valor ?? '').replace(/\D/g, '');
 
-// Vacío está permitido. Si hay valor: solo dígitos y exactamente 10.
 const mensajeTelefono = (valor) => {
-  if (!String(valor ?? '').trim()) return null;
+  if (!String(valor ?? '').trim()) return 'El teléfono es obligatorio';
   const digitos = digitosTelefono(valor);
   if (digitos && !/^\d+$/.test(digitos)) return 'El teléfono solo puede contener números';
   if (!/^\d{10}$/.test(digitos)) return 'El teléfono debe tener exactamente 10 dígitos';
   return null;
 };
-
-const telefonoRepetido = (digitos, lista, idActual) =>
-  lista.some((p) => {
-    if (idActual != null && String(p.id_paciente) === String(idActual)) return false;
-    return digitosTelefono(p.telefono) === digitos;
-  });
 
 // Convierte lo que devuelve el backend a lo que muestra la tabla
 const mapearPaciente = (p) => ({
@@ -85,8 +83,12 @@ export default function PacientesPage() {
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState(null);
+  const [erroresCampos, setErroresCampos] = useState({});
+  const formularioRef = useRef(null);
   const [errorCarga, setErrorCarga] = useState(null);
   const [guardando, setGuardando] = useState(false);
+  const [verContrasena, setVerContrasena] = useState(false);
+  const [verConfirmar, setVerConfirmar] = useState(false);
 
   const creando = editandoId === null;
 
@@ -133,7 +135,11 @@ console.log('mapearPaciente:', pacientes);
   );
 
   const handleChange = (campo) => (e) => {
-    const valor = campo === 'telefono' ? limitarTelefono(e.target.value) : e.target.value;
+    const valor = campo === 'telefono'
+      ? limitarTelefono(e.target.value)
+      : campo === 'nombre' || campo === 'ape_pat' || campo === 'ape_mat'
+        ? nombrePersona(e.target.value)
+        : e.target.value;
     setForm((prev) => ({ ...prev, [campo]: valor }));
   };
 
@@ -141,42 +147,52 @@ console.log('mapearPaciente:', pacientes);
     setForm(FORM_INICIAL);
     setEditandoId(null);
     setError(null);
+    setErroresCampos({});
   };
 
-  // Devuelve un mensaje de error o null si todo está bien
   const validar = () => {
-    if (!form.nombre.trim()) return 'El nombre es obligatorio';
-    if (!form.ape_pat.trim()) return 'El apellido paterno es obligatorio';
+    const errores = {};
+    if (!form.nombre.trim()) errores.nombre = 'El nombre es obligatorio';
+    if (!form.ape_pat.trim()) errores.ape_pat = 'El apellido paterno es obligatorio';
 
     const errTel = mensajeTelefono(form.telefono);
-    if (errTel) return errTel;
-    const digitos = digitosTelefono(form.telefono);
-    if (/^\d{10}$/.test(digitos) && telefonoRepetido(digitos, pacientes, editandoId)) {
-      return 'Ya existe un paciente con ese teléfono';
+    if (errTel) errores.telefono = errTel;
+    else {
+      const ocupado = avisoTelefonoOcupado(digitosTelefono(form.telefono), {
+        pacientes,
+        odontologos,
+        idPaciente: editandoId,
+      });
+      if (ocupado) errores.telefono = ocupado;
     }
 
     if (creando) {
       const correo = form.correo.trim();
-      if (!correo) return 'El correo de acceso es obligatorio';
-      if (!REGEX_CORREO.test(correo)) return 'El correo de acceso no es válido';
+      if (!correo) errores.correo = 'El correo de acceso es obligatorio';
+      else if (!REGEX_CORREO.test(correo)) errores.correo = 'El correo de acceso no es válido';
       const errorClave = errorContrasena(form.contrasena);
-      if (errorClave) return errorClave;
-      if (form.contrasena !== form.confirmarContrasena) return 'Las contraseñas no coinciden';
+      if (errorClave) errores.contrasena = errorClave;
+      if (form.contrasena !== form.confirmarContrasena) errores.confirmarContrasena = 'Las contraseñas no coinciden';
     }
-    return null;
+    return errores;
+  };
+
+  const rechazarCampos = (errores) => {
+    setErroresCampos(errores);
+    setError(null);
+    requestAnimationFrame(() => scrollAlPrimerCampo(formularioRef.current, errores));
+    return false;
   };
 
   // Devuelve true si guardó bien (para que el modal pueda cerrarse)
   const handleGuardar = async () => {
-    const mensaje = validar();
-    if (mensaje) {
-      setError(mensaje);
-      return false;
-    }
+    const errores = validar();
+    if (Object.keys(errores).length > 0) return rechazarCampos(errores);
 
     try {
       setGuardando(true);
       setError(null);
+      setErroresCampos({});
 
       const datosBase = {
         nombre: mayus(form.nombre),
@@ -219,6 +235,7 @@ console.log('mapearPaciente:', pacientes);
     if (!p) return;
     setEditandoId(id);
     setError(null);
+    setErroresCampos({});
     setForm({
       ...FORM_INICIAL,
       nombre: p.nombre ?? '',
@@ -242,17 +259,14 @@ console.log('mapearPaciente:', pacientes);
 
   // max-h + overflow: si no cabe, solo el formulario hace scroll
   const formularioPaciente = (
-    <div className="flex max-h-[65vh] flex-col gap-3 overflow-y-auto pr-1 md:max-h-[72vh] md:gap-7 md:px-2">
-      {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600 md:rounded-xl md:p-3 md:text-sm">
-          {error}
-        </p>
-      )}
+    <>
+    <AvisoGeneral mensaje={error} />
+    <div ref={formularioRef} className="flex max-h-[65vh] flex-col gap-3 overflow-y-auto pr-1 md:max-h-[72vh] md:gap-7 md:px-2">
 
       {/* Datos personales */}
       <Seccion titulo="Datos personales">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
-          <div>
+          <div data-campo="nombre">
             <Etiqueta requerido>Nombre(s):</Etiqueta>
             <input
               type="text"
@@ -261,9 +275,10 @@ console.log('mapearPaciente:', pacientes);
               value={form.nombre}
               onChange={handleChange('nombre')}
             />
+            <AvisoCampo mensaje={erroresCampos.nombre} />
           </div>
-          <div>
-            <Etiqueta>Teléfono:</Etiqueta>
+          <div data-campo="telefono">
+            <Etiqueta requerido>Teléfono:</Etiqueta>
             <input
               type="tel"
               inputMode="numeric"
@@ -273,8 +288,9 @@ console.log('mapearPaciente:', pacientes);
               value={form.telefono}
               onChange={handleChange('telefono')}
             />
+            <AvisoCampo mensaje={erroresCampos.telefono} />
           </div>
-          <div>
+          <div data-campo="ape_pat">
             <Etiqueta requerido>Apellido paterno:</Etiqueta>
             <input
               type="text"
@@ -283,6 +299,7 @@ console.log('mapearPaciente:', pacientes);
               value={form.ape_pat}
               onChange={handleChange('ape_pat')}
             />
+            <AvisoCampo mensaje={erroresCampos.ape_pat} />
           </div>
           <div>
             <Etiqueta>Apellido materno:</Etiqueta>
@@ -326,7 +343,7 @@ console.log('mapearPaciente:', pacientes);
             Con estos datos el paciente iniciará sesión en el sistema.
           </p>
 
-          <div>
+          <div data-campo="correo">
             <Etiqueta requerido>Correo electrónico:</Etiqueta>
             <input
               type="email"
@@ -336,37 +353,61 @@ console.log('mapearPaciente:', pacientes);
               value={form.correo}
               onChange={handleChange('correo')}
             />
+            <AvisoCampo mensaje={erroresCampos.correo} />
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
-            <div>
+            <div data-campo="contrasena">
               <Etiqueta requerido>Contraseña:</Etiqueta>
-              <input
-                type="password"
-                autoComplete="new-password"
-                placeholder="Crea una contraseña"
-                maxLength={72}
-                className={inputClass}
-                value={form.contrasena}
-                onChange={handleChange('contrasena')}
-              />
+              <div className="relative">
+                <input
+                  type={verContrasena ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  placeholder="Crea una contraseña"
+                  maxLength={72}
+                  className={`${inputClass} pr-12! md:pr-12!`}
+                  value={form.contrasena}
+                  onChange={handleChange('contrasena')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setVerContrasena((valor) => !valor)}
+                  aria-label={verContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400"
+                >
+                  {verContrasena ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               <ChecklistContrasena contrasena={form.contrasena} />
+              <AvisoCampo mensaje={erroresCampos.contrasena} />
             </div>
-            <div>
+            <div data-campo="confirmarContrasena">
               <Etiqueta requerido>Confirmar contraseña:</Etiqueta>
-              <input
-                type="password"
-                autoComplete="new-password"
-                placeholder="Repite la contraseña"
-                className={inputClass}
-                value={form.confirmarContrasena}
-                onChange={handleChange('confirmarContrasena')}
-              />
+              <div className="relative">
+                <input
+                  type={verConfirmar ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  placeholder="Repite la contraseña"
+                  className={`${inputClass} pr-12! md:pr-12!`}
+                  value={form.confirmarContrasena}
+                  onChange={handleChange('confirmarContrasena')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setVerConfirmar((valor) => !valor)}
+                  aria-label={verConfirmar ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400"
+                >
+                  {verConfirmar ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              <AvisoCampo mensaje={erroresCampos.confirmarContrasena} />
             </div>
           </div>
         </fieldset>
       )}
     </div>
+    </>
   );
 
   return (
