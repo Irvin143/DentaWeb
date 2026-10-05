@@ -1,5 +1,6 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import ProtectedLayout from "../layouts/ProtectedLayout.jsx";
+import { getAuth, primeraRutaPermitida } from "../config/permisos.js";
 
 
 import Login from "../modules/login/login.jsx";
@@ -21,8 +22,12 @@ import ServiciosPage from "../modules/servicios/ServiciosPage.jsx";
 import TipoCitaPage from "../modules/tipoCita/TipoCItaPage.jsx"; 
 import TiposUsuarioPage from "../modules/tiposUsuarios/TiposUsuariosPage.jsx";
 import UsuariosPage from "../modules/usuarios/UsuariosPage.jsx";
-import PanelPage from "../modules/panel/PanelPage.jsx";
 import PanelPacientePage from "../modules/panel/PanelPacientePage.jsx";
+
+function RedirigirInicio() {
+  const destino = primeraRutaPermitida(getAuth()?.usuario);
+  return <Navigate to={destino || "/"} replace />;
+}
 
 export default function App() {
   return (
@@ -39,7 +44,7 @@ export default function App() {
 
         {/* Protegidas: comparten MainLayout + Sidebar */}
         <Route element={<ProtectedLayout />}>
-          <Route path="/panel" element={<PanelPage />} />
+          <Route path="/panel" element={<RedirigirInicio />} />
           <Route path="/panel-paciente" element={<PanelPacientePage />} />
           <Route path="/clinicas" element={<ClinicasPage />} />
           <Route path="/pacientes" element={<PacientesPage />} />
