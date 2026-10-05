@@ -1,9 +1,10 @@
+import jwt from 'jsonwebtoken';
 import * as authService from '../services/loginServices.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const esTexto = (v, max) => typeof v === 'string' && v.trim().length > 0 && v.length <= max;
 
-function errorContrasena(contrasena) {
+export function errorContrasena(contrasena) {
     if (typeof contrasena !== 'string' || contrasena.trim().length === 0) {
         return 'La contraseña no puede ser solo espacios.';
     }
@@ -81,5 +82,42 @@ export async function login(req, res, next) {
         res.status(200).json(data);
     } catch (err) {
         next(err); // el 401 del service llega al manejador de errores
+    }
+}
+
+// El id sale solo del token. Se ignora cualquier id del cuerpo o de la URL.
+export async function cambiarContrasenaPropia(req, res, next) {
+    try {
+        const header = req.headers.authorization;
+        if (typeof header !== 'string' || !header.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'No autorizado' });
+        }
+
+        let payload;
+        try {
+            payload = jwt.verify(header.slice('Bearer '.length), process.env.JWT_SECRET);
+        } catch {
+            return res.status(401).json({ error: 'No autorizado' });
+        }
+
+        const idUsuario = Number(payload?.sub);
+        if (!Number.isInteger(idUsuario) || idUsuario <= 0) {
+            return res.status(401).json({ error: 'No autorizado' });
+        }
+
+        const { actual, nueva } = req.body ?? {};
+        if (typeof actual !== 'string') {
+            return res.status(400).json({ error: 'La contraseña actual es obligatoria' });
+        }
+
+        const errorClave = errorContrasena(nueva);
+        if (errorClave) {
+            return res.status(400).json({ error: errorClave });
+        }
+
+        await authService.cambiarContrasenaPropia({ idUsuario, actual, nueva });
+        res.status(200).json({ mensaje: 'Contraseña actualizada correctamente' });
+    } catch (err) {
+        next(err);
     }
 }

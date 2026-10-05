@@ -74,3 +74,37 @@ export async function login({ correo, contrasena }) {
 
     return { token, usuario };
 }
+
+// Cambia la contraseña del usuario del token. actual y nueva llegan sin trim.
+export async function cambiarContrasenaPropia({ idUsuario, actual, nueva }) {
+    const { rows } = await conexion.query(
+        'SELECT contrasena FROM usuarios WHERE idUsuario = $1 AND activo',
+        [idUsuario]
+    );
+    const hashGuardado = rows[0]?.contrasena;
+
+    if (typeof hashGuardado !== 'string' || hashGuardado.length === 0) {
+        await bcrypt.compare(actual, DUMMY_HASH);
+        const error = new Error('Usuario no encontrado o desactivado');
+        error.status = 404;
+        throw error;
+    }
+
+    const coincide = await bcrypt.compare(actual, hashGuardado);
+    if (!coincide) {
+        const error = new Error('La contraseña actual no es correcta');
+        error.status = 401;
+        throw error;
+    }
+
+    const hash = await bcrypt.hash(nueva, SALT_ROUNDS);
+    const { rowCount } = await conexion.query(
+        'UPDATE usuarios SET contrasena = $2 WHERE idUsuario = $1 AND activo',
+        [idUsuario, hash]
+    );
+    if (!rowCount) {
+        const error = new Error('Usuario no encontrado o desactivado');
+        error.status = 404;
+        throw error;
+    }
+}

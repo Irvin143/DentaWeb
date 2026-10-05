@@ -104,6 +104,13 @@ export const authApi = {
       body: payload,
     });
   },
+
+  cambiarPassword(payload) {
+    return apiRequest("/api/login/cambiar-contrasena", {
+      method: "POST",
+      body: payload,
+    });
+  },
 };
 
 export const clinicasApi = {
