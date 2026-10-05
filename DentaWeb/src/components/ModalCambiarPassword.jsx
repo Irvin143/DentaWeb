@@ -47,13 +47,12 @@ function errorContrasena(contrasena) {
   return fallo ? fallo.mensaje : null;
 }
 
-export default function ModalCambiarPassword({ isOpen, onClose }) {
+export default function ModalCambiarPassword({ isOpen, onClose, onExito }) {
   const [passwordActual, setPasswordActual] = useState('');
   const [passwordNueva, setPasswordNueva] = useState('');
   const [showPasswordActual, setShowPasswordActual] = useState(false);
   const [showPasswordNueva, setShowPasswordNueva] = useState(false);
   const [error, setError] = useState(null);
-  const [exito, setExito] = useState(false);
   const [cargando, setCargando] = useState(false);
 
   if (!isOpen) return null;
@@ -64,14 +63,12 @@ export default function ModalCambiarPassword({ isOpen, onClose }) {
     setShowPasswordActual(false);
     setShowPasswordNueva(false);
     setError(null);
-    setExito(false);
     onClose();
   };
 
   const handleGuardar = async (e) => {
     e.preventDefault();
     setError(null);
-    setExito(false);
 
     // Validar usando las mismas reglas del registro
     const errorClave = errorContrasena(passwordNueva);
@@ -88,11 +85,8 @@ export default function ModalCambiarPassword({ isOpen, onClose }) {
         nueva: passwordNueva 
       });
 
-      setExito(true);
-      setTimeout(() => {
-        resetearYcerrar(); 
-      }, 2000);
-
+      onExito?.();
+      resetearYcerrar();
     } catch (err) {
       setError(err.data?.mensaje || err.message || 'Error al actualizar la contraseña. Verifica tu contraseña actual.');
     } finally {
@@ -104,12 +98,7 @@ export default function ModalCambiarPassword({ isOpen, onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
         <h3 className="mb-4 text-lg font-bold text-slate-800">Cambiar contraseña</h3>
-        
-        {exito ? (
-          <div className="rounded-xl bg-teal-50 p-4 text-center text-teal-700">
-            <p className="font-medium">Contraseña cambiada exitosamente</p>
-          </div>
-        ) : (
+
           <form onSubmit={handleGuardar} className="flex flex-col gap-4">
             {error && (
               <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</p>
@@ -205,7 +194,6 @@ export default function ModalCambiarPassword({ isOpen, onClose }) {
               </button>
             </div>
           </form>
-        )}
       </div>
     </div>
   );

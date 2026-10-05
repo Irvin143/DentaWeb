@@ -4,6 +4,10 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Building2, BriefcaseMedical, CalendarCheck, CalendarClock, ChevronLeft, ChevronRight, DoorOpen, GraduationCap, IdCard, KeyRound, LayoutGrid, LogOut, Menu, Package, Scan, Shield, Stethoscope, UserCog, Users, X } from 'lucide-react';
 import { borrarSesion, getAuth, puedeVer, primeraRutaPermitida } from '../config/permisos'; // ajusta la ruta a donde guardes permisos.js
 import ModalCambiarPassword from './ModalCambiarPassword';
+import { ToastContainer } from './Toast';
+
+const DURACION_TOAST = 3000;
+const DURACION_SALIDA = 300;
 
 const navItems = [
   { path: '/panel', label: 'Panel Principal', icon: LayoutGrid },
@@ -116,9 +120,34 @@ export function Sidebar() {
   const [menuUsuario, setMenuUsuario] = useState(false);
   const [confirmarSalida, setConfirmarSalida] = useState(false);
   const [modalPasswordAbierto, setModalPasswordAbierto] = useState(false);
+  const [toasts, setToasts] = useState([]);
   const confirmarSalidaRef = useRef(false);
   const tarjetaRef = useRef(null);
   confirmarSalidaRef.current = confirmarSalida;
+
+  const cerrarToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const mostrarToast = useCallback(
+    (tipo, mensaje) => {
+      const id = `${Date.now()}-${Math.random()}`;
+
+      setToasts((prev) => [...prev, { id, tipo, mensaje, visible: false }]);
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() =>
+          setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, visible: true } : t)))
+        )
+      );
+
+      setTimeout(
+        () => setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, visible: false } : t))),
+        DURACION_TOAST - DURACION_SALIDA
+      );
+      setTimeout(() => cerrarToast(id), DURACION_TOAST);
+    },
+    [cerrarToast]
+  );
 
   // Solo se muestran las opciones a las que el usuario tiene acceso
   const itemsVisibles = navItems.filter((item) => puedeVer(item.path, usuario));
@@ -320,10 +349,12 @@ export function Sidebar() {
       {confirmarSalida && (
         <DialogoCerrarSesion onCancelar={cancelarCierre} onConfirmar={cerrarSesion} />
       )}
-      <ModalCambiarPassword 
-        isOpen={modalPasswordAbierto} 
-        onClose={() => setModalPasswordAbierto(false)} 
+      <ModalCambiarPassword
+        isOpen={modalPasswordAbierto}
+        onClose={() => setModalPasswordAbierto(false)}
+        onExito={() => mostrarToast('exito', 'Contraseña actualizada correctamente')}
       />
+      <ToastContainer toasts={toasts} onCerrar={cerrarToast} />
     </>
   );
 }
