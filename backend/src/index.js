@@ -8,6 +8,8 @@ const origenesPermitidos = [
     'https://www.clinicware.tech',
     'http://localhost:5173',
     'http://127.0.0.1:5173',
+    'https://denta-web-three.vercel.app',
+    'https://denta-web-inky.vercel.app',
 ];
 
 app.use(express.json()); // comentario
