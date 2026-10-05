@@ -238,7 +238,7 @@ export function Sidebar() {
         type="button"
         onClick={() => setColapsada((valor) => !valor)}
         aria-label={colapsada ? 'Mostrar menú' : 'Ocultar menú'}
-        className={`fixed top-5 z-[60] hidden h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-700 md:flex ${
+        className={`fixed top-5 z-30 hidden h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-700 md:flex ${
           colapsada ? 'left-2' : 'left-64 -translate-x-1/2'
         }`}
       >
