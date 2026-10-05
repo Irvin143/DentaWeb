@@ -1,4 +1,4 @@
-import { ArrowLeft, Shield, Smartphone } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Privacy = () => (
@@ -20,7 +20,7 @@ const Privacy = () => (
 			</article>
 			<div className="mt-8 flex justify-center"><Link to="/" className="inline-flex items-center gap-2 text-sm font-semibold text-primary-container transition-colors hover:text-login-active"><ArrowLeft size={16} />Volver a iniciar sesión</Link></div>
 		</main>
-		<footer className="mt-8 flex w-full max-w-4xl flex-col items-center gap-3 text-center"><nav aria-label="Navegación legal" className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-medium text-login-muted"><Link to="/legal/terminos" className="transition-colors hover:text-login-active">Términos de servicio</Link><Link to="/legal/privacidad" className="text-primary-container">Privacidad</Link><Link to="/legal/cookies" className="transition-colors hover:text-login-active">Cookies</Link><Link to="/legal/seguridad" className="transition-colors hover:text-login-active">Seguridad</Link></nav><div className="flex items-center gap-1.5 text-xs text-login-muted"><Shield size={14} /><Smartphone size={14} /><span>Soporte clínico 24/7</span></div></footer>
+		<footer className="mt-8 flex w-full max-w-4xl flex-col items-center gap-3 text-center"><nav aria-label="Navegación legal" className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-medium text-login-muted"><Link to="/legal/terminos" className="transition-colors hover:text-login-active">Términos de servicio</Link><Link to="/legal/privacidad" className="text-primary-container">Privacidad</Link><Link to="/legal/cookies" className="transition-colors hover:text-login-active">Cookies</Link><Link to="/legal/seguridad" className="transition-colors hover:text-login-active">Seguridad</Link></nav></footer>
 	</div>
 );
 

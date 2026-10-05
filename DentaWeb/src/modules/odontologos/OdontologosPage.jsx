@@ -222,6 +222,7 @@ export default function OdontologosPage() {
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState(null);
+  const [errorCarga, setErrorCarga] = useState(null);
   const [erroresCampos, setErroresCampos] = useState({});
   const [guardando, setGuardando] = useState(false);
 
@@ -230,13 +231,14 @@ export default function OdontologosPage() {
   const cargar = useCallback(async () => {
     try {
       setCargando(true);
+      setErrorCarga(null);
       const data = await odontologosApi.listar();
       console.log('Odontólogos cargados:', data);
       setOdontologos(comoLista(data, 'odontologos'));
     } catch (err) {
       console.error('Error al listar odontólogos:', err);
       setOdontologos([]);
-      setError(err.message || 'No se pudieron cargar los odontólogos');
+      setErrorCarga(err.message || 'No se pudieron cargar los odontólogos.');
     } finally {
       setCargando(false);
     }
@@ -407,21 +409,13 @@ export default function OdontologosPage() {
   };
 
   const handleEliminar = async (id) => {
-    try {
-      await odontologosApi.eliminar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al desactivar el odontólogo');
-    }
+    await odontologosApi.eliminar(id);
+    await cargar();
   };
 
   const handleReactivar = async (id) => {
-    try {
-      await odontologosApi.reactivar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al reactivar el odontólogo');
-    }
+    await odontologosApi.reactivar(id);
+    await cargar();
   };
 
   // Clase para marcar el input en rojo si tiene error
@@ -639,6 +633,7 @@ export default function OdontologosPage() {
       placeholderBusqueda="Buscar por nombre, cédula, correo o clínica..."
       datos={odontologos.map(mapearOdontologo)}
       cargando={cargando}
+      errorCarga={errorCarga}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}

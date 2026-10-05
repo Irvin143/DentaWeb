@@ -110,16 +110,18 @@ export default function EstudiosPage() {
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState(null);
+  const [errorCarga, setErrorCarga] = useState(null);
   const [erroresCampos, setErroresCampos] = useState({});
   const [guardando, setGuardando] = useState(false);
 
   const cargar = useCallback(async () => {
     try {
       setCargando(true);
+      setErrorCarga(null);
       const data = await estudiosApi.listar();
       setEstudios(data?.estudios ?? (Array.isArray(data) ? data : []));
     } catch (err) {
-      setError(err.message || 'No se pudieron cargar los estudios');
+      setErrorCarga(err.message || 'No se pudieron cargar los estudios.');
     } finally {
       setCargando(false);
     }
@@ -232,21 +234,13 @@ export default function EstudiosPage() {
   };
 
   const handleEliminar = async (id) => {
-    try {
-      await estudiosApi.eliminar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al desactivar el estudio');
-    }
+    await estudiosApi.eliminar(id);
+    await cargar();
   };
 
   const handleReactivar = async (id) => {
-    try {
-      await estudiosApi.reactivar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al reactivar el estudio');
-    }
+    await estudiosApi.reactivar(id);
+    await cargar();
   };
 
   // Clase para marcar el input en rojo si tiene error
@@ -323,6 +317,7 @@ export default function EstudiosPage() {
       placeholderBusqueda="Buscar por nombre o descripción..."
       datos={estudios.map(mapearEstudio)}
       cargando={cargando}
+      errorCarga={errorCarga}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}

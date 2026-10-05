@@ -85,6 +85,7 @@ export default function PacientesPage() {
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState(null);
+  const [errorCarga, setErrorCarga] = useState(null);
   const [guardando, setGuardando] = useState(false);
 
   const creando = editandoId === null;
@@ -92,6 +93,7 @@ export default function PacientesPage() {
   const cargar = useCallback(async () => {
     try {
       setCargando(true);
+      setErrorCarga(null);
       const data = await pacientesApi.listar();
       setPacientes(comoLista(data, 'pacientes'));
       
@@ -99,7 +101,7 @@ console.log('mapearPaciente:', pacientes);
     } catch (err) {
       console.error('Error al listar pacientes:', err);
       setPacientes([]);
-      setError(err.message || 'No se pudieron cargar los pacientes');
+      setErrorCarga(err.message || 'No se pudieron cargar los pacientes.');
     } finally {
       setCargando(false);
     }
@@ -229,21 +231,13 @@ console.log('mapearPaciente:', pacientes);
   };
 
   const handleEliminar = async (id) => {
-    try {
-      await pacientesApi.eliminar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al desactivar al paciente');
-    }
+    await pacientesApi.eliminar(id);
+    await cargar();
   };
 
   const handleReactivar = async (id) => {
-    try {
-      await pacientesApi.reactivar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al reactivar al paciente');
-    }
+    await pacientesApi.reactivar(id);
+    await cargar();
   };
 
   // max-h + overflow: si no cabe, solo el formulario hace scroll
@@ -383,6 +377,7 @@ console.log('mapearPaciente:', pacientes);
       placeholderBusqueda="Buscar por nombre, teléfono o correo..."
       datos={pacientes.map(mapearPaciente)}
       cargando={cargando}
+      errorCarga={errorCarga}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}

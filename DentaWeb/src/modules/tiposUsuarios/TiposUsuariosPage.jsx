@@ -25,15 +25,17 @@ export default function TiposUsuarioPage() {
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState(null);
+  const [errorCarga, setErrorCarga] = useState(null);
   const [guardando, setGuardando] = useState(false);
 
   const cargar = useCallback(async () => {
     try {
       setCargando(true);
+      setErrorCarga(null);
       const data = await tiposUsuarioApi.listar();
       setTipos(data?.tipos ?? (Array.isArray(data) ? data : []));
     } catch (err) {
-      setError(err.message || 'No se pudieron cargar los tipos de usuario');
+      setErrorCarga(err.message || 'No se pudieron cargar los tipos de usuario.');
     } finally {
       setCargando(false);
     }
@@ -103,21 +105,13 @@ export default function TiposUsuarioPage() {
   };
 
   const handleEliminar = async (id) => {
-    try {
-      await tiposUsuarioApi.eliminar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al desactivar el tipo de usuario');
-    }
+    await tiposUsuarioApi.eliminar(id);
+    await cargar();
   };
 
   const handleReactivar = async (id) => {
-    try {
-      await tiposUsuarioApi.reactivar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al reactivar el tipo de usuario');
-    }
+    await tiposUsuarioApi.reactivar(id);
+    await cargar();
   };
 
   const formularioTipoUsuario = (
@@ -147,6 +141,7 @@ export default function TiposUsuarioPage() {
       placeholderBusqueda="Buscar por nombre..."
       datos={tipos.map(mapearTipoUsuario)}
       cargando={cargando}
+      errorCarga={errorCarga}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}

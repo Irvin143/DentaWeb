@@ -86,18 +86,20 @@ export default function EspecialidadesPage() {
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState(null);
+  const [errorCarga, setErrorCarga] = useState(null);
   const [erroresCampos, setErroresCampos] = useState({});
   const [guardando, setGuardando] = useState(false);
 
   const cargar = useCallback(async () => {
     try {
       setCargando(true);
+      setErrorCarga(null);
       const data = await especialidadesApi.listar();
       setEspecialidades(
         data?.especialidades ?? (Array.isArray(data) ? data : [])
       );
     } catch (err) {
-      setError(err.message || 'No se pudieron cargar las especialidades');
+      setErrorCarga(err.message || 'No se pudieron cargar las especialidades.');
     } finally {
       setCargando(false);
     }
@@ -201,21 +203,13 @@ export default function EspecialidadesPage() {
   };
 
   const handleEliminar = async (id) => {
-    try {
-      await especialidadesApi.eliminar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al desactivar la especialidad');
-    }
+    await especialidadesApi.eliminar(id);
+    await cargar();
   };
 
   const handleReactivar = async (id) => {
-    try {
-      await especialidadesApi.reactivar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al reactivar la especialidad');
-    }
+    await especialidadesApi.reactivar(id);
+    await cargar();
   };
 
   // Clase para marcar el input en rojo si tiene error
@@ -260,6 +254,7 @@ export default function EspecialidadesPage() {
       placeholderBusqueda="Buscar por nombre..."
       datos={especialidades.map(mapearEspecialidad)}
       cargando={cargando}
+      errorCarga={errorCarga}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}

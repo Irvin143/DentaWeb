@@ -27,15 +27,17 @@ export default function RolesPage() {
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState(null);
+  const [errorCarga, setErrorCarga] = useState(null);
   const [guardando, setGuardando] = useState(false);
 
   const cargar = useCallback(async () => {
     try {
       setCargando(true);
+      setErrorCarga(null);
       const data = await rolesApi.listar();
       setRoles(data?.roles ?? (Array.isArray(data) ? data : []));
     } catch (err) {
-      setError(err.message || 'No se pudieron cargar los roles');
+      setErrorCarga(err.message || 'No se pudieron cargar los roles.');
     } finally {
       setCargando(false);
     }
@@ -107,21 +109,13 @@ export default function RolesPage() {
   };
 
   const handleEliminar = async (id) => {
-    try {
-      await rolesApi.eliminar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al desactivar el rol');
-    }
+    await rolesApi.eliminar(id);
+    await cargar();
   };
 
   const handleReactivar = async (id) => {
-    try {
-      await rolesApi.reactivar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al reactivar el rol');
-    }
+    await rolesApi.reactivar(id);
+    await cargar();
   };
 
   const formularioRol = (
@@ -161,6 +155,7 @@ export default function RolesPage() {
       placeholderBusqueda="Buscar por nombre o descripción..."
       datos={roles.map(mapearRol)}
       cargando={cargando}
+      errorCarga={errorCarga}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}

@@ -28,7 +28,7 @@ const ACCIONES = {
     palabraRequerida: 'DESACTIVAR',
     esPeligro: true,
     textoExito: 'Registro desactivado correctamente.',
-    textoError: 'No se pudo desactivar el registro',
+    textoError: 'No se pudo desactivar el registro.',
   },
   reactivar: {
     titulo: 'Reactivar registro',
@@ -37,7 +37,7 @@ const ACCIONES = {
     palabraRequerida: '',
     esPeligro: false,
     textoExito: 'Registro reactivado correctamente.',
-    textoError: 'No se pudo reactivar el registro',
+    textoError: 'No se pudo reactivar el registro.',
   },
   borrar: {
     titulo: 'Eliminar registro',
@@ -46,7 +46,7 @@ const ACCIONES = {
     palabraRequerida: 'ELIMINAR',
     esPeligro: true,
     textoExito: 'Registro eliminado correctamente.',
-    textoError: 'No se pudo eliminar el registro',
+    textoError: 'No se pudo eliminar el registro.',
   },
 };
 
@@ -130,6 +130,7 @@ export function CatalogoPage({
   // Tabla
   datos = [],
   cargando = false,
+  errorCarga = null,
   columnas, // opcional: [{ key, label, render? }]
   // Acciones por fila (opcionales: si no se pasan, no se muestra la columna)
   // Si lanzan un error o devuelven false, se muestra una notificación de error
@@ -232,6 +233,14 @@ export function CatalogoPage({
 
   // Paginación
   const totalRegistros = datosFiltrados.length;
+  const textoTabla = cargando
+    ? 'Cargando...'
+    : errorCarga
+      ? errorCarga
+      : busqueda.trim()
+        ? 'No se encontraron resultados.'
+        : 'Aún no hay registros.';
+  const claseTextoTabla = !cargando && errorCarga ? 'text-red-600' : 'text-slate-500';
   // Botón de ícono 1.875rem, interruptor 2.75rem, hueco 0.5rem, padding derecho 1.25rem.
   const anchoAccionesRem = hayAcciones
     ? 0.5 +
@@ -519,22 +528,13 @@ export function CatalogoPage({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {cargando ? (
+                  {cargando || errorCarga || totalRegistros === 0 ? (
                     <tr>
                       <td
                         colSpan={totalColumnas || 1}
-                        className="px-5 py-12 text-center text-slate-500"
+                        className={`px-5 py-12 text-center ${claseTextoTabla}`}
                       >
-                        Ejecutando consulta a la base de datos...
-                      </td>
-                    </tr>
-                  ) : totalRegistros === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={totalColumnas || 1}
-                        className="px-5 py-12 text-center text-slate-500"
-                      >
-                        No se encontraron resultados.
+                        {textoTabla}
                       </td>
                     </tr>
                   ) : (
@@ -621,13 +621,9 @@ export function CatalogoPage({
 
             {/* Mobile: tarjetas */}
             <ul className="m-0 list-none divide-y divide-slate-100 p-0 md:hidden">
-              {cargando ? (
-                <li className="px-4 py-12 text-center text-sm text-slate-500">
-                  Ejecutando consulta a la base de datos...
-                </li>
-              ) : totalRegistros === 0 ? (
-                <li className="px-4 py-12 text-center text-sm text-slate-500">
-                  No se encontraron resultados.
+              {cargando || errorCarga || totalRegistros === 0 ? (
+                <li className={`px-4 py-12 text-center text-sm ${claseTextoTabla}`}>
+                  {textoTabla}
                 </li>
               ) : (
                 datosPagina.map((fila, rowIndex) => (

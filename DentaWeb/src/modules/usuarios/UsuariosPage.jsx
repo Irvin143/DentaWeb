@@ -106,6 +106,7 @@ export default function UsuariosPage() {
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState(null);
+  const [errorCarga, setErrorCarga] = useState(null);
   const [guardando, setGuardando] = useState(false);
 
   const creando = editandoId === null;
@@ -113,12 +114,13 @@ export default function UsuariosPage() {
   const cargar = useCallback(async () => {
     try {
       setCargando(true);
+      setErrorCarga(null);
       const data = await usuariosApi.listar();
       setUsuarios(comoLista(data, 'usuarios'));
     } catch (err) {
       console.error('Error al listar usuarios:', err);
       setUsuarios([]);
-      setError(err.message || 'No se pudieron cargar los usuarios');
+      setErrorCarga(err.message || 'No se pudieron cargar los usuarios.');
     } finally {
       setCargando(false);
     }
@@ -346,21 +348,13 @@ export default function UsuariosPage() {
   };
 
   const handleEliminar = async (id) => {
-    try {
-      await usuariosApi.eliminar(id);
-      await cargar();
-    } catch (err) {
-      alert(err.message || 'Error al desactivar el usuario');
-    }
+    await usuariosApi.eliminar(id);
+    await cargar();
   };
 
   const handleReactivar = async (id) => {
-    try {
-      await usuariosApi.reactivar(id);
-      await cargar();
-    } catch (err) {
-      alert(err.message || 'Error al reactivar el usuario');
-    }
+    await usuariosApi.reactivar(id);
+    await cargar();
   };
 
   // max-h + overflow: si no cabe, solo el formulario hace scroll
@@ -626,6 +620,7 @@ export default function UsuariosPage() {
       placeholderBusqueda="Buscar por correo, tipo o paquete..."
       datos={usuarios.map(mapearUsuario)}
       cargando={cargando}
+      errorCarga={errorCarga}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}

@@ -34,16 +34,18 @@ export default function ServiciosPage() {
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState(null);
+  const [errorCarga, setErrorCarga] = useState(null);
   const [guardando, setGuardando] = useState(false);
 
   const cargar = useCallback(async () => {
     try {
       setCargando(true);
+      setErrorCarga(null);
       const data = await serviciosApi.listar();
       console.log('Servicios cargados:', data);
       setServicios(comoLista(data, 'servicios'));
     } catch (err) {
-      setError(err.message || 'No se pudieron cargar los servicios');
+      setErrorCarga(err.message || 'No se pudieron cargar los servicios.');
     } finally {
       setCargando(false);
     }
@@ -143,21 +145,13 @@ export default function ServiciosPage() {
   };
 
   const handleEliminar = async (id) => {
-    try {
-      await serviciosApi.eliminar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al desactivar el servicio');
-    }
+    await serviciosApi.eliminar(id);
+    await cargar();
   };
 
   const handleReactivar = async (id) => {
-    try {
-      await serviciosApi.reactivar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al reactivar el servicio');
-    }
+    await serviciosApi.reactivar(id);
+    await cargar();
   };
 
   const formularioServicio = (
@@ -216,6 +210,7 @@ export default function ServiciosPage() {
       placeholderBusqueda="Buscar por nombre, descripción o clínica..."
       datos={servicios.map(mapearServicio)}
       cargando={cargando}
+      errorCarga={errorCarga}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}

@@ -1,4 +1,4 @@
-import { ArrowLeft, Smartphone } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const LegalFooter = () => (
@@ -9,10 +9,6 @@ const LegalFooter = () => (
 			<Link to="/legal/cookies" className="transition-colors hover:text-login-active">Cookies</Link>
 			<Link to="/legal/seguridad" className="transition-colors hover:text-login-active">Seguridad</Link>
 		</nav>
-		<div className="flex items-center gap-1.5 text-xs text-login-muted">
-			<Smartphone size={14} />
-			<span>Soporte clínico 24/7</span>
-		</div>
 	</footer>
 );
 

@@ -8,7 +8,6 @@ import {
   EyeOff,
   Lock,
   Mail,
-  Smartphone,
   UserRound,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -482,10 +481,6 @@ const Register = () => {
             Seguridad
           </Link>
         </nav>
-        <div className="flex items-center gap-1.5">
-          <Smartphone className="text-login-muted" size={14} />
-          <span className="text-xs text-login-muted">Soporte clínico 24/7</span>
-        </div>
         <p className="text-center text-[11px] text-login-icon">
           DentalWeb Medical Systems © 2026. Todos los derechos reservados.
         </p>

@@ -69,12 +69,14 @@ export default function ConsultoriosPage() {
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState(null);
+  const [errorCarga, setErrorCarga] = useState(null);
   const [erroresCampos, setErroresCampos] = useState({});
   const [guardando, setGuardando] = useState(false);
 
   const cargar = useCallback(async () => {
     try {
       setCargando(true);
+      setErrorCarga(null);
       const [dataConsultorios, dataClinicas] = await Promise.all([
         consultoriosApi.listar(),
         clinicasApi.listar(),
@@ -88,7 +90,7 @@ export default function ConsultoriosPage() {
           (Array.isArray(dataClinicas) ? dataClinicas : [])
       );
     } catch (err) {
-      setError(err.message || 'No se pudieron cargar los consultorios');
+      setErrorCarga(err.message || 'No se pudieron cargar los consultorios.');
     } finally {
       setCargando(false);
     }
@@ -207,21 +209,13 @@ export default function ConsultoriosPage() {
   };
 
   const handleEliminar = async (id) => {
-    try {
-      await consultoriosApi.eliminar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al desactivar el consultorio');
-    }
+    await consultoriosApi.eliminar(id);
+    await cargar();
   };
 
   const handleReactivar = async (id) => {
-    try {
-      await consultoriosApi.reactivar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al reactivar el consultorio');
-    }
+    await consultoriosApi.reactivar(id);
+    await cargar();
   };
 
   // Clase para marcar el input en rojo si tiene error
@@ -283,6 +277,7 @@ export default function ConsultoriosPage() {
       placeholderBusqueda="Buscar por nombre o clínica..."
       datos={consultorios.map(mapearConsultorio)}
       cargando={cargando}
+      errorCarga={errorCarga}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}

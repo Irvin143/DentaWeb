@@ -173,6 +173,7 @@ export default function ClinicasPage() {
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState(null);
+  const [errorCarga, setErrorCarga] = useState(null);
   const [erroresCampos, setErroresCampos] = useState({});
   const [guardando, setGuardando] = useState(false);
 
@@ -181,12 +182,13 @@ export default function ClinicasPage() {
   const cargar = useCallback(async () => {
     try {
       setCargando(true);
+      setErrorCarga(null);
       const data = await clinicasApi.listar();
       setClinicas(comoLista(data, 'clinicas'));
     } catch (err) {
       console.error('Error al listar clínicas:', err);
       setClinicas([]);
-      setError(err.message || 'No se pudieron cargar las clínicas');
+      setErrorCarga(err.message || 'No se pudieron cargar las clínicas.');
     } finally {
       setCargando(false);
     }
@@ -319,21 +321,13 @@ export default function ClinicasPage() {
   };
 
   const handleEliminar = async (id) => {
-    try {
-      await clinicasApi.eliminar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al desactivar la clínica');
-    }
+    await clinicasApi.eliminar(id);
+    await cargar();
   };
 
   const handleReactivar = async (id) => {
-    try {
-      await clinicasApi.reactivar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al reactivar la clínica');
-    }
+    await clinicasApi.reactivar(id);
+    await cargar();
   };
 
   // Clase para marcar el input en rojo si tiene error
@@ -484,6 +478,7 @@ export default function ClinicasPage() {
       placeholderBusqueda="Buscar por nombre de clínica o dirección..."
       datos={clinicas.map(mapearClinica)}
       cargando={cargando}
+      errorCarga={errorCarga}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}

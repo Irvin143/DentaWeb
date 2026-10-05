@@ -25,15 +25,17 @@ export default function TiposCitaPage() {
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState(null);
+  const [errorCarga, setErrorCarga] = useState(null);
   const [guardando, setGuardando] = useState(false);
 
   const cargar = useCallback(async () => {
     try {
       setCargando(true);
+      setErrorCarga(null);
       const data = await tiposCitaApi.listar();
       setTipos(data?.tipos ?? (Array.isArray(data) ? data : []));
     } catch (err) {
-      setError(err.message || 'No se pudieron cargar los tipos de cita');
+      setErrorCarga(err.message || 'No se pudieron cargar los tipos de cita.');
     } finally {
       setCargando(false);
     }
@@ -103,21 +105,13 @@ export default function TiposCitaPage() {
   };
 
   const handleEliminar = async (id) => {
-    try {
-      await tiposCitaApi.eliminar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al desactivar el tipo de cita');
-    }
+    await tiposCitaApi.eliminar(id);
+    await cargar();
   };
 
   const handleReactivar = async (id) => {
-    try {
-      await tiposCitaApi.reactivar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al reactivar el tipo de cita');
-    }
+    await tiposCitaApi.reactivar(id);
+    await cargar();
   };
 
   const formularioTipoCita = (
@@ -147,6 +141,7 @@ export default function TiposCitaPage() {
       placeholderBusqueda="Buscar por nombre..."
       datos={tipos.map(mapearTipoCita)}
       cargando={cargando}
+      errorCarga={errorCarga}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}

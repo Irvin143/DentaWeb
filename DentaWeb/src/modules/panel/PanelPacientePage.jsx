@@ -131,7 +131,7 @@ export default function PanelPacientePage() {
                 <p className="text-xs text-on-surface-variant">Ortodoncista · Box 02</p>
                 <p className="mt-0.5 flex items-center gap-1 text-xs text-outline">
                   <MapPin size={14} aria-hidden="true" />
-                  DentalWeb Miraflores Centro
+                  ClinicWare Universitarios
                 </p>
               </div>
             </div>

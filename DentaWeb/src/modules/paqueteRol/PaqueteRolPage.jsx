@@ -27,16 +27,18 @@ export default function PaquetesPage() {
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState(null);
+  const [errorCarga, setErrorCarga] = useState(null);
   const [guardando, setGuardando] = useState(false);
 
   const cargar = useCallback(async () => {
     try {
       setCargando(true);
+      setErrorCarga(null);
       const data = await paquetesApi.listar();
       console.log('Paquetes cargados:', data);
       setPaquetes(data?.paquetes ?? (Array.isArray(data) ? data : []));
     } catch (err) {
-      setError(err.message || 'No se pudieron cargar los paquetes');
+      setErrorCarga(err.message || 'No se pudieron cargar los paquetes.');
     } finally {
       setCargando(false);
     }
@@ -108,21 +110,13 @@ export default function PaquetesPage() {
   };
 
   const handleEliminar = async (id) => {
-    try {
-      await paquetesApi.eliminar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al desactivar el paquete');
-    }
+    await paquetesApi.eliminar(id);
+    await cargar();
   };
 
   const handleReactivar = async (id) => {
-    try {
-      await paquetesApi.reactivar(id);
-      await cargar();
-    } catch (err) {
-      setError(err.message || 'Error al reactivar el paquete');
-    }
+    await paquetesApi.reactivar(id);
+    await cargar();
   };
 
   const formularioPaquete = (
@@ -162,6 +156,7 @@ export default function PaquetesPage() {
       placeholderBusqueda="Buscar por nombre o descripción..."
       datos={paquetes.map(mapearPaquete)}
       cargando={cargando}
+      errorCarga={errorCarga}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}

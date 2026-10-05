@@ -2,9 +2,7 @@ import { useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
-  CheckCircle2,
   Mail,
-  Smartphone,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -15,7 +13,7 @@ const ForgotPassword = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    console.log("Password recovery request:", { email });
+    if (!email.trim()) return;
     setSubmitted(true);
   };
 
@@ -50,8 +48,7 @@ const ForgotPassword = () => {
                 ¿Olvidaste tu contraseña?
               </h2>
               <p className="mt-1 text-sm text-login-muted">
-                Ingresa tu correo electrónico y te enviaremos instrucciones para
-                restablecer tu contraseña.
+                Ingresa tu correo electrónico.
               </p>
             </div>
 
@@ -84,23 +81,18 @@ const ForgotPassword = () => {
                 type="submit"
                 className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover"
               >
-                Enviar instrucciones
+                Continuar
                 <ArrowRight size={18} />
               </button>
             </form>
           </>
         ) : (
           <div className="text-center" aria-live="polite">
-            <CheckCircle2
-              className="mx-auto mb-4 text-login-active"
-              size={42}
-            />
             <h2 className="text-xl font-bold text-login-heading sm:text-2xl">
-              Revisa tu correo
+              Restablecer la contraseña todavía no está disponible.
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-login-muted">
-              Si existe una cuenta asociada a este correo, recibirás
-              instrucciones para restablecer tu contraseña.
+              Puedes volver al inicio de sesión.
             </p>
             <button
               type="button"
@@ -157,10 +149,6 @@ const ForgotPassword = () => {
             Seguridad
           </Link>
         </nav>
-        <div className="flex items-center gap-1.5">
-          <Smartphone className="text-login-muted" size={14} />
-          <span className="text-xs text-login-muted">Soporte clínico 24/7</span>
-        </div>
         <p className="text-center text-[11px] text-login-icon">
           DentalWeb Medical Systems © 2026. Todos los derechos reservados.
         </p>
