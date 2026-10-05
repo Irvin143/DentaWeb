@@ -248,7 +248,7 @@ export function Sidebar() {
       {/* Sidebar: panel deslizante en mobile, fijo en escritorio */}
       <aside
         id="menu-lateral"
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 min-h-0 flex-col justify-between overflow-hidden border-r border-slate-100 bg-white p-4 shadow-sm transition-[transform,visibility] duration-200 md:h-full md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 min-h-0 flex-col justify-between overflow-hidden border-r border-slate-100 bg-white p-4 shadow-sm transition-[transform,visibility] duration-200 md:z-auto md:h-full md:translate-x-0 ${
           colapsada ? 'md:hidden' : 'md:visible md:static'
         } ${abierto ? 'translate-x-0' : '-translate-x-full invisible'}`}
       >
