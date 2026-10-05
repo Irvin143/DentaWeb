@@ -245,11 +245,6 @@ export function CatalogoPage({
           1) +
       1.25
     : 0;
-  // No. 5rem, cada dato 12rem. Acciones solo ocupa sus controles.
-  const anchoTablaRem =
-    (cols.length > 0 ? 5 : 0) +
-    cols.length * 12 +
-    (totalRegistros >= 1 ? anchoAccionesRem : 0);
   const totalPaginas = Math.max(1, Math.ceil(totalRegistros / REGISTROS_POR_PAGINA));
   const paginaActual = Math.min(pagina, totalPaginas);
   const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
@@ -478,11 +473,8 @@ export function CatalogoPage({
         <main className="flex flex-col gap-4">
           <figure className="m-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             {/* Escritorio: tabla */}
-            <section className="hidden overflow-x-auto md:block">
-              <table
-                className="min-w-full table-fixed border-separate border-spacing-0 text-left text-sm text-slate-600"
-                style={{ width: `max(100%, ${anchoTablaRem}rem)` }}
-              >
+            <section className="hidden overflow-x-hidden md:block">
+              <table className="w-full min-w-full table-fixed border-separate border-spacing-0 text-left text-sm text-slate-600">
                 <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
                   <tr>
                     {cols.length > 0 && (
@@ -501,15 +493,15 @@ export function CatalogoPage({
                           aria-sort={
                             !activa ? 'none' : orden.direccion === 'asc' ? 'ascending' : 'descending'
                           }
-                          className="w-auto min-w-48 p-0"
+                          className="w-auto min-w-0 p-0"
                         >
                           <button
                             type="button"
                             onClick={() => ordenarPor(col.key)}
                             aria-label={`${etiquetaColumna(col.label)}, orden ${siguiente}`}
-                            className="flex w-full cursor-pointer items-center gap-1.5 px-5 py-3 text-left uppercase transition-colors hover:bg-slate-100 hover:text-slate-700"
+                            className="flex w-full min-w-0 cursor-pointer items-center gap-1.5 px-5 py-3 text-left whitespace-normal uppercase transition-colors hover:bg-slate-100 hover:text-slate-700"
                           >
-                            <span className="min-w-0">{col.label}</span>
+                            <span className="min-w-0 break-words">{col.label}</span>
                             <FlechaOrden activa={activa} direccion={orden.direccion} />
                           </button>
                         </th>
@@ -563,7 +555,7 @@ export function CatalogoPage({
                         {cols.map((col) => (
                           <td
                             key={col.key}
-                            className={`w-auto min-w-48 break-words px-5 py-3 align-top ${col.key === 'estado' ? 'uppercase' : ''} ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
+                            className={`w-auto min-w-0 break-words px-5 py-3 align-top ${col.key === 'estado' ? 'uppercase' : ''} ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
                           >
                             {esVacio(fila[col.key]) ? (
                               <span className="text-slate-400">—</span>
