@@ -75,7 +75,7 @@ export const eliminar = async (req, res) => {
     try {
         const ok = await tipoUsuarioService.eliminarTipoUsuario(Number(id));
         if (!ok) return res.status(404).json({ error: 'Tipo de usuario no encontrado o ya desactivado' });
-        res.status(200).json({ mensaje: 'Tipo de usuario eliminado correctamente' });
+        res.status(200).json({ mensaje: 'Tipo de usuario eliminado correctamente.' });
     } catch (err) {
         responderError(res, err);
     }
@@ -87,7 +87,7 @@ export const reactivar = async (req, res) => {
     try {
         const tipo = await tipoUsuarioService.reactivarTipoUsuario(Number(id));
         if (!tipo) return res.status(404).json({ error: 'Tipo de usuario no encontrado o ya activo' });
-        res.json({ mensaje: 'Tipo de usuario reactivado correctamente', tipo });
+        res.json({ mensaje: 'Tipo de usuario reactivado correctamente.', tipo });
     } catch (err) {
         responderError(res, err);
     }

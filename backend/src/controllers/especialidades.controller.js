@@ -75,7 +75,7 @@ export async function eliminarEspecialidad(req, res, next) {
         const eliminado = await especialidadesService.eliminarEspecialidad(id);
         if (!eliminado) return res.status(404).json({ error: 'Especialidad no encontrada' });
 
-        res.status(200).json({ mensaje: 'Especialidad eliminada correctamente' });
+        res.status(200).json({ mensaje: 'Especialidad eliminada correctamente.' });
     } catch (err) {
         next(err);
     }

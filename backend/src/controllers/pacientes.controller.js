@@ -62,7 +62,7 @@ export async function eliminar(req, res, next) {
         const eliminado = await pacientesService.eliminarPaciente(id);
         if (!eliminado) return res.status(404).json({ error: 'Paciente no encontrado' });
 
-        res.status(200).json({ mensaje: 'Paciente desactivado correctamente' });
+        res.status(200).json({ mensaje: 'Paciente desactivado correctamente.' });
     } catch (err) {
         next(err);
     }
@@ -76,7 +76,7 @@ export async function reactivar(req, res, next) {
         const reactivado = await pacientesService.reactivarPaciente(id);
         if (!reactivado) return res.status(404).json({ error: 'Paciente no encontrado o ya está activo' });
 
-        res.status(200).json({ mensaje: 'Paciente reactivado correctamente' });
+        res.status(200).json({ mensaje: 'Paciente reactivado correctamente.' });
     } catch (err) {
         next(err);
     }

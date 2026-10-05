@@ -27,7 +27,7 @@ const ACCIONES = {
     textoConfirmar: 'Desactivar',
     palabraRequerida: 'DESACTIVAR',
     esPeligro: true,
-    textoExito: 'Registro desactivado correctamente',
+    textoExito: 'Registro desactivado correctamente.',
     textoError: 'No se pudo desactivar el registro',
   },
   reactivar: {
@@ -36,7 +36,7 @@ const ACCIONES = {
     textoConfirmar: 'Reactivar',
     palabraRequerida: '',
     esPeligro: false,
-    textoExito: 'Registro reactivado correctamente',
+    textoExito: 'Registro reactivado correctamente.',
     textoError: 'No se pudo reactivar el registro',
   },
   borrar: {
@@ -45,7 +45,7 @@ const ACCIONES = {
     textoConfirmar: 'Eliminar',
     palabraRequerida: 'ELIMINAR',
     esPeligro: true,
-    textoExito: 'Registro eliminado correctamente',
+    textoExito: 'Registro eliminado correctamente.',
     textoError: 'No se pudo eliminar el registro',
   },
 };
@@ -323,7 +323,7 @@ export function CatalogoPage({
         modal.onCerrar?.();
         mostrarToast(
           'exito',
-          modoEdicion ? 'Registro actualizado correctamente' : 'Registro creado correctamente'
+          modoEdicion ? 'Registro actualizado correctamente.' : 'Registro creado correctamente.'
         );
         return true;
       }

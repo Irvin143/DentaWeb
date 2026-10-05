@@ -163,7 +163,7 @@ export const eliminar = async (req, res) => {
     try {
         const ok = await odontologoService.eliminarOdontologo(Number(id));
         if (!ok) return res.status(404).json({ error: 'Odontólogo no encontrado o ya desactivado' });
-        res.status(200).json({ mensaje: 'Odontólogo eliminado correctamente' });
+        res.status(200).json({ mensaje: 'Odontólogo eliminado correctamente.' });
     } catch (err) {
         responderError(res, err);
     }
@@ -175,7 +175,7 @@ export const reactivar = async (req, res) => {
     try {
         const odontologo = await odontologoService.reactivarOdontologo(Number(id));
         if (!odontologo) return res.status(404).json({ error: 'Odontólogo no encontrado o ya activo' });
-        res.json({ mensaje: 'Odontólogo reactivado correctamente', odontologo });
+        res.json({ mensaje: 'Odontólogo reactivado correctamente.', odontologo });
     } catch (err) {
         responderError(res, err);
     }

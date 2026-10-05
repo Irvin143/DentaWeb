@@ -76,7 +76,7 @@ export const eliminar = async (req, res) => {
     try {
         const ok = await paqueteRolService.eliminarPaquete(Number(id));
         if (!ok) return res.status(404).json({ error: 'Paquete no encontrado o ya desactivado' });
-        res.status(200).json({ mensaje: 'Paquete eliminado correctamente' });
+        res.status(200).json({ mensaje: 'Paquete eliminado correctamente.' });
     } catch (err) {
         responderError(res, err);
     }
@@ -88,7 +88,7 @@ export const reactivar = async (req, res) => {
     try {
         const paquete = await paqueteRolService.reactivarPaquete(Number(id));
         if (!paquete) return res.status(404).json({ error: 'Paquete no encontrado o ya activo' });
-        res.json({ mensaje: 'Paquete reactivado correctamente', paquete });
+        res.json({ mensaje: 'Paquete reactivado correctamente.', paquete });
     } catch (err) {
         responderError(res, err);
     }

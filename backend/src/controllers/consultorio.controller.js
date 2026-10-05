@@ -94,7 +94,7 @@ export const eliminar = async (req, res) => {
     try {
         const ok = await consultorioService.eliminarConsultorio(Number(id));
         if (!ok) return res.status(404).json({ error: 'Consultorio no encontrado o ya desactivado' });
-        res.status(200).json({ mensaje: 'Consultorio eliminado correctamente' });
+        res.status(200).json({ mensaje: 'Consultorio eliminado correctamente.' });
     } catch (err) {
         responderError(res, err);
     }
@@ -106,7 +106,7 @@ export const reactivar = async (req, res) => {
     try {
         const consultorio = await consultorioService.reactivarConsultorio(Number(id));
         if (!consultorio) return res.status(404).json({ error: 'Consultorio no encontrado o ya activo' });
-        res.json({ mensaje: 'Consultorio reactivado correctamente', consultorio });
+        res.json({ mensaje: 'Consultorio reactivado correctamente.', consultorio });
     } catch (err) {
         responderError(res, err);
     }

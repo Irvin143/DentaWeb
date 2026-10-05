@@ -110,7 +110,7 @@ export const cambiarContrasena = async (req, res) => {
     try {
         const ok = await usuarioService.cambiarContrasena(Number(id), req.body.contrasena);
         if (!ok) return res.status(404).json({ error: 'Usuario no encontrado o desactivado' });
-        res.status(200).json({ mensaje: 'Contraseña actualizada correctamente' });
+        res.status(200).json({ mensaje: 'Contraseña actualizada correctamente.' });
     } catch (err) {
         responderError(res, err);
     }
@@ -122,7 +122,7 @@ export const eliminar = async (req, res) => {
     try {
         const ok = await usuarioService.eliminarUsuario(Number(id));
         if (!ok) return res.status(404).json({ error: 'Usuario no encontrado o ya desactivado' });
-        res.status(200).json({ mensaje: 'Usuario eliminado correctamente' });
+        res.status(200).json({ mensaje: 'Usuario eliminado correctamente.' });
     } catch (err) {
         responderError(res, err);
     }
@@ -134,7 +134,7 @@ export const reactivar = async (req, res) => {
     try {
         const usuario = await usuarioService.reactivarUsuario(Number(id));
         if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado o ya activo' });
-        res.json({ mensaje: 'Usuario reactivado correctamente', usuario });
+        res.json({ mensaje: 'Usuario reactivado correctamente.', usuario });
     } catch (err) {
         responderError(res, err);
     }

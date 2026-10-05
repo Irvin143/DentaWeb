@@ -79,7 +79,7 @@ export const eliminar = async (req, res) => {
     try {
         const ok = await servicioService.eliminarServicio(Number(id));
         if (!ok) return res.status(404).json({ error: 'Servicio no encontrado o ya desactivado' });
-        res.status(200).json({ mensaje: 'Servicio eliminado correctamente' });
+        res.status(200).json({ mensaje: 'Servicio eliminado correctamente.' });
     } catch (err) {
         responderError(res, err);
     }
@@ -91,7 +91,7 @@ export const reactivar = async (req, res) => {
     try {
         const servicio = await servicioService.reactivarServicio(Number(id));
         if (!servicio) return res.status(404).json({ error: 'Servicio no encontrado o ya activo' });
-        res.json({ mensaje: 'Servicio reactivado correctamente', servicio });
+        res.json({ mensaje: 'Servicio reactivado correctamente.', servicio });
     } catch (err) {
         responderError(res, err);
     }

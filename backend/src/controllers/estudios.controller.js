@@ -74,7 +74,7 @@ export async function eliminarEstudio(req, res, next) {
         const eliminado = await estudiosService.eliminarEstudio(id);
         if (!eliminado) return res.status(404).json({ error: 'Estudio no encontrado' });
 
-        res.status(200).json({ mensaje: 'Estudio desactivado correctamente' });
+        res.status(200).json({ mensaje: 'Estudio desactivado correctamente.' });
     } catch (err) {
         next(err);
     }

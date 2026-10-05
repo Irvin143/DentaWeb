@@ -118,7 +118,7 @@ export const eliminar = async (req, res) => {
     try {
         const ok = await clinicaService.eliminarClinica(Number(id));
         if (!ok) return res.status(404).json({ error: 'Clínica no encontrada o ya desactivada' });
-        res.status(200).json({ mensaje: 'Clínica eliminada correctamente' });
+        res.status(200).json({ mensaje: 'Clínica eliminada correctamente.' });
     } catch (err) {
         responderError(res, err);
     }

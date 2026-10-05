@@ -75,7 +75,7 @@ export const eliminar = async (req, res) => {
     try {
         const ok = await tipoCitaService.eliminarTipoCita(Number(id));
         if (!ok) return res.status(404).json({ error: 'Tipo de cita no encontrado o ya desactivado' });
-        res.status(200).json({ mensaje: 'Tipo de cita eliminado correctamente' });
+        res.status(200).json({ mensaje: 'Tipo de cita eliminado correctamente.' });
     } catch (err) {
         responderError(res, err);
     }
@@ -87,7 +87,7 @@ export const reactivar = async (req, res) => {
     try {
         const tipo = await tipoCitaService.reactivarTipoCita(Number(id));
         if (!tipo) return res.status(404).json({ error: 'Tipo de cita no encontrado o ya activo' });
-        res.json({ mensaje: 'Tipo de cita reactivado correctamente', tipo });
+        res.json({ mensaje: 'Tipo de cita reactivado correctamente.', tipo });
     } catch (err) {
         responderError(res, err);
     }

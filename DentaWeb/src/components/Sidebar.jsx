@@ -362,7 +362,7 @@ export function Sidebar() {
       <ModalCambiarPassword
         isOpen={modalPasswordAbierto}
         onClose={() => setModalPasswordAbierto(false)}
-        onExito={() => mostrarToast('exito', 'Contraseña actualizada correctamente')}
+        onExito={() => mostrarToast('exito', 'Contraseña actualizada correctamente.')}
       />
       <ToastContainer toasts={toasts} onCerrar={cerrarToast} />
     </>

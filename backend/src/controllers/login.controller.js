@@ -116,7 +116,7 @@ export async function cambiarContrasenaPropia(req, res, next) {
         }
 
         await authService.cambiarContrasenaPropia({ idUsuario, actual, nueva });
-        res.status(200).json({ mensaje: 'Contraseña actualizada correctamente' });
+        res.status(200).json({ mensaje: 'Contraseña actualizada correctamente.' });
     } catch (err) {
         next(err);
     }

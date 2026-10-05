@@ -76,7 +76,7 @@ export const eliminar = async (req, res) => {
     try {
         const ok = await rolService.eliminarRol(Number(id));
         if (!ok) return res.status(404).json({ error: 'Rol no encontrado o ya desactivado' });
-        res.status(200).json({ mensaje: 'Rol eliminado correctamente' });
+        res.status(200).json({ mensaje: 'Rol eliminado correctamente.' });
     } catch (err) {
         responderError(res, err);
     }
@@ -88,7 +88,7 @@ export const reactivar = async (req, res) => {
     try {
         const rol = await rolService.reactivarRol(Number(id));
         if (!rol) return res.status(404).json({ error: 'Rol no encontrado o ya activo' });
-        res.json({ mensaje: 'Rol reactivado correctamente', rol });
+        res.json({ mensaje: 'Rol reactivado correctamente.', rol });
     } catch (err) {
         responderError(res, err);
     }
