@@ -7,9 +7,11 @@ import {
   ArrowRight,
   Smartphone,
 } from "lucide-react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { authApi } from "../../services/api.js";
 import { borrarSesion, getAuth, guardarSesion, primeraRutaPermitida } from "../../config/permisos.js";
+
+let avisoCierreHasta = 0;
 
 const DentalWebLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,8 +21,10 @@ const DentalWebLogin = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [cierreMensaje, setCierreMensaje] = useState(() => Date.now() < avisoCierreHasta);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const redireccion = useRef(null);
 
   useEffect(() => {
@@ -29,11 +33,30 @@ const DentalWebLogin = () => {
     };
   }, []);
 
+  if (location.state?.sesionCerrada) {
+    if (Date.now() >= avisoCierreHasta) avisoCierreHasta = Date.now() + 3000;
+    if (!cierreMensaje) setCierreMensaje(true);
+  }
+
+  useEffect(() => {
+    if (!location.state?.sesionCerrada) return;
+    if (Date.now() >= avisoCierreHasta) avisoCierreHasta = Date.now() + 3000;
+    navigate("/", { replace: true, state: null });
+  }, [location.state, navigate]);
+
+  useEffect(() => {
+    if (!cierreMensaje) return;
+    const restante = Math.max(0, avisoCierreHasta - Date.now());
+    const aviso = setTimeout(() => setCierreMensaje(false), restante);
+    return () => clearTimeout(aviso);
+  }, [cierreMensaje]);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (isSubmitting) return;
     setErrorMessage("");
     setSuccessMessage("");
+    setCierreMensaje(false);
 
     const normalizedEmail = email.trim();
 
@@ -221,6 +244,12 @@ const DentalWebLogin = () => {
           {successMessage && (
             <p className="rounded-xl bg-login-active/10 px-4 py-3 text-sm text-primary" role="status" aria-live="polite">
               {successMessage}
+            </p>
+          )}
+
+          {cierreMensaje && (
+            <p className="rounded-xl bg-login-active/10 px-4 py-3 text-sm text-primary" role="status" aria-live="polite">
+              Sesión cerrada correctamente.
             </p>
           )}
 

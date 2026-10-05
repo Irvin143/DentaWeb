@@ -178,7 +178,7 @@ export function Sidebar() {
 
   const cerrarSesion = () => {
     borrarSesion();
-    navigate('/', { replace: true });
+    navigate('/', { replace: true, state: { sesionCerrada: true } });
   };
 
   const cancelarCierre = useCallback(() => setConfirmarSalida(false), []);
