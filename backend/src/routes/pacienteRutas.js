@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import * as pacientesController from '../controllers/pacientes.controller.js';
+import { exigirAcceso } from '../middleware/auth.js';
 
 const router = Router();
+
+router.use(exigirAcceso(['admin', 'clinica', 'odontologo']));
 
 router.get('/', pacientesController.obtenerPacientes);
 

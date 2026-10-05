@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import * as odontologoController from '../controllers/odontologos.controller.js';
+import { exigirAcceso } from '../middleware/auth.js';
 
 const router = Router();
+
+router.use(exigirAcceso(['admin', 'clinica']));
 
 router.get('/', odontologoController.listar);                    // GET    /api/odontologos?activo=true|false|todos&idclinica=1
 router.get('/:id', odontologoController.obtenerPorId);           // GET    /api/odontologos/5

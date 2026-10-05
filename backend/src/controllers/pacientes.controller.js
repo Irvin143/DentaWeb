@@ -83,6 +83,7 @@ export async function reactivar(req, res, next) {
 }
 
 import * as loginServices from '../services/loginServices.js';
+import { errorContrasena } from './login.controller.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -96,9 +97,8 @@ export async function crearPaciente(req, res, next) {
         if (!esTexto(correo, 150) || !EMAIL_RE.test(correo.trim())) {
         return res.status(400).json({ error: 'Correo inválido' });
         }
-        if (typeof contrasena !== 'string' || contrasena.length < 8 || contrasena.length > 72) {
-        return res.status(400).json({ error: 'La contraseña debe tener entre 8 y 72 caracteres' });
-        }
+        const falloClave = errorContrasena(contrasena);
+        if (falloClave) return res.status(400).json({ error: falloClave });
         if (!esTexto(nombre, 100) || !esTexto(ape_pat, 100)) {
         return res.status(400).json({ error: 'Nombre y apellido paterno son obligatorios' });
         }

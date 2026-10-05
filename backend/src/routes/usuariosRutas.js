@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import * as usuariosController from '../controllers/usuarios.controller.js';
+import { exigirAcceso } from '../middleware/auth.js';
 
 const router = Router();
+
+router.use(exigirAcceso(['admin']));
 
 router.get('/', usuariosController.listar);                            // GET    /usuarios?activo=true|false|todos
 router.post('/', usuariosController.crear);

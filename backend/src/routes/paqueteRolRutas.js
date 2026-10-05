@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import * as paqueteRolController from '../controllers/paqueteRol.controller.js';
+import { exigirAcceso } from '../middleware/auth.js';
 
 const router = Router();
+
+router.use(exigirAcceso(['admin']));
 
 router.get('/', paqueteRolController.listar);                    // GET    /api/paquetes-roles?activo=true|false|todos
 router.get('/:id', paqueteRolController.obtenerPorId);           // GET    /api/paquetes-roles/5

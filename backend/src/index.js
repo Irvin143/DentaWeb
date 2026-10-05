@@ -3,8 +3,25 @@ import cors from 'cors';
 
 const app = express();
 
+const origenesPermitidos = [
+    'https://clinicware.tech',
+    'https://www.clinicware.tech',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+];
+
 app.use(express.json()); // comentario
-app.use(cors());
+app.use(cors({
+    origin(origin, callback) {
+        if (!origin || origenesPermitidos.includes(origin)) {
+            callback(null, true);
+            return;
+        }
+        callback(null, false);
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 import loginRutas from './routes/loginRutas.js';
 app.use("/api/login", loginRutas);

@@ -1,4 +1,5 @@
 import * as clinicaService from '../services/clinicasServices.js';
+import { errorContrasena } from './login.controller.js';
 
 const FILTROS_VALIDOS = ['true', 'false', 'todos'];
 
@@ -68,12 +69,8 @@ export const crear = async (req, res) => {
     }
 
     const contrasena = body.contrasena;
-    if (typeof contrasena !== 'string' || contrasena.length < 8) {
-        return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
-    }
-    if (Buffer.byteLength(contrasena, 'utf8') > 72) {
-        return res.status(400).json({ error: 'La contraseña no puede exceder 72 bytes' });
-    }
+    const falloClave = errorContrasena(contrasena);
+    if (falloClave) return res.status(400).json({ error: falloClave });
 
     // Datos de la clínica
     const nombre = mayus(body.nombre);

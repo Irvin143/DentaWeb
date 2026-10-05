@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import * as servicioController from '../controllers/servicios.controller.js';
+import { exigirAcceso } from '../middleware/auth.js';
 
 const router = Router();
+
+router.use(exigirAcceso(['admin', 'clinica']));
 
 router.get('/', servicioController.listar);                    // GET    /api/servicios?activo=true|false|todos
 router.get('/:id', servicioController.obtenerPorId);           // GET    /api/servicios/5

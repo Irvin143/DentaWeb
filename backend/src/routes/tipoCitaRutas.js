@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import * as tipoCitaController from '../controllers/tipoCita.controller.js';
+import { exigirAcceso } from '../middleware/auth.js';
 
 const router = Router();
+
+router.use(exigirAcceso(['admin', 'clinica']));
 
 router.get('/', tipoCitaController.listar);                    // GET    /api/tipos-cita?activo=true|false|todos
 router.get('/:id', tipoCitaController.obtenerPorId);           // GET    /api/tipos-cita/5

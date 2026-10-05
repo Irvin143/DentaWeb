@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import * as consultorioController from '../controllers/consultorio.controller.js';
+import { exigirAcceso } from '../middleware/auth.js';
 
 const router = Router();
+
+router.use(exigirAcceso(['admin', 'clinica']));
 
 router.get('/', consultorioController.listar);                    // GET    /api/consultorios?activo=true|false|todos&idclinica=1
 router.get('/:id', consultorioController.obtenerPorId);           // GET    /api/consultorios/5

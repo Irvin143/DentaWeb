@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import * as clinicaController from '../controllers/clinicas.controller.js';
+import { exigirAcceso } from '../middleware/auth.js';
 
 const router = Router();
+
+router.use(exigirAcceso(['admin']));
 
 router.get('/', clinicaController.listar);                            // GET    /clinicas?activo=true|false|todos
 router.post('/', clinicaController.crear);                            // POST   /clinicas

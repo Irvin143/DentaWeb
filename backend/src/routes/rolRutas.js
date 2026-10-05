@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import * as rolController from '../controllers/rol.controller.js';
+import { exigirAcceso } from '../middleware/auth.js';
 
 const router = Router();
+
+router.use(exigirAcceso(['admin']));
 
 router.get('/', rolController.listar);                    // GET    /api/roles?activo=true|false|todos
 router.get('/:id', rolController.obtenerPorId);           // GET    /api/roles/5

@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import * as tipoUsuarioController from '../controllers/tiposUsuarios.controller.js';
+import { exigirAcceso } from '../middleware/auth.js';
 
 const router = Router();
 
-// // Todas las rutas requieren sesión y rol admin
-// router.use(verificarToken, requiereRol('admin'));
+router.use(exigirAcceso(['admin']));
 
 router.get('/', tipoUsuarioController.listar);
 router.get('/:id', tipoUsuarioController.obtenerPorId);

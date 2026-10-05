@@ -1,4 +1,5 @@
 import * as odontologoService from '../services/odontologosServices.js';
+import { errorContrasena } from './login.controller.js';
 
 const FILTROS_VALIDOS = ['true', 'false', 'todos'];
 
@@ -9,17 +10,6 @@ const responderError = (res, err) => {
 };
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Valida la contraseña (bcrypt solo considera los primeros 72 bytes)
-const validarContrasena = (contrasena) => {
-    if (typeof contrasena !== 'string' || contrasena.length < 8) {
-        return 'La contraseña debe tener al menos 8 caracteres';
-    }
-    if (Buffer.byteLength(contrasena, 'utf8') > 72) {
-        return 'La contraseña no puede exceder 72 bytes';
-    }
-    return null;
-};
-
 // Credenciales de acceso (solo al crear)
 const validarCredenciales = (body = {}) => {
     const correo = body.correo?.toString().trim().toLowerCase();
@@ -27,8 +17,8 @@ const validarCredenciales = (body = {}) => {
     if (correo.length > 150) return { error: 'El correo no puede exceder 150 caracteres' };
     if (!REGEX_CORREO.test(correo)) return { error: 'El correo no es válido' };
 
-    const errorContrasena = validarContrasena(body.contrasena);
-    if (errorContrasena) return { error: errorContrasena };
+    const falloClave = errorContrasena(body.contrasena);
+    if (falloClave) return { error: falloClave };
 
     return { correo, contrasena: body.contrasena };
 };

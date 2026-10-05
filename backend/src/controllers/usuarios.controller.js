@@ -1,4 +1,5 @@
 import * as usuarioService from '../services/usuariosServices.js';
+import { errorContrasena } from './login.controller.js';
 
 const FILTROS_VALIDOS = ['true', 'false', 'todos'];
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -10,17 +11,6 @@ const responderError = (res, err) => {
 };
 
 const idValido = (valor) => Number.isInteger(Number(valor)) && Number(valor) > 0;
-
-// Valida la contraseña (bcrypt solo considera los primeros 72 bytes)
-const validarContrasena = (contrasena) => {
-    if (typeof contrasena !== 'string' || contrasena.length < 8) {
-        return 'La contraseña debe tener al menos 8 caracteres';
-    }
-    if (Buffer.byteLength(contrasena, 'utf8') > 72) {
-        return 'La contraseña no puede exceder 72 bytes';
-    }
-    return null;
-};
 
 const validarDatosBase = (body = {}) => {
     const correo = body.correo?.toString().trim().toLowerCase();
@@ -72,8 +62,8 @@ export const crear = async (req, res) => {
     const { datos, error } = validarDatosBase(req.body);
     if (error) return res.status(400).json({ error });
 
-    const errorContrasena = validarContrasena(req.body?.contrasena);
-    if (errorContrasena) return res.status(400).json({ error: errorContrasena });
+    const falloClave = errorContrasena(req.body?.contrasena);
+    if (falloClave) return res.status(400).json({ error: falloClave });
 
     try {
         const usuario = await usuarioService.crearUsuario({
@@ -104,8 +94,8 @@ export const cambiarContrasena = async (req, res) => {
     const { id } = req.params;
     if (!idValido(id)) return res.status(400).json({ error: 'ID inválido' });
 
-    const errorContrasena = validarContrasena(req.body?.contrasena);
-    if (errorContrasena) return res.status(400).json({ error: errorContrasena });
+    const falloClave = errorContrasena(req.body?.contrasena);
+    if (falloClave) return res.status(400).json({ error: falloClave });
 
     try {
         const ok = await usuarioService.cambiarContrasena(Number(id), req.body.contrasena);
