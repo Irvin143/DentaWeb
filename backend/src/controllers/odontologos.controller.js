@@ -70,6 +70,7 @@ const validarBody = (body = {}) => {
 export const listar = async (req, res) => {
     const filtroActivo = req.query.activo ?? 'todos';
     const { idclinica } = req.query;
+    const { paquete, sub } = req.usuario || {};
 
     if (!FILTROS_VALIDOS.includes(filtroActivo)) {
         return res.status(400).json({ error: "activo debe ser 'true', 'false' o 'todos'" });
@@ -81,7 +82,8 @@ export const listar = async (req, res) => {
     try {
         const odontologos = await odontologoService.obtenerOdontologos({
             filtroActivo,
-            idClinica: idclinica !== undefined ? Number(idclinica) : null,
+            idUsuario: sub,
+            paquete,  
         });
         res.json(odontologos);
     } catch (err) {
@@ -156,6 +158,7 @@ export const actualizar = async (req, res) => {
 
 export const eliminar = async (req, res) => {
     const { id } = req.params;
+    
     if (!idValido(id)) return res.status(400).json({ error: 'ID inválido' });
     try {
         const ok = await odontologoService.eliminarOdontologo(Number(id));

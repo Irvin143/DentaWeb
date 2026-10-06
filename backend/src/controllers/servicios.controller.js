@@ -26,11 +26,13 @@ const validarBody = (body = {}) => {
 
 export const listar = async (req, res) => {
     const filtroActivo = req.query.activo ?? 'todos';
+    const { paquete, sub } = req.usuario || {};
+
     if (!FILTROS_VALIDOS.includes(filtroActivo)) {
         return res.status(400).json({ error: "activo debe ser 'true', 'false' o 'todos'" });
     }
     try {
-        res.json(await servicioService.obtenerServicios({ filtroActivo }));
+        res.json(await servicioService.obtenerServicios({ filtroActivo, idUsuario: sub, paquete }));
     } catch (err) {
         responderError(res, err);
     }

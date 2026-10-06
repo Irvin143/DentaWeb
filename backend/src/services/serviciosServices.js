@@ -52,17 +52,40 @@ const SELECT_BASE = `
 
 const RETURNING_SERVICIO = 'RETURNING idServicio AS id_servicio, nombre, descripcion, activo';
 
-// ---------- LISTAR ----------
-// filtroActivo: 'true' | 'false' | 'todos' (default)
-// idClinica: opcional, para ver solo los servicios de una clínica
-export const obtenerServicios = async ({ filtroActivo = 'todos', idClinica = null } = {}) => {
+export const obtenerServicios = async ({ 
+    filtroActivo = 'todos', 
+    idUsuario = null, 
+    paquete = null 
+} = {}) => {
+    const esClinica = paquete === 'Clinica';
+    let idClinicaFiltro = null;
+
+    // Si es tipo 'Clinica', obtenemos primero su idClinica mediante el idUsuario
+    if (esClinica && idUsuario) {
+        const queryClinica = `
+            SELECT idClinica 
+            FROM Clinicas 
+            WHERE idUsuario = $1::int 
+            LIMIT 1;
+        `;
+        const resClinica = await conexion.query(queryClinica, [idUsuario]);
+
+        if (resClinica.rows.length > 0) {
+            idClinicaFiltro = resClinica.rows[0].idclinica || resClinica.rows[0].idClinica;
+        } else {
+            // Si la cuenta no tiene clínica registrada, retorna arreglo vacío
+            return [];
+        }
+    }
+
     const query = `
         ${SELECT_BASE}
         WHERE ($1::text = 'todos' OR s.activo = ($1::text = 'true'))
           AND ($2::int IS NULL OR cs.idClinica = $2::int)
         ORDER BY s.nombre, s.idServicio;
     `;
-    const { rows } = await conexion.query(query, [filtroActivo, idClinica]);
+
+    const { rows } = await conexion.query(query, [filtroActivo, idClinicaFiltro]);
     return rows;
 };
 

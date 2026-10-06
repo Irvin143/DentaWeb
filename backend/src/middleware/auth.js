@@ -61,7 +61,6 @@ export function exigirAcceso(permitidos = []) {
                 return res.status(403).json({ error: 'No tienes permiso para esta acción.' });
             }
         }
-        console.log("si paso");
         req.usuario = usuario;
         return next();
     };

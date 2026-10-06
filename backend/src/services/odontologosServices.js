@@ -45,8 +45,33 @@ const JOINS = `
 
 // ---------- LISTAR ----------
 // filtroActivo: 'true' | 'false' | 'todos' (default)
-// idClinica (opcional): filtra los odontólogos de una clínica
-export const obtenerOdontologos = async ({ filtroActivo = 'todos', idClinica = null } = {}) => {
+// idUsuario / paquete: si es 'Clinica', obtiene su idClinica primero
+export const obtenerOdontologos = async ({ 
+    filtroActivo = 'todos', 
+    idUsuario = null, 
+    paquete = null 
+} = {}) => {
+    const esClinica = paquete === 'Clinica';
+    let idClinicaFiltro = null;
+
+    // Si es tipo 'Clinica', obtenemos primero su idClinica mediante el idUsuario
+    if (esClinica && idUsuario) {
+        const queryClinica = `
+            SELECT idClinica 
+            FROM clinicas 
+            WHERE idUsuario = $1::int 
+            LIMIT 1;
+        `;
+        const resClinica = await conexion.query(queryClinica, [idUsuario]);
+
+        if (resClinica.rows.length > 0) {
+            idClinicaFiltro = resClinica.rows[0].idclinica || resClinica.rows[0].idClinica;
+        } else {
+            // Si la cuenta no tiene clínica registrada, retorna arreglo vacío
+            return [];
+        }
+    }
+
     const query = `
         SELECT ${COLUMNAS}
         FROM odontologos o
@@ -55,7 +80,8 @@ export const obtenerOdontologos = async ({ filtroActivo = 'todos', idClinica = n
           AND ($2::int IS NULL OR o.idClinica = $2::int)
         ORDER BY o.ape_pat, o.ape_mat, o.nombre, o.idOdontologo;
     `;
-    const { rows } = await conexion.query(query, [filtroActivo, idClinica]);
+
+    const { rows } = await conexion.query(query, [filtroActivo, idClinicaFiltro]);
     return rows;
 };
 
