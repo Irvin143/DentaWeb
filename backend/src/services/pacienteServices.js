@@ -1,7 +1,8 @@
 import conexion from "./conexion.js"; // ajusta a como exportas tu conexión real
 
 export const obtenerPacientes = async ({ paquete, idUsuario } = {}) => {
-    const esOdontologo = limpiar(paquete) === 'odontologo';
+    const esOdontologo = paquete === 'Odontologo';
+    console.log('obtenerPacientes: esOdontologo =', paquete, 'idUsuario =', idUsuario);
 
     const query = `
         SELECT

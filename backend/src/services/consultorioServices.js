@@ -28,18 +28,42 @@ const FROM_JOIN = `
     LEFT JOIN Clinicas cl ON cl.idClinica = c.idClinica
 `;
 
-// ---------- LISTAR ----------
-// filtroActivo: 'true' | 'false' | 'todos' (default)
-// idClinica (opcional): filtra los consultorios de una clínica
-export const obtenerConsultorios = async ({ filtroActivo = 'todos', idClinica = null } = {}) => {
+export const obtenerConsultorios = async ({ 
+    filtroActivo = 'todos', 
+    idUsuario = null, 
+    paquete = null
+} = {}) => {
+    const esClinica = paquete === 'Clinica';
+    let idClinicaFiltro = null;
+
+    // Si es tipo 'Clinica', buscamos primero su idClinica mediante el idUsuario
+    if (esClinica && idUsuario) {
+        const queryClinica = `
+            SELECT idClinica 
+            FROM Clinicas 
+            WHERE idUsuario = $1::int 
+            LIMIT 1;
+        `;
+        const resClinica = await conexion.query(queryClinica, [idUsuario]);
+        
+        // Si el usuario con paquete 'Clinica' tiene un registro asociado en Clinicas
+        if (resClinica.rows.length > 0) {
+            idClinicaFiltro = resClinica.rows[0].idclinica || resClinica.rows[0].idClinica;
+        } else {
+            // Si no tiene clínica registrada, retornamos un arreglo vacío de inmediato
+            return [];
+        }
+    }
+
     const query = `
         SELECT ${COLUMNAS}
         ${FROM_JOIN}
         WHERE ($1::text = 'todos' OR c.activo = ($1::text = 'true'))
-          AND ($2::int IS NULL OR c.idClinica = $2::int)
+            AND ($2::int IS NULL OR c.idClinica = $2::int)
         ORDER BY cl.nombre, c.nombre, c.idConsultorio;
     `;
-    const { rows } = await conexion.query(query, [filtroActivo, idClinica]);
+
+    const { rows } = await conexion.query(query, [filtroActivo, idClinicaFiltro]);
     return rows;
 };
 

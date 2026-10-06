@@ -25,8 +25,8 @@ function leerToken(req) {
         return { error: { status: 401, mensaje } };
     }
 
-    const id = Number(payload?.sub);
-    if (!Number.isInteger(id) || id <= 0) {
+    const id_usuario = Number(payload?.sub);
+    if (!Number.isInteger(id_usuario) || id_usuario <= 0) {
         return { error: { status: 401, mensaje: 'No autorizado' } };
     }
 
@@ -34,7 +34,7 @@ function leerToken(req) {
 
     return {
         usuario: {
-            id,                          // payload.sub
+            sub: id_usuario,                          // payload.sub
             tipo: payload.tipo,
             paquete: payload.paquete,
             roles,
@@ -52,6 +52,7 @@ export function exigirAcceso(permitidos = []) {
 
         const { usuario, error } = leerToken(req);
         if (error) return res.status(error.status).json({ error: error.mensaje });
+        
 
         if (permitidosNorm.length > 0) {
             const identidades = [usuario.paquete, ...usuario.roles].filter(Boolean).map(limpiar);
@@ -60,7 +61,7 @@ export function exigirAcceso(permitidos = []) {
                 return res.status(403).json({ error: 'No tienes permiso para esta acción.' });
             }
         }
-
+        console.log("si paso");
         req.usuario = usuario;
         return next();
     };

@@ -27,11 +27,13 @@ const validarBody = (body = {}) => {
             idclinica: idclinica === null ? null : Number(idclinica),
         },
     };
-};
+};  
 
 export const listar = async (req, res) => {
     const filtroActivo = req.query.activo ?? 'todos';
     const { idclinica } = req.query;
+
+    const { paquete, sub } = req.usuario || {};
 
     if (!FILTROS_VALIDOS.includes(filtroActivo)) {
         return res.status(400).json({ error: "activo debe ser 'true', 'false' o 'todos'" });
@@ -43,10 +45,12 @@ export const listar = async (req, res) => {
     try {
         const consultorios = await consultorioService.obtenerConsultorios({
             filtroActivo,
-            idClinica: idclinica !== undefined ? Number(idclinica) : null,
+            idUsuario: sub,
+            paquete: paquete,
         });
         res.json(consultorios);
     } catch (err) {
+        console.error('Error al obtener consultorios:', err);
         responderError(res, err);
     }
 };

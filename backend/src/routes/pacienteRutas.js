@@ -4,7 +4,7 @@ import { exigirAcceso } from '../middleware/auth.js';
 
 const router = Router();
 
-router.use(exigirAcceso(['admin', 'clinica', 'odontologo']));
+router.use(exigirAcceso(['admin', 'odontologo']));
 
 router.get('/', pacientesController.obtenerPacientes);
 

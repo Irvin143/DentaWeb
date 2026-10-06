@@ -4,7 +4,7 @@ import { exigirAcceso } from '../middleware/auth.js';
 
 const router = Router();
 
-router.use(exigirAcceso(['admin']));
+router.use(exigirAcceso(['admin', 'clinica']));
 
 router.get('/', clinicaController.listar);                            // GET    /clinicas?activo=true|false|todos
 router.post('/', clinicaController.crear);                            // POST   /clinicas

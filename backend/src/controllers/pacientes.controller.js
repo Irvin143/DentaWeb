@@ -2,10 +2,10 @@ import * as pacientesService from '../services/pacienteServices.js';
 
 export async function obtenerPacientes(req, res, next) {
     try {
-        const { idUsuario, paquete } = req.usuario ?? {};
+        const { sub, paquete } = req.usuario ?? {};
         // 2. Llamar al service
-        const pacientes = await pacientesService.obtenerPacientes({ paquete, idUsuario });
-        
+        const pacientes = await pacientesService.obtenerPacientes({ paquete, idUsuario: sub });
+
         // 3. Responder
         res.status(200).json({
         total: pacientes.length,
