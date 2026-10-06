@@ -1,6 +1,8 @@
 import conexion from "./conexion.js"; // ajusta a como exportas tu conexión real
 
-export const obtenerPacientes = async () => {
+export const obtenerPacientes = async ({ paquete, idUsuario } = {}) => {
+    const esOdontologo = limpiar(paquete) === 'odontologo';
+
     const query = `
         SELECT
             p.idPaciente   AS id_paciente,
@@ -16,10 +18,11 @@ export const obtenerPacientes = async () => {
         FROM Pacientes p
         LEFT JOIN Usuarios u    ON p.idUsuario    = u.idUsuario
         LEFT JOIN Odontologos o ON p.idOdontologo = o.idOdontologo
+        ${esOdontologo ? 'WHERE o.idUsuario = $1' : ''}
         ORDER BY p.ape_pat, p.nombre;
     `;
 
-    const { rows } = await conexion.query(query);
+    const { rows } = await conexion.query(query, esOdontologo ? [idUsuario] : []);
     return rows;
 };
 export const actualizarPaciente = async (

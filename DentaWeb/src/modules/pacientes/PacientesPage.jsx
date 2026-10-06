@@ -3,6 +3,8 @@ import { KeyRound, Users } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
 import { ChecklistContrasena, errorContrasena } from '../../components/ChecklistContrasena';
 import { pacientesApi, odontologosApi } from '../../services/api.js';
+import { CampoContrasena } from '../../utils/utils.jsx'; // ajusta la ruta
+
 
 // Mobile: compacto. Desktop (md:): más amplio y cómodo
 const inputClass =
@@ -87,6 +89,7 @@ export default function PacientesPage() {
   const [error, setError] = useState(null);
   const [errorCarga, setErrorCarga] = useState(null);
   const [guardando, setGuardando] = useState(false);
+    const [erroresCampos, setErroresCampos] = useState({});
 
   const creando = editandoId === null;
 
@@ -240,6 +243,11 @@ console.log('mapearPaciente:', pacientes);
     await cargar();
   };
 
+    const claseConError = (campo) =>
+    erroresCampos[campo]
+      ? `${inputClass} border-red-400 focus:border-red-500 focus:ring-red-500`
+      : inputClass;
+
   // max-h + overflow: si no cabe, solo el formulario hace scroll
   const formularioPaciente = (
     <div className="flex max-h-[65vh] flex-col gap-3 overflow-y-auto pr-1 md:max-h-[72vh] md:gap-7 md:px-2">
@@ -338,31 +346,35 @@ console.log('mapearPaciente:', pacientes);
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
-            <div>
-              <Etiqueta requerido>Contraseña:</Etiqueta>
-              <input
-                type="password"
-                autoComplete="new-password"
-                placeholder="Crea una contraseña"
-                maxLength={72}
-                className={inputClass}
-                value={form.contrasena}
-                onChange={handleChange('contrasena')}
-              />
-              <ChecklistContrasena contrasena={form.contrasena} />
-            </div>
-            <div>
-              <Etiqueta requerido>Confirmar contraseña:</Etiqueta>
-              <input
-                type="password"
-                autoComplete="new-password"
-                placeholder="Repite la contraseña"
-                className={inputClass}
-                value={form.confirmarContrasena}
-                onChange={handleChange('confirmarContrasena')}
-              />
-            </div>
+          <div>
+            <Etiqueta requerido>Contraseña:</Etiqueta>
+            <CampoContrasena
+              autoComplete="new-password"
+              placeholder="Crea una contraseña"
+              className={claseConError('contrasena')}
+              value={form.contrasena}
+              onChange={handleChange('contrasena')}
+              onBlur={handleBlur('contrasena')}
+              maxLength={72}
+            />
+            <ChecklistContrasena contrasena={form.contrasena} />
+          </div>
+          <div>
+            <Etiqueta requerido>Confirmar contraseña:</Etiqueta>
+            <CampoContrasena
+              autoComplete="new-password"
+              placeholder="Repite la contraseña"
+              className={claseConError('confirmarContrasena')}
+              value={form.confirmarContrasena}
+              onChange={handleChange('confirmarContrasena')}
+              onBlur={handleBlur('confirmarContrasena')}
+              maxLength={72}
+            />
+            {erroresCampos.confirmarContrasena && (
+              <p className="mt-1 text-xs text-red-600">
+                {erroresCampos.confirmarContrasena}
+              </p>
+            )}
           </div>
         </fieldset>
       )}
