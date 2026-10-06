@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { authApi } from "../../services/api.js";
+import { ToastContainer } from "../../components/Toast.jsx";
 import { borrarSesion, getAuth, guardarSesion, primeraRutaPermitida } from "../../config/permisos.js";
 
 let avisoCierreHasta = 0;
@@ -102,8 +103,20 @@ const DentalWebLogin = () => {
     return <Navigate to={destinoSesion} replace />;
   }
 
+  const avisosLogin = [
+    errorMessage && { id: 'login-error', tipo: 'error', mensaje: errorMessage, visible: true },
+    successMessage && { id: 'login-ok', tipo: 'exito', mensaje: successMessage, visible: true },
+    cierreMensaje && { id: 'login-cierre', tipo: 'exito', mensaje: 'Sesión cerrada correctamente.', visible: true },
+  ].filter(Boolean);
+
+  const cerrarAviso = (id) => {
+    if (id === 'login-error') setErrorMessage('');
+    if (id === 'login-cierre') setCierreMensaje(false);
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-login-background px-4 py-8">
+      <ToastContainer toasts={avisosLogin} onCerrar={cerrarAviso} />
       {/* Background decorative gradient */}
       <div className="fixed inset-0 pointer-events-none bg-login-backdrop" />
 
@@ -233,24 +246,6 @@ const DentalWebLogin = () => {
               ¿Olvidaste tu contraseña?
             </Link>{" "}
           </div>
-
-          {errorMessage && (
-            <p className="rounded-xl bg-error-container px-4 py-3 text-sm text-on-error-container" role="alert">
-              {errorMessage}
-            </p>
-          )}
-
-          {successMessage && (
-            <p className="rounded-xl bg-login-active/10 px-4 py-3 text-sm text-primary" role="status" aria-live="polite">
-              {successMessage}
-            </p>
-          )}
-
-          {cierreMensaje && (
-            <p className="rounded-xl bg-login-active/10 px-4 py-3 text-sm text-primary" role="status" aria-live="polite">
-              Sesión cerrada correctamente.
-            </p>
-          )}
 
           {/* Submit Button */}
           <button

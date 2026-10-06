@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DoorOpen } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
+import { AvisoGeneral, scrollAlPrimerCampo } from '../../components/avisosFormulario';
 import { consultoriosApi, clinicasApi } from '../../services/api.js';
 
 const inputClass =
@@ -72,6 +73,7 @@ export default function ConsultoriosPage() {
   const [errorCarga, setErrorCarga] = useState(null);
   const [erroresCampos, setErroresCampos] = useState({});
   const [guardando, setGuardando] = useState(false);
+  const formularioRef = useRef(null);
 
   const cargar = useCallback(async () => {
     try {
@@ -165,7 +167,8 @@ export default function ConsultoriosPage() {
 
     if (Object.keys(errores).length > 0) {
       setErroresCampos(errores);
-      setError('Revisa los campos marcados antes de continuar');
+      setError(null);
+      requestAnimationFrame(() => scrollAlPrimerCampo(formularioRef.current, errores));
       return false;
     }
 
@@ -228,11 +231,10 @@ export default function ConsultoriosPage() {
      FORMULARIO (misma vista, solo agregamos clases y mensajes)
      ------------------------------------------------------------ */
   const formularioConsultorio = (
-    <div className="flex flex-col gap-4">
-      {error && (
-        <p className="rounded-xl bg-red-50 p-3 text-sm text-red-600">{error}</p>
-      )}
-      <div>
+    <>
+    <AvisoGeneral mensaje={error} />
+    <div ref={formularioRef} className="flex flex-col gap-4">
+      <div data-campo="nombre">
         <label className="mb-1 block text-sm font-medium text-slate-700">
           Nombre:
         </label>
@@ -267,6 +269,7 @@ export default function ConsultoriosPage() {
         </select>
       </div>
     </div>
+    </>
   );
 
   return (

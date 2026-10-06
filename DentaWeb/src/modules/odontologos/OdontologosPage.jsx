@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { KeyRound, Stethoscope } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Eye, EyeOff, KeyRound, Stethoscope } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
 import { ChecklistContrasena, errorContrasena } from '../../components/ChecklistContrasena';
-import { odontologosApi, clinicasApi } from '../../services/api.js';
+import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../components/avisosFormulario';
+import { avisoTelefonoOcupado } from '../../utils/telefonoCompartido';
+import { odontologosApi, clinicasApi, pacientesApi } from '../../services/api.js';
 
 // Mobile: compacto. Desktop (md:): más amplio y cómodo
 const inputClass =
@@ -57,7 +59,7 @@ const validarNombre = (valor, etiqueta) => {
 
 const validarTelefono = (valor) => {
   const v = valor.trim();
-  if (!v) return null; // opcional
+  if (!v) return 'El teléfono es obligatorio';
   const soloDigitos = v.replace(/[\s()-]/g, '');
   if (!/^\d+$/.test(soloDigitos))
     return 'El teléfono solo puede contener números';
@@ -93,7 +95,8 @@ const validarFormulario = (
   form,
   creando,
   odontologos = [],
-  editandoId = null
+  editandoId = null,
+  pacientes = []
 ) => {
   const errores = {};
 
@@ -113,17 +116,16 @@ const validarFormulario = (
     if (errApeMat) errores.ape_mat = errApeMat;
   }
 
-  // --- Teléfono (opcional; si viene, checar duplicado como la cédula) ---
+  // --- Teléfono (obligatorio; 10 dígitos y sin duplicado) ---
   const errTel = validarTelefono(form.telefono);
   if (errTel) errores.telefono = errTel;
-  else if (form.telefono.trim()) {
-    const digitos = form.telefono.replace(/[\s()-]/g, '');
-    const duplicado = odontologos.some(
-      (o) =>
-        o.id_odontologo !== editandoId &&
-        String(o.telefono ?? '').replace(/\D/g, '') === digitos
-    );
-    if (duplicado) errores.telefono = 'Ya existe un odontólogo con ese teléfono';
+  else {
+    const ocupado = avisoTelefonoOcupado(form.telefono.replace(/\D/g, ''), {
+      pacientes,
+      odontologos,
+      idOdontologo: editandoId,
+    });
+    if (ocupado) errores.telefono = ocupado;
   }
 
   // --- Cédula (opcional pero si viene, validar y checar duplicado) ---
@@ -218,6 +220,8 @@ const Seccion = ({ titulo, children }) => (
 export default function OdontologosPage() {
   const [odontologos, setOdontologos] = useState([]);
   const [clinicas, setClinicas] = useState([]);
+  const [pacientes, setPacientes] = useState([]);
+  const formularioRef = useRef(null);
   const [cargando, setCargando] = useState(true);
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
@@ -225,6 +229,8 @@ export default function OdontologosPage() {
   const [errorCarga, setErrorCarga] = useState(null);
   const [erroresCampos, setErroresCampos] = useState({});
   const [guardando, setGuardando] = useState(false);
+  const [verContrasena, setVerContrasena] = useState(false);
+  const [verConfirmar, setVerConfirmar] = useState(false);
 
   const creando = editandoId === null;
 
@@ -245,12 +251,20 @@ export default function OdontologosPage() {
   }, []);
 
   const cargarCatalogos = useCallback(async () => {
-    const [resClinicas] = await Promise.allSettled([clinicasApi.listar()]);
+    const [resClinicas, resPacientes] = await Promise.allSettled([
+      clinicasApi.listar(),
+      pacientesApi.listar(),
+    ]);
 
     if (resClinicas.status === 'fulfilled') {
       setClinicas(comoLista(resClinicas.value, 'clinicas'));
     } else {
       console.error('Error al cargar clínicas:', resClinicas.reason);
+    }
+    if (resPacientes.status === 'fulfilled') {
+      setPacientes(comoLista(resPacientes.value, 'pacientes'));
+    } else {
+      console.error('Error al cargar pacientes:', resPacientes.reason);
     }
   }, []);
 
@@ -339,16 +353,14 @@ export default function OdontologosPage() {
       form,
       creando,
       odontologos,
-      editandoId
+      editandoId,
+      pacientes
     );
 
     if (Object.keys(errores).length > 0) {
       setErroresCampos(errores);
-      setError(
-        errores.contrasena ||
-          errores.confirmarContrasena ||
-          'Revisa los campos marcados antes de continuar'
-      );
+      setError(null);
+      requestAnimationFrame(() => scrollAlPrimerCampo(formularioRef.current, errores));
       return false;
     }
 
@@ -428,17 +440,14 @@ export default function OdontologosPage() {
      FORMULARIO (misma vista, solo agregamos clases y mensajes)
      ------------------------------------------------------------ */
   const formularioOdontologo = (
-    <div className="flex max-h-[65vh] flex-col gap-3 overflow-y-auto pr-1 md:max-h-[72vh] md:gap-7 md:px-2">
-      {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600 md:rounded-xl md:p-3 md:text-sm">
-          {error}
-        </p>
-      )}
+    <>
+    <AvisoGeneral mensaje={error} />
+    <div ref={formularioRef} className="flex max-h-[65vh] flex-col gap-3 overflow-y-auto pr-1 md:max-h-[72vh] md:gap-7 md:px-2">
 
       {/* Datos personales */}
       <Seccion titulo="Datos personales">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
-          <div>
+          <div data-campo="nombre">
             <Etiqueta requerido>Nombre(s):</Etiqueta>
             <input
               type="text"
@@ -455,8 +464,8 @@ export default function OdontologosPage() {
               </p>
             )}
           </div>
-          <div>
-            <Etiqueta>Teléfono:</Etiqueta>
+          <div data-campo="telefono">
+            <Etiqueta requerido>Teléfono:</Etiqueta>
             <input
               type="tel"
               maxLength={10}
@@ -473,7 +482,7 @@ export default function OdontologosPage() {
               </p>
             )}
           </div>
-          <div>
+          <div data-campo="ape_pat">
             <Etiqueta requerido>Apellido paterno:</Etiqueta>
             <input
               type="text"
@@ -490,7 +499,7 @@ export default function OdontologosPage() {
               </p>
             )}
           </div>
-          <div>
+          <div data-campo="ape_mat">
             <Etiqueta>Apellido materno:</Etiqueta>
             <input
               type="text"
@@ -513,7 +522,7 @@ export default function OdontologosPage() {
       {/* Datos profesionales */}
       <Seccion titulo="Datos profesionales">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
-          <div>
+          <div data-campo="cedula">
             <Etiqueta>Cédula profesional:</Etiqueta>
             <input
               type="text"
@@ -531,7 +540,7 @@ export default function OdontologosPage() {
               </p>
             )}
           </div>
-          <div>
+          <div data-campo="idclinica">
             <Etiqueta requerido={creando}>Clínica:</Etiqueta>
             <select
               className={claseConError('idclinica')}
@@ -567,7 +576,7 @@ export default function OdontologosPage() {
             Con estos datos el odontólogo iniciará sesión en el sistema.
           </p>
 
-          <div>
+          <div data-campo="correo">
             <Etiqueta requerido>Correo electrónico:</Etiqueta>
             <input
               type="email"
@@ -587,32 +596,53 @@ export default function OdontologosPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
-            <div>
+            <div data-campo="contrasena">
               <Etiqueta requerido>Contraseña:</Etiqueta>
-              <input
-                type="password"
-                autoComplete="new-password"
-                placeholder="Crea una contraseña"
-                className={claseConError('contrasena')}
-                value={form.contrasena}
-                onChange={handleChange('contrasena')}
-                onBlur={handleBlur('contrasena')}
-                maxLength={72}
-              />
+              <div className="relative">
+                <input
+                  type={verContrasena ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  placeholder="Crea una contraseña"
+                  className={`${claseConError('contrasena')} pr-12! md:pr-12!`}
+                  value={form.contrasena}
+                  onChange={handleChange('contrasena')}
+                  onBlur={handleBlur('contrasena')}
+                  maxLength={72}
+                />
+                <button
+                  type="button"
+                  onClick={() => setVerContrasena((valor) => !valor)}
+                  aria-label={verContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400"
+                >
+                  {verContrasena ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               <ChecklistContrasena contrasena={form.contrasena} />
+              <AvisoCampo mensaje={erroresCampos.contrasena} />
             </div>
-            <div>
+            <div data-campo="confirmarContrasena">
               <Etiqueta requerido>Confirmar contraseña:</Etiqueta>
-              <input
-                type="password"
-                autoComplete="new-password"
-                placeholder="Repite la contraseña"
-                className={claseConError('confirmarContrasena')}
-                value={form.confirmarContrasena}
-                onChange={handleChange('confirmarContrasena')}
-                onBlur={handleBlur('confirmarContrasena')}
-                maxLength={72}
-              />
+              <div className="relative">
+                <input
+                  type={verConfirmar ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  placeholder="Repite la contraseña"
+                  className={`${claseConError('confirmarContrasena')} pr-12! md:pr-12!`}
+                  value={form.confirmarContrasena}
+                  onChange={handleChange('confirmarContrasena')}
+                  onBlur={handleBlur('confirmarContrasena')}
+                  maxLength={72}
+                />
+                <button
+                  type="button"
+                  onClick={() => setVerConfirmar((valor) => !valor)}
+                  aria-label={verConfirmar ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400"
+                >
+                  {verConfirmar ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {erroresCampos.confirmarContrasena && (
                 <p className="mt-1 text-xs text-red-600">
                   {erroresCampos.confirmarContrasena}
@@ -623,6 +653,7 @@ export default function OdontologosPage() {
         </fieldset>
       )}
     </div>
+    </>
   );
 
   return (

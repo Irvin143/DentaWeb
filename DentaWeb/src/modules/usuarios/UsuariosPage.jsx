@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { KeyRound } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Eye, EyeOff, KeyRound } from 'lucide-react';
 import { CatalogoPage } from '../../components/CatalogoPage';
 import { ChecklistContrasena, errorContrasena } from '../../components/ChecklistContrasena';
+import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../components/avisosFormulario';
+import { avisoTelefonoOcupado } from '../../utils/telefonoCompartido';
 import {
   usuariosApi,
   paquetesApi,
@@ -53,19 +55,20 @@ const limpiar = (s) =>
 // Normaliza a mayúsculas lo que se manda al backend
 const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
 
+const LIMPIAR_NOMBRE = /[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s'.-]/g;
+const nombrePersona = (valor) =>
+  String(valor ?? '').replace(LIMPIAR_NOMBRE, '').toLocaleUpperCase('es-MX');
+
 const limitarTelefono = (valor) => String(valor ?? '').replace(/\D/g, '').slice(0, 10);
 const digitosTelefono = (valor) => String(valor ?? '').replace(/\D/g, '');
 
 const mensajeTelefono = (valor) => {
-  if (!String(valor ?? '').trim()) return null;
+  if (!String(valor ?? '').trim()) return 'El teléfono es obligatorio';
   const digitos = digitosTelefono(valor);
   if (digitos && !/^\d+$/.test(digitos)) return 'El teléfono solo puede contener números';
   if (!/^\d{10}$/.test(digitos)) return 'El teléfono debe tener exactamente 10 dígitos';
   return null;
 };
-
-const telefonoRepetido = (digitos, lista) =>
-  lista.some((p) => digitosTelefono(p.telefono) === digitos);
 
 const nombreOdontologo = (o) =>
   o.nombre_completo ?? [o.nombre, o.ape_pat, o.ape_mat].filter(Boolean).join(' ');
@@ -102,12 +105,17 @@ export default function UsuariosPage() {
   const [tipos, setTipos] = useState([]);
   const [clinicas, setClinicas] = useState([]);
   const [odontologos, setOdontologos] = useState([]);
+  const [pacientes, setPacientes] = useState([]);
+  const [erroresCampos, setErroresCampos] = useState({});
+  const formularioRef = useRef(null);
   const [cargando, setCargando] = useState(true);
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState(null);
   const [errorCarga, setErrorCarga] = useState(null);
   const [guardando, setGuardando] = useState(false);
+  const [verContrasena, setVerContrasena] = useState(false);
+  const [verConfirmar, setVerConfirmar] = useState(false);
 
   const creando = editandoId === null;
 
@@ -128,11 +136,12 @@ export default function UsuariosPage() {
 
   // Catálogos para los selects (si alguno falla, la página sigue funcionando)
   const cargarCatalogos = useCallback(async () => {
-    const [resPaquetes, resTipos, resClinicas, resOdontologos] = await Promise.allSettled([
+    const [resPaquetes, resTipos, resClinicas, resOdontologos, resPacientes] = await Promise.allSettled([
       paquetesApi.listar(),
       tiposUsuarioApi.listar(),
       clinicasApi.listar(),
       odontologosApi.listar(),
+      pacientesApi.listar(),
     ]);
 
     const aplicar = (res, setter, clave, etiqueta) => {
@@ -144,6 +153,7 @@ export default function UsuariosPage() {
     aplicar(resTipos, setTipos, 'tipos', 'tipos de usuario');
     aplicar(resClinicas, setClinicas, 'clinicas', 'clínicas');
     aplicar(resOdontologos, setOdontologos, 'odontologos', 'odontólogos');
+    aplicar(resPacientes, setPacientes, 'pacientes', 'pacientes');
   }, []);
 
   useEffect(() => {
@@ -191,7 +201,11 @@ export default function UsuariosPage() {
   );
 
   const handleChange = (campo) => (e) => {
-    const valor = campo === 'telefono' ? limitarTelefono(e.target.value) : e.target.value;
+    const valor = campo === 'telefono'
+      ? limitarTelefono(e.target.value)
+      : campo === 'nombre' || campo === 'ape_pat' || campo === 'ape_mat'
+        ? nombrePersona(e.target.value)
+        : e.target.value;
     setForm((prev) => ({ ...prev, [campo]: valor }));
   };
 
@@ -199,55 +213,58 @@ export default function UsuariosPage() {
     setForm(FORM_INICIAL);
     setEditandoId(null);
     setError(null);
+    setErroresCampos({});
   };
 
-  // Devuelve un mensaje de error o null si todo está bien
   const validar = () => {
-    if (!form.idtipousuario) return 'Selecciona el tipo de usuario';
+    const errores = {};
+    if (!form.idtipousuario) errores.idtipousuario = 'Selecciona el tipo de usuario';
 
-    // Al editar solo se modifica la cuenta; el perfil se edita en su propio catálogo
     if (creando && esPersona) {
-      if (!form.nombre.trim()) return 'El nombre es obligatorio';
-      if (!form.ape_pat.trim()) return 'El apellido paterno es obligatorio';
-      if (esPaciente) {
-        const errTel = mensajeTelefono(form.telefono);
-        if (errTel) return errTel;
+      if (!form.nombre.trim()) errores.nombre = 'El nombre es obligatorio';
+      if (!form.ape_pat.trim()) errores.ape_pat = 'El apellido paterno es obligatorio';
+      const errTel = mensajeTelefono(form.telefono);
+      if (errTel) errores.telefono = errTel;
+      else {
+        const ocupado = avisoTelefonoOcupado(digitosTelefono(form.telefono), { pacientes, odontologos });
+        if (ocupado) errores.telefono = ocupado;
       }
-      if (esOdontologo && !form.idclinica) return 'La clínica es obligatoria';
+      if (esOdontologo && !form.idclinica) errores.idclinica = 'La clínica es obligatoria';
     }
     if (creando && esClinica) {
-      if (!form.clinica_nombre.trim()) return 'El nombre de la clínica es obligatorio';
-      if (form.clinica_nombre.trim().length > 150) return 'El nombre no puede exceder 150 caracteres';
+      if (!form.clinica_nombre.trim()) errores.clinica_nombre = 'El nombre de la clínica es obligatorio';
+      else if (form.clinica_nombre.trim().length > 150) errores.clinica_nombre = 'El nombre no puede exceder 150 caracteres';
       if (form.identificacion_fiscal.trim().length > 50) {
-        return 'La identificación fiscal no puede exceder 50 caracteres';
+        errores.identificacion_fiscal = 'La identificación fiscal no puede exceder 50 caracteres';
       }
     }
 
     const correo = form.correo.trim();
-    if (!correo) return 'El correo es obligatorio';
-    if (correo.length > 150) return 'El correo no puede exceder 150 caracteres';
-    if (!REGEX_CORREO.test(correo)) return 'El correo no es válido';
+    if (!correo) errores.correo = 'El correo es obligatorio';
+    else if (correo.length > 150) errores.correo = 'El correo no puede exceder 150 caracteres';
+    else if (!REGEX_CORREO.test(correo)) errores.correo = 'El correo no es válido';
 
-    // Al crear la contraseña es obligatoria; al editar solo si escribió una nueva
     if (creando || form.contrasena || form.confirmarContrasena) {
       const errorClave = errorContrasena(form.contrasena);
-      if (errorClave) return errorClave;
-      if (form.contrasena !== form.confirmarContrasena) return 'Las contraseñas no coinciden';
+      if (errorClave) errores.contrasena = errorClave;
+      if (form.contrasena !== form.confirmarContrasena) errores.confirmarContrasena = 'Las contraseñas no coinciden';
     }
-    return null;
+    return errores;
   };
 
-  // Devuelve true si guardó bien (para que el modal pueda cerrarse)
   const handleGuardar = async () => {
-    const mensaje = validar();
-    if (mensaje) {
-      setError(mensaje);
+    const errores = validar();
+    if (Object.keys(errores).length > 0) {
+      setErroresCampos(errores);
+      setError(null);
+      requestAnimationFrame(() => scrollAlPrimerCampo(formularioRef.current, errores));
       return false;
     }
 
     try {
       setGuardando(true);
       setError(null);
+      setErroresCampos({});
 
       const correo = form.correo.trim().toLowerCase();
 
@@ -262,42 +279,22 @@ export default function UsuariosPage() {
           await usuariosApi.cambiarContrasena(editandoId, form.contrasena);
         }
       } else if (esOdontologo) {
-        const telefono = String(form.telefono).trim() ? digitosTelefono(form.telefono) : '';
-        if (telefono) {
-          const data = await odontologosApi.listar();
-          const lista = comoLista(data, 'odontologos');
-          if (telefonoRepetido(telefono, lista)) {
-            setError('Ya existe un odontólogo con ese teléfono');
-            return false;
-          }
-        }
-        // Crea usuario (tipo odontólogo) + registro de odontólogo
         await odontologosApi.crear({
           nombre: mayus(form.nombre),
           ape_pat: mayus(form.ape_pat),
           ape_mat: mayus(form.ape_mat) || null,
-          telefono: form.telefono.trim() || null,
+          telefono: digitosTelefono(form.telefono),
           cedula: mayus(form.cedula) || null,
           idclinica: Number(form.idclinica),
           correo,
           contrasena: form.contrasena,
         });
       } else if (esPaciente) {
-        const telefono = String(form.telefono).trim() ? digitosTelefono(form.telefono) : '';
-        if (telefono) {
-          const data = await pacientesApi.listar();
-          const lista = comoLista(data, 'pacientes');
-          if (telefonoRepetido(telefono, lista)) {
-            setError('Ya existe un paciente con ese teléfono');
-            return false;
-          }
-        }
-        // Crea usuario (tipo paciente) + registro de paciente + expediente
         await pacientesApi.crear({
           nombre: mayus(form.nombre),
           ape_pat: mayus(form.ape_pat),
           ape_mat: mayus(form.ape_mat) || null,
-          telefono: telefono || null,
+          telefono: digitosTelefono(form.telefono),
           id_odontologo: form.id_odontologo ? Number(form.id_odontologo) : null,
           correo,
           contrasena: form.contrasena,
@@ -339,6 +336,7 @@ export default function UsuariosPage() {
     if (!u) return;
     setEditandoId(id);
     setError(null);
+    setErroresCampos({});
     setForm({
       ...FORM_INICIAL,
       correo: u.correo ?? '',
@@ -359,16 +357,13 @@ export default function UsuariosPage() {
 
   // max-h + overflow: si no cabe, solo el formulario hace scroll
   const formularioUsuario = (
-    <div className="flex max-h-[65vh] flex-col gap-3 overflow-y-auto pr-1 md:max-h-[72vh] md:gap-7 md:px-2">
-      {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600 md:rounded-xl md:p-3 md:text-sm">
-          {error}
-        </p>
-      )}
+    <>
+    <AvisoGeneral mensaje={error} />
+    <div ref={formularioRef} className="flex max-h-[65vh] flex-col gap-3 overflow-y-auto pr-1 md:max-h-[72vh] md:gap-7 md:px-2">
 
       {/* El tipo define qué campos se piden después */}
       <div className={`grid grid-cols-1 gap-3 md:gap-5 ${mostrarPaquete ? 'md:grid-cols-2' : ''}`}>
-          <div>
+          <div data-campo="idtipousuario">
             <Etiqueta requerido>Tipo de usuario:</Etiqueta>
             <select
               className={inputClass}
@@ -388,6 +383,7 @@ export default function UsuariosPage() {
                 El tipo no se puede cambiar, porque está ligado a su registro.
               </p>
             )}
+            <AvisoCampo mensaje={erroresCampos.idtipousuario} />
           </div>
 
           {mostrarPaquete && (
@@ -413,7 +409,7 @@ export default function UsuariosPage() {
       {creando && esPersona && (
         <Seccion titulo="Datos personales">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
-            <div>
+            <div data-campo="nombre">
               <Etiqueta requerido>Nombre(s):</Etiqueta>
               <input
                 type="text"
@@ -422,9 +418,10 @@ export default function UsuariosPage() {
                 value={form.nombre}
                 onChange={handleChange('nombre')}
               />
+              <AvisoCampo mensaje={erroresCampos.nombre} />
             </div>
-            <div>
-              <Etiqueta>Teléfono:</Etiqueta>
+            <div data-campo="telefono">
+              <Etiqueta requerido>Teléfono:</Etiqueta>
               <input
                 type="tel"
                 inputMode="numeric"
@@ -434,8 +431,9 @@ export default function UsuariosPage() {
                 value={form.telefono}
                 onChange={handleChange('telefono')}
               />
+              <AvisoCampo mensaje={erroresCampos.telefono} />
             </div>
-            <div>
+            <div data-campo="ape_pat">
               <Etiqueta requerido>Apellido paterno:</Etiqueta>
               <input
                 type="text"
@@ -444,6 +442,7 @@ export default function UsuariosPage() {
                 value={form.ape_pat}
                 onChange={handleChange('ape_pat')}
               />
+              <AvisoCampo mensaje={erroresCampos.ape_pat} />
             </div>
             <div>
               <Etiqueta>Apellido materno:</Etiqueta>
@@ -473,7 +472,7 @@ export default function UsuariosPage() {
                 onChange={handleChange('cedula')}
               />
             </div>
-            <div>
+            <div data-campo="idclinica">
               <Etiqueta requerido>Clínica:</Etiqueta>
               <select
                 className={inputClass}
@@ -487,6 +486,7 @@ export default function UsuariosPage() {
                   </option>
                 ))}
               </select>
+              <AvisoCampo mensaje={erroresCampos.idclinica} />
             </div>
           </div>
         </Seccion>
@@ -517,7 +517,7 @@ export default function UsuariosPage() {
       {creando && esClinica && (
         <Seccion titulo="Datos de la clínica">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
-            <div>
+            <div data-campo="clinica_nombre">
               <Etiqueta requerido>Nombre de la clínica:</Etiqueta>
               <input
                 type="text"
@@ -527,8 +527,9 @@ export default function UsuariosPage() {
                 value={form.clinica_nombre}
                 onChange={handleChange('clinica_nombre')}
               />
+              <AvisoCampo mensaje={erroresCampos.clinica_nombre} />
             </div>
-            <div>
+            <div data-campo="identificacion_fiscal">
               <Etiqueta>Identificación fiscal:</Etiqueta>
               <input
                 type="text"
@@ -538,6 +539,7 @@ export default function UsuariosPage() {
                 value={form.identificacion_fiscal}
                 onChange={handleChange('identificacion_fiscal')}
               />
+              <AvisoCampo mensaje={erroresCampos.identificacion_fiscal} />
             </div>
             <div className="md:col-span-2">
               <Etiqueta>Dirección:</Etiqueta>
@@ -560,7 +562,7 @@ export default function UsuariosPage() {
             <KeyRound size={14} aria-hidden="true" /> {creando ? 'Crear llave de acceso' : 'Cuenta de acceso'}
           </legend>
 
-          <div>
+          <div data-campo="correo">
             <Etiqueta requerido>Correo electrónico:</Etiqueta>
             <input
               type="email"
@@ -571,6 +573,7 @@ export default function UsuariosPage() {
               value={form.correo}
               onChange={handleChange('correo')}
             />
+            <AvisoCampo mensaje={erroresCampos.correo} />
           </div>
 
           {!creando && (
@@ -580,36 +583,59 @@ export default function UsuariosPage() {
           )}
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
-            <div>
+            <div data-campo="contrasena">
               <Etiqueta requerido={creando}>
                 {creando ? 'Contraseña:' : 'Nueva contraseña:'}
               </Etiqueta>
-              <input
-                type="password"
-                autoComplete="new-password"
-                placeholder="Crea una contraseña"
-                maxLength={72}
-                className={inputClass}
-                value={form.contrasena}
-                onChange={handleChange('contrasena')}
-              />
+              <div className="relative">
+                <input
+                  type={verContrasena ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  placeholder="Crea una contraseña"
+                  maxLength={72}
+                  className={`${inputClass} pr-12! md:pr-12!`}
+                  value={form.contrasena}
+                  onChange={handleChange('contrasena')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setVerContrasena((valor) => !valor)}
+                  aria-label={verContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400"
+                >
+                  {verContrasena ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               <ChecklistContrasena contrasena={form.contrasena} />
+              <AvisoCampo mensaje={erroresCampos.contrasena} />
             </div>
-            <div>
+            <div data-campo="confirmarContrasena">
               <Etiqueta requerido={creando}>Confirmar contraseña:</Etiqueta>
-              <input
-                type="password"
-                autoComplete="new-password"
-                placeholder="Repite la contraseña"
-                className={inputClass}
-                value={form.confirmarContrasena}
-                onChange={handleChange('confirmarContrasena')}
-              />
+              <div className="relative">
+                <input
+                  type={verConfirmar ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  placeholder="Repite la contraseña"
+                  className={`${inputClass} pr-12! md:pr-12!`}
+                  value={form.confirmarContrasena}
+                  onChange={handleChange('confirmarContrasena')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setVerConfirmar((valor) => !valor)}
+                  aria-label={verConfirmar ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400"
+                >
+                  {verConfirmar ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              <AvisoCampo mensaje={erroresCampos.confirmarContrasena} />
             </div>
           </div>
         </fieldset>
       )}
     </div>
+    </>
   );
 
   return (

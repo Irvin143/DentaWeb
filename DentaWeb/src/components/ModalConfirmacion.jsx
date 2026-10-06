@@ -24,9 +24,10 @@ export default function ModalConfirmacion({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm transition-opacity">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-        <h3 className="mb-2 text-lg font-bold text-slate-800">{titulo}</h3>
-        <p className="mb-6 text-sm text-slate-600">{mensaje}</p>
+      <div className={`w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl ${esPeligro ? '' : 'p-6'}`}>
+        <h3 className={esPeligro ? 'bg-error px-6 py-4 text-lg font-bold text-on-primary' : 'mb-2 text-lg font-bold text-slate-800'}>{titulo}</h3>
+        <div className={esPeligro ? 'px-6 pb-6 pt-4' : undefined}>
+        <p className={`mb-6 text-sm ${esPeligro ? 'font-medium text-error' : 'text-slate-600'}`}>{mensaje}</p>
         
         {/* Campo de validación de seguridad */}
         {requierePalabra && (
@@ -69,6 +70,7 @@ export default function ModalConfirmacion({
           >
             {textoConfirmar}
           </button>
+        </div>
         </div>
       </div>
     </div>
