@@ -12,6 +12,8 @@ import {
   User,
 } from 'lucide-react';
 import { getAuth } from '../../config/permisos.js';
+import AgendarCitaView from './AgendarCitaView';
+import UrgenciaView from './UrgenciaView';
 
 function fechaHoy() {
   const texto = new Date().toLocaleDateString('es-MX', {
@@ -47,8 +49,18 @@ export default function PanelPacientePage() {
   const primerNombre = presentarPalabra(usuario?.nombre);
   const saludo = saludoPorHora();
 
+  const [vista, setVista] = useState('panel'); // 'panel' | 'agendar' | 'urgencia'
+
+  if (vista === 'agendar') {
+    return <AgendarCitaView onVolver={() => setVista('panel')} />;
+  }
+
+  if (vista === 'urgencia') {
+    return <UrgenciaView onVolver={() => setVista('panel')} />;
+  }
+
   return (
-    <section className="flex flex-col gap-6 bg-surface p-4 md:p-8">
+    <section className="mx-auto flex max-w-7xl flex-col gap-6 bg-surface p-4 md:p-8">
       <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-on-surface">
@@ -73,6 +85,7 @@ export default function PanelPacientePage() {
           <button
             type="button"
             className={botonPrimario}
+            onClick={() => setVista('agendar')} // ACCIÓN BOTÓN SUPERIOR
           >
             <Plus size={18} aria-hidden="true" />
             Agendar cita
@@ -151,6 +164,7 @@ export default function PanelPacientePage() {
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <button
             type="button"
+            onClick={() => setVista('agendar')} 
             className="flex cursor-pointer items-center justify-between rounded-2xl border border-outline-variant bg-on-primary p-5 text-left transition-colors hover:border-teal-600"
           >
             <span className="flex items-center gap-3.5">
@@ -167,6 +181,7 @@ export default function PanelPacientePage() {
 
           <button
             type="button"
+            onClick={() => setVista('urgencia')}
             className="flex cursor-pointer items-center justify-between rounded-2xl border border-outline-variant bg-on-primary p-5 text-left transition-colors hover:border-error"
           >
             <span className="flex items-center gap-3.5">
