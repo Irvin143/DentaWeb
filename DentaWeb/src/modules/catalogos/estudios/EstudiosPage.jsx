@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { DoorOpen } from 'lucide-react';
-import { CatalogoPage } from '../../components/CatalogoPage';
-import { AvisoGeneral, scrollAlPrimerCampo } from '../../components/avisosFormulario';
-import { consultoriosApi, clinicasApi } from '../../services/api.js';
+import { Scan } from 'lucide-react';
+import { CatalogoPage } from '../../../components/CatalogoPage.jsx';
+import { AvisoGeneral, scrollAlPrimerCampo } from '../../../components/avisosFormulario.jsx';
+import { estudiosApi } from '../../../services/api.js';
 
 const inputClass =
   'w-full rounded-xl border border-slate-200 p-3 outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500';
@@ -11,27 +11,49 @@ const inputClass =
    VALIDACIONES
    ============================================================ */
 
-// Nombre: letras, números, espacios y símbolos comunes (por si es "Consultorio 1-A")
-const REGEX_NOMBRE = /^[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ][A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,#°&/-]*$/;
+// Nombre: letras, números, espacios y símbolos comunes (por si es "Rayos X 3D")
+const REGEX_NOMBRE = /^[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ][A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,#°&/()-]*$/;
 
-// Filtro en tiempo real: bloquea caracteres inválidos mientras se escribe
-const LIMPIAR_NOMBRE = /[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,#°&/-]/g;
+// Descripción: más libre, pero sin caracteres de control raros
+const REGEX_DESCRIPCION = /^[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,;:¿?¡!()#°&/+\-–—]*$/;
 
-// Longitud máxima según el DER (varchar(100))
-const MAX_NOMBRE = 100;
+// Filtros en tiempo real
+const LIMPIAR_NOMBRE = /[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,#°&/()-]/g;
+const LIMPIAR_DESCRIPCION = /[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,;:¿?¡!()#°&/+\-–—]/g;
+
+// Longitudes máximas
+const MAX_NOMBRE = 100;       // varchar(100) en el DER
+const MAX_DESCRIPCION = 500;  // text en el DER, pero ponemos un tope razonable
+
+// Cuenta palabras para evitar nombres absurdamente largos
+const contarPalabras = (str) =>
+  str.trim().split(/\s+/).filter(Boolean).length;
 
 /* ------------------------------------------------------------
    Validadores por campo
    ------------------------------------------------------------ */
 
-const validarNombreConsultorio = (valor) => {
+const validarNombreEstudio = (valor) => {
   const v = valor.trim();
   if (!v) return 'El nombre es obligatorio';
   if (v.length < 2) return 'El nombre debe tener al menos 2 caracteres';
   if (v.length > MAX_NOMBRE)
     return `El nombre no puede exceder ${MAX_NOMBRE} caracteres`;
+  if (contarPalabras(v) > 8) return 'El nombre parece demasiado largo';
   if (!REGEX_NOMBRE.test(v))
     return 'El nombre contiene caracteres no permitidos';
+  return null;
+};
+
+const validarDescripcion = (valor) => {
+  const v = valor.trim();
+  if (!v) return null; // opcional
+  if (v.length < 5)
+    return 'La descripción debe tener al menos 5 caracteres';
+  if (v.length > MAX_DESCRIPCION)
+    return `La descripción no puede exceder ${MAX_DESCRIPCION} caracteres`;
+  if (!REGEX_DESCRIPCION.test(v))
+    return 'La descripción contiene caracteres no permitidos';
   return null;
 };
 
@@ -39,11 +61,24 @@ const validarNombreConsultorio = (valor) => {
    Validador global del formulario
    ------------------------------------------------------------ */
 
-const validarFormulario = (form) => {
+const validarFormulario = (form, estudios = [], editandoId = null) => {
   const errores = {};
 
-  const errNombre = validarNombreConsultorio(form.nombre);
+  const errNombre = validarNombreEstudio(form.nombre);
   if (errNombre) errores.nombre = errNombre;
+  else {
+    // Unicidad local: no permitir nombres duplicados
+    const normalizado = form.nombre.trim().toLowerCase();
+    const duplicado = estudios.some(
+      (e) =>
+        e.id_estudio !== editandoId &&
+        (e.nombre ?? '').trim().toLowerCase() === normalizado
+    );
+    if (duplicado) errores.nombre = 'Ya existe un estudio con ese nombre';
+  }
+
+  const errDesc = validarDescripcion(form.descripcion);
+  if (errDesc) errores.descripcion = errDesc;
 
   return errores;
 };
@@ -54,18 +89,24 @@ const validarFormulario = (form) => {
 
 const FORM_INICIAL = {
   nombre: '',
-  id_clinica: '',
+  descripcion: '',
 };
 
 const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
+
+const mapearEstudio = (e) => ({
+  id: e.id_estudio,
+  nombre: e.nombre,
+  descripcion: e.descripcion,
+  estado: e.activo ? 'Activo' : 'Inactivo',
+});
 
 /* ============================================================
    COMPONENTE
    ============================================================ */
 
-export default function ConsultoriosPage() {
-  const [consultorios, setConsultorios] = useState([]);
-  const [clinicas, setClinicas] = useState([]);
+export default function EstudiosPage() {
+  const [estudios, setEstudios] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
@@ -79,20 +120,10 @@ export default function ConsultoriosPage() {
     try {
       setCargando(true);
       setErrorCarga(null);
-      const [dataConsultorios, dataClinicas] = await Promise.all([
-        consultoriosApi.listar(),
-        clinicasApi.listar(),
-      ]);
-      setConsultorios(
-        dataConsultorios?.consultorios ??
-          (Array.isArray(dataConsultorios) ? dataConsultorios : [])
-      );
-      setClinicas(
-        dataClinicas?.clinicas ??
-          (Array.isArray(dataClinicas) ? dataClinicas : [])
-      );
+      const data = await estudiosApi.listar();
+      setEstudios(data?.estudios ?? (Array.isArray(data) ? data : []));
     } catch (err) {
-      setErrorCarga(err.message || 'No se pudieron cargar los consultorios.');
+      setErrorCarga(err.message || 'No se pudieron cargar los estudios.');
     } finally {
       setCargando(false);
     }
@@ -102,18 +133,8 @@ export default function ConsultoriosPage() {
     cargar();
   }, [cargar]);
 
-  const mapearConsultorio = (c) => {
-    const clinica = clinicas.find((x) => x.id_clinica === c.id_clinica);
-    return {
-      id: c.id_consultorio,
-      nombre: c.nombre,
-      clinica: c.id_clinica ? c.nombre_clinica ?? clinica?.nombre : null,
-      estado: c.activo ? 'Activo' : 'Inactivo',
-    };
-  };
-
   /* ------------------------------------------------------------
-     HANDLE CHANGE con filtro en tiempo real
+     HANDLE CHANGE con filtros en tiempo real
      ------------------------------------------------------------ */
   const handleChange = (campo) => (e) => {
     let valor = e.target.value;
@@ -122,8 +143,10 @@ export default function ConsultoriosPage() {
       case 'nombre':
         valor = valor.replace(LIMPIAR_NOMBRE, '').toUpperCase();
         break;
-      case 'id_clinica':
-        // select: no se filtra, es un id numérico
+      case 'descripcion':
+        // En descripción permitimos mayúsculas/minúsculas y puntos, pero sin
+        // caracteres raros. La normalizamos a mayúsculas también.
+        valor = valor.replace(LIMPIAR_DESCRIPCION, '').toUpperCase();
         break;
       default:
         break;
@@ -143,7 +166,7 @@ export default function ConsultoriosPage() {
      HANDLE BLUR
      ------------------------------------------------------------ */
   const handleBlur = (campo) => () => {
-    const todos = validarFormulario(form);
+    const todos = validarFormulario(form, estudios, editandoId);
     setErroresCampos((prev) => {
       const copia = { ...prev };
       if (todos[campo]) copia[campo] = todos[campo];
@@ -163,7 +186,7 @@ export default function ConsultoriosPage() {
      GUARDAR
      ------------------------------------------------------------ */
   const handleGuardar = async () => {
-    const errores = validarFormulario(form);
+    const errores = validarFormulario(form, estudios, editandoId);
 
     if (Object.keys(errores).length > 0) {
       setErroresCampos(errores);
@@ -179,20 +202,22 @@ export default function ConsultoriosPage() {
 
       const payload = {
         nombre: mayus(form.nombre),
-        idclinica: form.id_clinica ? Number(form.id_clinica) : null,
+        descripcion: form.descripcion.trim()
+          ? mayus(form.descripcion)
+          : null,
       };
 
       if (editandoId) {
-        await consultoriosApi.actualizar(editandoId, payload);
+        await estudiosApi.actualizar(editandoId, payload);
       } else {
-        await consultoriosApi.crear(payload);
+        await estudiosApi.crear(payload);
       }
 
       resetFormulario();
-      cargar();
+      await cargar();
       return true;
     } catch (err) {
-      setError(err.message || 'Error al guardar el consultorio');
+      setError(err.message || 'Error al guardar el estudio');
       return false;
     } finally {
       setGuardando(false);
@@ -200,24 +225,24 @@ export default function ConsultoriosPage() {
   };
 
   const handleEditar = (id) => {
-    const c = consultorios.find((x) => x.id_consultorio === id);
-    if (!c) return;
+    const e = estudios.find((x) => x.id_estudio === id);
+    if (!e) return;
     setEditandoId(id);
     setError(null);
     setErroresCampos({});
     setForm({
-      nombre: (c.nombre ?? '').toUpperCase(),
-      id_clinica: c.id_clinica ? String(c.id_clinica) : '',
+      nombre: (e.nombre ?? '').toUpperCase(),
+      descripcion: (e.descripcion ?? '').toUpperCase(),
     });
   };
 
   const handleEliminar = async (id) => {
-    await consultoriosApi.eliminar(id);
+    await estudiosApi.eliminar(id);
     await cargar();
   };
 
   const handleReactivar = async (id) => {
-    await consultoriosApi.reactivar(id);
+    await estudiosApi.reactivar(id);
     await cargar();
   };
 
@@ -230,7 +255,7 @@ export default function ConsultoriosPage() {
   /* ------------------------------------------------------------
      FORMULARIO (misma vista, solo agregamos clases y mensajes)
      ------------------------------------------------------------ */
-  const formularioConsultorio = (
+  const formularioEstudio = (
     <>
     <AvisoGeneral mensaje={error} />
     <div ref={formularioRef} className="flex flex-col gap-4">
@@ -241,7 +266,7 @@ export default function ConsultoriosPage() {
         <input
           type="text"
           maxLength={MAX_NOMBRE}
-          placeholder="Ej. CONSULTORIO 1"
+          placeholder="Ej. RADIOGRAFÍA PANORÁMICA"
           className={claseConError('nombre')}
           value={form.nombre}
           onChange={handleChange('nombre')}
@@ -251,22 +276,37 @@ export default function ConsultoriosPage() {
           <p className="mt-1 text-xs text-red-600">{erroresCampos.nombre}</p>
         )}
       </div>
-      <div>
+      <div data-campo="descripcion">
         <label className="mb-1 block text-sm font-medium text-slate-700">
-          Clínica:
+          Descripción:
         </label>
-        <select
-          className={inputClass}
-          value={form.id_clinica}
-          onChange={handleChange('id_clinica')}
-        >
-          <option value="">Sin asignar</option>
-          {clinicas.map((c) => (
-            <option key={c.id_clinica} value={c.id_clinica}>
-              {c.nombre}
-            </option>
-          ))}
-        </select>
+        <textarea
+          rows={4}
+          maxLength={MAX_DESCRIPCION}
+          placeholder="Describe en qué consiste el estudio (opcional)"
+          className={`${claseConError('descripcion')} resize-none`}
+          value={form.descripcion}
+          onChange={handleChange('descripcion')}
+          onBlur={handleBlur('descripcion')}
+        />
+        <div className="mt-1 flex items-center justify-between">
+          {erroresCampos.descripcion ? (
+            <p className="text-xs text-red-600">{erroresCampos.descripcion}</p>
+          ) : (
+            <span className="text-xs text-slate-400">
+              Opcional · máx {MAX_DESCRIPCION} caracteres
+            </span>
+          )}
+          <span
+            className={`text-xs ${
+              form.descripcion.length > MAX_DESCRIPCION * 0.9
+                ? 'text-amber-600'
+                : 'text-slate-400'
+            }`}
+          >
+            {form.descripcion.length} / {MAX_DESCRIPCION}
+          </span>
+        </div>
       </div>
     </div>
     </>
@@ -274,21 +314,21 @@ export default function ConsultoriosPage() {
 
   return (
     <CatalogoPage
-      titulo="Consultorios"
-      subtitulo="Gestiona los consultorios de cada clínica."
-      textoBotonNuevo="Agregar consultorio"
-      placeholderBusqueda="Buscar por nombre o clínica..."
-      datos={consultorios.map(mapearConsultorio)}
+      titulo="Estudios"
+      subtitulo="Gestiona los estudios clínicos disponibles en la red médica."
+      textoBotonNuevo="Agregar estudio"
+      placeholderBusqueda="Buscar por nombre o descripción..."
+      datos={estudios.map(mapearEstudio)}
       cargando={cargando}
       errorCarga={errorCarga}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}
       modal={{
-        icono: <DoorOpen />,
-        titulo: editandoId ? 'Editar Consultorio' : 'Nuevo Consultorio',
-        textoGuardar: guardando ? 'Guardando...' : 'Guardar Consultorio',
-        contenido: formularioConsultorio,
+        icono: <Scan />,
+        titulo: editandoId ? 'Editar Estudio' : 'Nuevo Estudio',
+        textoGuardar: guardando ? 'Guardando...' : 'Guardar Estudio',
+        contenido: formularioEstudio,
         onGuardar: handleGuardar,
         onCerrar: resetFormulario,
       }}

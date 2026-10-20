@@ -59,9 +59,36 @@ export const obtenerPorId = async (req, res) => {
         responderError(res, err);
     }
 };
+const validarBodyCrear = (body) => {
+    const { nombre } = body;
+    const descripcion = body.descripcion ?? '';
+    const ids = body.idsClinicas ?? (body.idclinica ? [body.idclinica] : []);
+
+    if (typeof nombre !== 'string' || !nombre.trim())
+        return { error: 'El nombre es obligatorio' };
+    if (nombre.trim().length > 100)
+        return { error: 'El nombre no puede exceder 100 caracteres' };
+    if (typeof descripcion !== 'string')
+        return { error: 'La descripción debe ser texto' };
+    if (!Array.isArray(ids) || ids.length === 0)
+        return { error: 'Debe asignarse al menos una clínica' };
+
+    const idsClinicas = ids.map(Number);
+    if (idsClinicas.some((id) => !Number.isInteger(id) || id <= 0))
+        return { error: 'idsClinicas debe contener enteros positivos' };
+
+    return {
+        datos: {
+            nombre: nombre.trim(),
+            descripcion: descripcion.trim() || null,
+            idsClinicas: [...new Set(idsClinicas)],
+        },
+    };
+};
 
 export const crear = async (req, res) => {
-    const { datos, error } = validarBody(req.body);
+    const { datos, error } = validarBodyCrear(req.body);
+
     if (error) return res.status(400).json({ error });
     try {
         const servicio = await servicioService.crearServicio(datos);

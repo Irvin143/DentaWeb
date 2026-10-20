@@ -52,43 +52,48 @@ const SELECT_BASE = `
 
 const RETURNING_SERVICIO = 'RETURNING idServicio AS id_servicio, nombre, descripcion, activo';
 
-export const obtenerServicios = async ({ 
-    filtroActivo = 'todos', 
-    idUsuario = null, 
-    paquete = null 
+export const obtenerServicios = async ({
+    filtroActivo = 'todos',
+    idUsuario = null,
+    paquete = null
 } = {}) => {
     const esClinica = paquete === 'Clinica';
     let idClinicaFiltro = null;
 
-    // Si es tipo 'Clinica', obtenemos primero su idClinica mediante el idUsuario
     if (esClinica && idUsuario) {
-        const queryClinica = `
-            SELECT idClinica 
-            FROM Clinicas 
-            WHERE idUsuario = $1::int 
-            LIMIT 1;
-        `;
-        const resClinica = await conexion.query(queryClinica, [idUsuario]);
+        const { rows: clinicaRows } = await conexion.query(
+            `SELECT idClinica FROM Clinicas WHERE idUsuario = $1::int LIMIT 1;`,
+            [idUsuario]
+        );
 
-        if (resClinica.rows.length > 0) {
-            idClinicaFiltro = resClinica.rows[0].idclinica || resClinica.rows[0].idClinica;
-        } else {
-            // Si la cuenta no tiene clínica registrada, retorna arreglo vacío
-            return [];
-        }
+        if (clinicaRows.length === 0) return [];
+        idClinicaFiltro = clinicaRows[0].idclinica ?? clinicaRows[0].idClinica;
     }
 
     const query = `
-        ${SELECT_BASE}
+        SELECT s.idServicio AS id_servicio,
+               s.nombre,
+               s.descripcion,
+               s.activo,
+               COALESCE(
+                 json_agg(
+                   json_build_object('id_clinica', c.idClinica, 'nombre', c.nombre)
+                   ORDER BY c.nombre
+                 ) FILTER (WHERE c.idClinica IS NOT NULL),
+                 '[]'::json
+               ) AS clinicas
+        FROM Servicios s
+        LEFT JOIN Clinica_Servicio cs ON cs.idServicio = s.idServicio
+        LEFT JOIN Clinicas c ON c.idClinica = cs.idClinica
         WHERE ($1::text = 'todos' OR s.activo = ($1::text = 'true'))
           AND ($2::int IS NULL OR cs.idClinica = $2::int)
+        GROUP BY s.idServicio
         ORDER BY s.nombre, s.idServicio;
     `;
 
     const { rows } = await conexion.query(query, [filtroActivo, idClinicaFiltro]);
     return rows;
 };
-
 // ---------- CATÁLOGO PARA PACIENTES ----------
 // Solo servicios activos con una relación activa a una clínica.
 // Devuelve únicamente los campos que el paciente necesita.
@@ -125,7 +130,7 @@ export const obtenerServicioPorId = async (id) => {
 
 // ---------- CREAR ----------
 // Crea el servicio y lo liga a la clínica en una sola transacción
-export const crearServicio = async ({ nombre, descripcion, idclinica }) => {
+export const crearServicio = async ({ nombre, descripcion, idsClinicas = [] }) => {
     try {
         return await enTransaccion(async (cliente) => {
             const { rows } = await cliente.query(
@@ -136,13 +141,16 @@ export const crearServicio = async ({ nombre, descripcion, idclinica }) => {
             );
             const servicio = rows[0];
 
-            await cliente.query(
-                `INSERT INTO Clinica_Servicio (idServicio, idClinica)
-                 VALUES ($1, $2)`,
-                [servicio.id_servicio, idclinica]
-            );
+            if (idsClinicas.length > 0) {
+                await cliente.query(
+                    `INSERT INTO Clinica_Servicio (idServicio, idClinica)
+                        SELECT $1, UNNEST($2::int[])
+                        ON CONFLICT DO NOTHING`,
+                    [servicio.id_servicio, idsClinicas]
+                );
+            }
 
-            return { ...servicio, id_clinica: idclinica };
+            return { ...servicio, ids_clinicas: idsClinicas };
         });
     } catch (err) {
         manejarErrorPg(err);

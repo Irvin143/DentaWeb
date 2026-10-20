@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Shield } from 'lucide-react';
-import { CatalogoPage } from '../../components/CatalogoPage';
-import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../components/avisosFormulario';
-import { rolesApi } from '../../services/api.js'; // agrega rolesApi en este archivo
+import { CatalogoPage } from '../../../components/CatalogoPage.jsx';
+import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../../components/avisosFormulario.jsx';
+import { rolesApi } from '../../../services/api.js'; // agrega rolesApi en este archivo
 
 const inputClass =
   'w-full rounded-xl border border-slate-200 p-3 outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500';

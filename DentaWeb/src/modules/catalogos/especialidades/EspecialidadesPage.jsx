@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GraduationCap } from 'lucide-react';
-import { CatalogoPage } from '../../components/CatalogoPage';
-import { AvisoGeneral, scrollAlPrimerCampo } from '../../components/avisosFormulario';
-import { especialidadesApi } from '../../services/api.js';
+import { CatalogoPage } from '../../../components/CatalogoPage.jsx';
+import { AvisoGeneral, scrollAlPrimerCampo } from '../../../components/avisosFormulario.jsx';
+import { especialidadesApi } from '../../../services/api.js';
 
 const inputClass =
   'w-full rounded-xl border border-slate-200 p-3 outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500';

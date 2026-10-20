@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { CalendarClock } from 'lucide-react';
-import { CatalogoPage } from '../../components/CatalogoPage.jsx';
-import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../components/avisosFormulario';
-import { tiposCitaApi } from '../../services/api.js'; // agrega tiposCitaApi en este archivo
+import { CatalogoPage } from '../../../components/CatalogoPage.jsx';
+import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../../components/avisosFormulario.jsx';
+import { tiposCitaApi } from '../../../services/api.js'; // agrega tiposCitaApi en este archivo
 
 const inputClass =
   'w-full rounded-xl border border-slate-200 p-3 outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500';

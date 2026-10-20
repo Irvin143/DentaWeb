@@ -2,7 +2,6 @@ import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import ProtectedLayout from "../layouts/ProtectedLayout.jsx";
 import { getAuth, primeraRutaPermitida } from "../config/permisos.js";
 
-
 import Login from "../modules/login/login.jsx";
 import Register from "../modules/login/register.jsx";
 import ForgotPassword from "../modules/login/forgotPassword.jsx";
@@ -10,18 +9,18 @@ import Terms from "../modules/legal/terminos.jsx";
 import Privacy from "../modules/legal/privacidad.jsx";
 import Cookies from "../modules/legal/cookies.jsx";
 import Security from "../modules/legal/seguridad.jsx";
-import ClinicasPage from "../modules/clinicas/ClinicasPage.jsx";
-import PacientesPage from "../modules/pacientes/PacientesPage.jsx";
-import OdontologosPage from "../modules/odontologos/OdontologosPage.jsx";
-import EspecialidadesPage from "../modules/especialidades/EspecialidadesPage.jsx";
-import ConsultoriosPage from "../modules/consultorios/ConsultorioPage.jsx";
-import EstudiosPage from "../modules/estudios/EstudiosPage.jsx";
-import RolesPage from "../modules/roles/RolesPage.jsx";
-import PaquetesRolesPage from "../modules/paqueteRol/PaqueteRolPage.jsx";
-import ServiciosPage from "../modules/servicios/ServiciosPage.jsx"; 
-import TipoCitaPage from "../modules/tipoCita/TipoCItaPage.jsx"; 
-import TiposUsuarioPage from "../modules/tiposUsuarios/TiposUsuariosPage.jsx";
-import UsuariosPage from "../modules/usuarios/UsuariosPage.jsx";
+import ClinicasPage from "../modules/catalogos/clinicas/ClinicasPage.jsx";
+import PacientesPage from "../modules/catalogos/pacientes/PacientesPage.jsx";
+import OdontologosPage from "../modules/catalogos/odontologos/OdontologosPage.jsx";
+import EspecialidadesPage from "../modules/catalogos/especialidades/EspecialidadesPage.jsx";
+import ConsultoriosPage from "../modules/catalogos/consultorios/ConsultorioPage.jsx";
+import EstudiosPage from "../modules/catalogos/estudios/EstudiosPage.jsx";
+import RolesPage from "../modules/catalogos/roles/RolesPage.jsx";
+import PaquetesRolesPage from "../modules/catalogos/paqueteRol/PaqueteRolPage.jsx";
+import ServiciosPage from "../modules/catalogos/servicios/ServiciosPage.jsx";
+import TipoCitaPage from "../modules/catalogos/tipoCita/TipoCItaPage.jsx";
+import TiposUsuarioPage from "../modules/catalogos/tiposUsuarios/TiposUsuariosPage.jsx";
+import UsuariosPage from "../modules/catalogos/usuarios/UsuariosPage.jsx";
 import PanelPacientePage from "../modules/panel/PanelPacientePage.jsx";
 
 function RedirigirInicio() {

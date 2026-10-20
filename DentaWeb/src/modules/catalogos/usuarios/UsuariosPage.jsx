@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Eye, EyeOff, KeyRound } from 'lucide-react';
-import { CatalogoPage } from '../../components/CatalogoPage';
-import { ChecklistContrasena, errorContrasena } from '../../components/ChecklistContrasena';
-import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../components/avisosFormulario';
-import { avisoTelefonoOcupado } from '../../utils/telefonoCompartido';
+import { CatalogoPage } from '../../../components/CatalogoPage.jsx';
+import { ChecklistContrasena, errorContrasena } from '../../../components/ChecklistContrasena.jsx';
+import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../../components/avisosFormulario.jsx';
+import { avisoTelefonoOcupado } from '../../../utils/telefonoCompartido.js';
 import {
   usuariosApi,
   paquetesApi,
@@ -11,7 +11,7 @@ import {
   odontologosApi,
   pacientesApi,
   clinicasApi,
-} from '../../services/api.js'; // ajusta paquetesApi al nombre que uses para paquetes
+} from '../../../services/api.js'; // ajusta paquetesApi al nombre que uses para paquetes
 
 // Mobile: compacto. Desktop (md:): más amplio y cómodo
 const inputClass =

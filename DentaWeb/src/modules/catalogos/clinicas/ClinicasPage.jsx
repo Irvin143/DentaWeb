@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Building2, Eye, EyeOff, KeyRound } from 'lucide-react';
-import { CatalogoPage } from '../../components/CatalogoPage';
-import { ChecklistContrasena, errorContrasena } from '../../components/ChecklistContrasena';
-import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../components/avisosFormulario';
-import { clinicasApi } from '../../services/api.js';
+import { CatalogoPage } from '../../../components/CatalogoPage.jsx';
+import { ChecklistContrasena, errorContrasena } from '../../../components/ChecklistContrasena.jsx';
+import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../../components/avisosFormulario.jsx';
+import { clinicasApi } from '../../../services/api.js';
 
 // Mobile: compacto. Desktop (md:): más amplio y cómodo
 const inputClass =

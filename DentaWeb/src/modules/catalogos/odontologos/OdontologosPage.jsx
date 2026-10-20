@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Eye, EyeOff, KeyRound, Stethoscope } from 'lucide-react';
-import { CatalogoPage } from '../../components/CatalogoPage';
-import { ChecklistContrasena, errorContrasena } from '../../components/ChecklistContrasena';
-import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../components/avisosFormulario';
-import { avisoTelefonoOcupado } from '../../utils/telefonoCompartido';
-import { odontologosApi, clinicasApi, pacientesApi } from '../../services/api.js';
+import { CatalogoPage } from '../../../components/CatalogoPage.jsx';
+import { ChecklistContrasena, errorContrasena } from '../../../components/ChecklistContrasena.jsx';
+import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../../components/avisosFormulario.jsx';
+import { avisoTelefonoOcupado } from '../../../utils/telefonoCompartido.js';
+import { odontologosApi, clinicasApi, pacientesApi } from '../../../services/api.js';
 
 // Mobile: compacto. Desktop (md:): más amplio y cómodo
 const inputClass =

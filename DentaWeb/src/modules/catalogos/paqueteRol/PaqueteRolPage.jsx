@@ -1,27 +1,29 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { IdCard } from 'lucide-react';
-import { CatalogoPage } from '../../components/CatalogoPage.jsx';
-import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../components/avisosFormulario';
-import { tiposUsuarioApi } from '../../services/api.js'; // agrega tiposUsuarioApi en este archivo
+import { Package } from 'lucide-react';
+import { CatalogoPage } from '../../../components/CatalogoPage.jsx';
+import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../../components/avisosFormulario.jsx';
+import { paquetesApi } from '../../../services/api.js'; // agrega paquetesApi en este archivo
 
 const inputClass =
   'w-full rounded-xl border border-slate-200 p-3 outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500';
 
 const FORM_INICIAL = {
   nombre: '',
+  descripcion: '',
 };
 
 const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
 
 // Convierte lo que devuelve el backend a lo que muestra la tabla
-const mapearTipoUsuario = (t) => ({
-  id: t.id_tipo_usuario,
-  nombre: t.nombre,
-  estado: t.activo ? 'Activo' : 'Inactivo',
+const mapearPaquete = (p) => ({
+  id: p.id_paquete,
+  nombre: p.nombre,
+  descripcion: p.descripcion,
+  estado: p.activo ? 'Activo' : 'Inactivo',
 });
 
-export default function TiposUsuarioPage() {
-  const [tipos, setTipos] = useState([]); // datos crudos del backend
+export default function PaquetesPage() {
+  const [paquetes, setPaquetes] = useState([]); // datos crudos del backend
   const [cargando, setCargando] = useState(true);
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
@@ -35,10 +37,11 @@ export default function TiposUsuarioPage() {
     try {
       setCargando(true);
       setErrorCarga(null);
-      const data = await tiposUsuarioApi.listar();
-      setTipos(data?.tipos ?? (Array.isArray(data) ? data : []));
+      const data = await paquetesApi.listar();
+      console.log('Paquetes cargados:', data);
+      setPaquetes(data?.paquetes ?? (Array.isArray(data) ? data : []));
     } catch (err) {
-      setErrorCarga(err.message || 'No se pudieron cargar los tipos de usuario.');
+      setErrorCarga(err.message || 'No se pudieron cargar los paquetes.');
     } finally {
       setCargando(false);
     }
@@ -79,19 +82,20 @@ export default function TiposUsuarioPage() {
 
       const payload = {
         nombre: mayus(form.nombre),
+        descripcion: form.descripcion.trim() ? mayus(form.descripcion) : null,
       };
 
       if (editandoId) {
-        await tiposUsuarioApi.actualizar(editandoId, payload);
+        await paquetesApi.actualizar(editandoId, payload);
       } else {
-        await tiposUsuarioApi.crear(payload);
+        await paquetesApi.crear(payload);
       }
 
       resetFormulario();
        cargar();
       return true;
     } catch (err) {
-      setError(err.message || 'Error al guardar el tipo de usuario');
+      setError(err.message || 'Error al guardar el paquete');
       return false;
     } finally {
       setGuardando(false);
@@ -100,27 +104,28 @@ export default function TiposUsuarioPage() {
 
   // Carga los datos de la fila en el formulario antes de abrir el modal
   const handleEditar = (id) => {
-    const t = tipos.find((x) => x.id_tipo_usuario === id);
-    if (!t) return;
+    const p = paquetes.find((x) => x.id_paquete === id);
+    if (!p) return;
     setEditandoId(id);
     setError(null);
     setErroresCampos({});
     setForm({
-      nombre: (t.nombre ?? '').toLocaleUpperCase('es-MX'),
+      nombre: (p.nombre ?? '').toLocaleUpperCase('es-MX'),
+      descripcion: (p.descripcion ?? '').toLocaleUpperCase('es-MX'),
     });
   };
 
   const handleEliminar = async (id) => {
-    await tiposUsuarioApi.eliminar(id);
+    await paquetesApi.eliminar(id);
     await cargar();
   };
 
   const handleReactivar = async (id) => {
-    await tiposUsuarioApi.reactivar(id);
+    await paquetesApi.reactivar(id);
     await cargar();
   };
 
-  const formularioTipoUsuario = (
+  const formularioPaquete = (
     <>
     <AvisoGeneral mensaje={error} />
     <div ref={formularioRef} className="flex flex-col gap-4">
@@ -129,12 +134,22 @@ export default function TiposUsuarioPage() {
         <input
           type="text"
           maxLength={50}
-          placeholder="Ej. ODONTOLOGO"
+          placeholder="Ej. PAQUETE DE LIMPIEZA DENTAL"
           className={inputClass}
           value={form.nombre}
           onChange={handleChange('nombre')}
         />
         <AvisoCampo mensaje={erroresCampos.nombre} />
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-700">Descripción:</label>
+        <textarea
+          rows={4}
+          placeholder="Describe qué incluye el paquete (opcional)"
+          className={`${inputClass} resize-none`}
+          value={form.descripcion}
+          onChange={handleChange('descripcion')}
+        />
       </div>
     </div>
     </>
@@ -142,21 +157,21 @@ export default function TiposUsuarioPage() {
 
   return (
     <CatalogoPage
-      titulo="Tipos de usuario"
-      subtitulo="Gestiona los tipos de usuario del sistema."
-      textoBotonNuevo="Agregar tipo de usuario"
-      placeholderBusqueda="Buscar por nombre..."
-      datos={tipos.map(mapearTipoUsuario)}
+      titulo="Paquetes"
+      subtitulo="Gestiona los paquetes de servicios de la red médica."
+      textoBotonNuevo="Agregar paquete"
+      placeholderBusqueda="Buscar por nombre o descripción..."
+      datos={paquetes.map(mapearPaquete)}
       cargando={cargando}
       errorCarga={errorCarga}
       onEditar={handleEditar}
       onEliminar={handleEliminar}
       onReactivar={handleReactivar}
       modal={{
-        icono: <IdCard />,
-        titulo: editandoId ? 'Editar Tipo de usuario' : 'Nuevo Tipo de usuario',
-        textoGuardar: guardando ? 'Guardando...' : 'Guardar Tipo de usuario',
-        contenido: formularioTipoUsuario,
+        icono: <Package />,
+        titulo: editandoId ? 'Editar Paquete' : 'Nuevo Paquete',
+        textoGuardar: guardando ? 'Guardando...' : 'Guardar Paquete',
+        contenido: formularioPaquete,
         onGuardar: handleGuardar,
         onCerrar: resetFormulario,
       }}

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Eye, EyeOff, KeyRound, Users } from 'lucide-react';
-import { CatalogoPage } from '../../components/CatalogoPage';
-import { ChecklistContrasena, errorContrasena } from '../../components/ChecklistContrasena';
-import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../components/avisosFormulario';
-import { avisoTelefonoOcupado } from '../../utils/telefonoCompartido';
-import { pacientesApi, odontologosApi } from '../../services/api.js';
-import { CampoContrasena } from '../../utils/utils.jsx'; // ajusta la ruta
+import { CatalogoPage } from '../../../components/CatalogoPage.jsx';
+import { ChecklistContrasena, errorContrasena } from '../../../components/ChecklistContrasena.jsx';
+import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../../components/avisosFormulario.jsx';
+import { avisoTelefonoOcupado } from '../../../utils/telefonoCompartido.js';
+import { pacientesApi, odontologosApi } from '../../../services/api.js';
+import { CampoContrasena } from '../../../utils/utils.jsx'; // ajusta la ruta
 
 
 // Mobile: compacto. Desktop (md:): más amplio y cómodo
