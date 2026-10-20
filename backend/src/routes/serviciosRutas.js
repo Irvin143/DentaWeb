@@ -1,20 +1,21 @@
 import { Router } from 'express';
 import * as servicioController from '../controllers/servicios.controller.js';
-import { exigirAcceso } from '../middleware/auth.js';
+import { exigirAcceso, exigirSesion } from '../middleware/auth.js';
 
 const router = Router();
 
+// Catálogo para pacientes: cualquier usuario con sesión, solo lectura.
+// IMPORTANTE: va ANTES de '/:id', si no Express toma "catalogo" como un id.
+// router.get('/catalogo', exigirSesion, servicioController.listarCatalogo);
+
+// Todo lo demás: solo administración y clínica, como antes
 router.use(exigirAcceso(['admin', 'clinica']));
 
-router.get('/', servicioController.listar);                    // GET    /api/servicios?activo=true|false|todos
-router.get('/:id', servicioController.obtenerPorId);           // GET    /api/servicios/5
-router.post('/', servicioController.crear);                    // POST   /api/servicios
-router.put('/:id', servicioController.actualizar);             // PUT    /api/servicios/5
-router.delete('/:id', servicioController.eliminar);            // DELETE /api/servicios/5  (lógico)
-router.patch('/:id/reactivar', servicioController.reactivar);  // PATCH  /api/servicios/5/reactivar
+router.get('/', servicioController.listar);
+router.get('/:id', servicioController.obtenerPorId);
+router.post('/', servicioController.crear);
+router.put('/:id', servicioController.actualizar);
+router.delete('/:id', servicioController.eliminar);
+router.patch('/:id/reactivar', servicioController.reactivar);
 
 export default router;
-
-// En tu app.js:
-// import servicioRoutes from './routes/servicioRoutes.js';
-// app.use('/api/servicios', servicioRoutes);

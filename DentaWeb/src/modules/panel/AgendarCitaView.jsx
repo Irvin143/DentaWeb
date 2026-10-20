@@ -1,9 +1,37 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Building2, Calendar as CalendarIcon, CheckCircle2, ChevronDown, Clock, MapPin, User, Bell } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import {
+  AlertCircle,
+  ArrowLeft,
+  Bell,
+  Building2,
+  Calendar as CalendarIcon,
+  CheckCircle2,
+  ChevronDown,
+  Clock,
+  Loader2,
+  MapPin,
+  Stethoscope,
+  User,
+} from 'lucide-react';
+// TODO: ajusta la ruta a donde tengas tu api.js
+import { serviciosApi } from '../../services/api.js';
+
+// Adapta la respuesta del backend a lo que usa la vista.
+// Si tus campos se llaman distinto, solo cambia esta función.
+function normalizarServicio(s) {
+  return {
+    id: String(s.id_servicio ?? s.id),
+    nombre: s.nombre,
+    desc: s.descripcion ?? '',
+    duracion: s.duracion_minutos ?? s.duracion ?? null,
+    activo: s.activo ?? true,
+  };
+}
 
 export default function AgendarCitaView({ onVolver }) {
   // Estado del formulario listo para conectarse a la API
   const [form, setForm] = useState({
+    id_servicio: '',
     id_sede: '1',
     id_especialista: '1',
     fecha: '2024-10-30',
@@ -13,6 +41,38 @@ export default function AgendarCitaView({ onVolver }) {
 
   const [cargando, setCargando] = useState(false);
 
+  const [servicios, setServicios] = useState([]);
+  const [cargandoServicios, setCargandoServicios] = useState(true);
+  const [errorServicios, setErrorServicios] = useState(false);
+  const [intento, setIntento] = useState(0); // para el botón "Reintentar"
+
+  useEffect(() => {
+    let cancelado = false;
+    setCargandoServicios(true);
+    setErrorServicios(false);
+
+    serviciosApi
+      .listar()
+      .then((res) => {
+        if (cancelado) return;
+        // Acepta un arreglo directo o { data: [...] } / { servicios: [...] }
+        const lista = Array.isArray(res) ? res : res?.data ?? res?.servicios ?? [];
+        setServicios(lista.map(normalizarServicio).filter((s) => s.activo));
+      })
+      .catch((err) => {
+        if (cancelado) return;
+        console.error('Error al cargar servicios:', err);
+        setErrorServicios(true);
+      })
+      .finally(() => {
+        if (!cancelado) setCargandoServicios(false);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [intento]);
+
   // Días estáticos para el prototipo (Luego se pueden generar dinámicamente)
   const dias = [
     { fecha: '2024-10-28', diaSemana: 'Lun', diaNumero: '28' },
@@ -21,6 +81,8 @@ export default function AgendarCitaView({ onVolver }) {
     { fecha: '2024-10-31', diaSemana: 'Jue', diaNumero: '31' },
     { fecha: '2024-11-01', diaSemana: 'Vie', diaNumero: '01' },
   ];
+
+  const servicioActivo = servicios.find((s) => s.id === form.id_servicio);
 
   const horasManana = ['09:00 AM', '10:30 AM', '11:45 AM'];
   const horasTarde = ['03:30 PM', '04:30 PM', '05:15 PM'];
@@ -53,9 +115,9 @@ export default function AgendarCitaView({ onVolver }) {
 
   return (
     // w-full + min-h-full: ocupa todo el espacio disponible del contenedor padre
-    <div className="min-h-full w-full bg-surface p-4 md:p-8 lg:px-10 lg:py-8">
+    <div className="min-h-full w-full bg-surface p-4 md:p-8 lg:flex lg:h-full lg:flex-col lg:overflow-hidden lg:px-10 lg:py-8">
       {/* Header */}
-      <header className="mb-6 flex items-center justify-between">
+      <header className="mb-6 flex items-center justify-between lg:shrink-0">
         <div className="flex items-center gap-4">
           <button
             type="button"
@@ -78,10 +140,75 @@ export default function AgendarCitaView({ onVolver }) {
       {/* En móvil: una columna. En lg+: dos columnas a todo el ancho */}
       <form
         onSubmit={handleSubmit}
-        className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start"
+        className="grid grid-cols-1 gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-12 lg:grid-rows-1"
       >
         {/* COLUMNA IZQUIERDA: sede, especialista, motivo */}
-        <div className="flex flex-col gap-6 lg:col-span-5 xl:col-span-4">
+        <div className="flex flex-col gap-6 lg:col-span-5 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:pr-2 xl:col-span-4">
+          {/* Servicio */}
+          <section className="rounded-2xl border border-slate-200 bg-white p-5">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500">
+                <Stethoscope size={18} /> Servicio
+              </h2>
+              <span className="text-xs text-slate-400">Obligatorio</span>
+            </div>
+            {cargandoServicios && (
+              <p className="flex items-center gap-2 py-2 text-sm text-slate-500">
+                <Loader2 size={16} className="animate-spin" /> Cargando servicios...
+              </p>
+            )}
+            {errorServicios && (
+              <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+                <p className="flex items-center gap-2 font-semibold">
+                  <AlertCircle size={16} /> No pudimos cargar los servicios
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIntento((n) => n + 1)}
+                  className="mt-1 cursor-pointer text-xs font-semibold underline"
+                >
+                  Reintentar
+                </button>
+              </div>
+            )}
+            {!cargandoServicios && !errorServicios && servicios.length === 0 && (
+              <p className="py-2 text-sm text-slate-500">No hay servicios disponibles por ahora.</p>
+            )}
+            <div className="flex flex-col gap-2">
+              {servicios.map((s) => {
+                const Icono = Stethoscope;
+                const activo = form.id_servicio === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    aria-pressed={activo}
+                    onClick={() => setForm({ ...form, id_servicio: s.id })}
+                    className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
+                      activo ? 'border-teal-600 bg-teal-50' : 'border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                        activo ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-500'
+                      }`}
+                    >
+                      <Icono size={20} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-bold text-slate-800">{s.nombre}</span>
+                      <span className="block truncate text-xs text-slate-500">{s.desc}</span>
+                    </span>
+                    {s.duracion && (
+                      <span className="shrink-0 text-xs font-medium text-slate-500">{s.duracion} min</span>
+                    )}
+                    {activo && <CheckCircle2 size={18} className="shrink-0 text-teal-600" />}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
           {/* Sede de atención */}
           <section className="rounded-2xl border border-slate-200 bg-white p-5">
             <div className="mb-3 flex items-center justify-between">
@@ -151,7 +278,7 @@ export default function AgendarCitaView({ onVolver }) {
         </div>
 
         {/* COLUMNA DERECHA: fecha, horarios, confirmar */}
-        <div className="flex flex-col gap-6 lg:col-span-7 xl:col-span-8">
+        <div className="flex flex-col gap-6 lg:col-span-7 lg:h-full lg:min-h-0 lg:overflow-y-auto xl:col-span-8">
           {/* Calendario (Fechas) */}
           <section className="rounded-2xl border border-slate-200 bg-white p-5 lg:p-6">
             <h2 className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-800">
@@ -182,7 +309,9 @@ export default function AgendarCitaView({ onVolver }) {
               <h2 className="flex items-center gap-2 text-sm font-bold text-slate-800">
                 <Clock size={18} className="text-teal-600" /> Horarios disponibles
               </h2>
-              <span className="text-xs text-slate-500">Duración: 45 min</span>
+              {servicioActivo?.duracion && (
+                <span className="text-xs text-slate-500">Duración: {servicioActivo.duracion} min</span>
+              )}
             </div>
 
             {/* Móvil: turnos apilados. Escritorio: mañana y tarde lado a lado */}
@@ -207,7 +336,7 @@ export default function AgendarCitaView({ onVolver }) {
           <div className="text-center">
             <button
               type="submit"
-              disabled={cargando}
+              disabled={cargando || !form.id_servicio}
               className="w-full cursor-pointer rounded-xl bg-teal-600 py-3.5 font-bold text-white shadow-lg transition-all hover:bg-teal-700 hover:shadow-xl disabled:cursor-not-allowed disabled:bg-slate-400"
             >
               {cargando ? 'Procesando...' : <><CalendarIcon size={18} className="mr-2 inline" /> Confirmar cita</>}
