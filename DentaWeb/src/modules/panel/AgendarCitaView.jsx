@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Building2, Calendar as CalendarIcon, CheckCircle2, ChevronDown, MapPin, User, Bell } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar as CalendarIcon, CheckCircle2, ChevronDown, Clock, MapPin, User, Bell } from 'lucide-react';
 
 export default function AgendarCitaView({ onVolver }) {
   // Estado del formulario listo para conectarse a la API

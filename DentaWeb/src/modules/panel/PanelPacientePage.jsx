@@ -14,6 +14,7 @@ import {
 import { getAuth } from '../../config/permisos.js';
 import AgendarCitaView from './AgendarCitaView';
 import UrgenciaView from './UrgenciaView';
+import { useState } from 'react';
 
 function fechaHoy() {
   const texto = new Date().toLocaleDateString('es-MX', {
@@ -49,7 +50,7 @@ export default function PanelPacientePage() {
   const primerNombre = presentarPalabra(usuario?.nombre);
   const saludo = saludoPorHora();
 
-  const [vista, setVista] = useState('panel'); // 'panel' | 'agendar' | 'urgencia'
+  const [vista, setVista] = useState('urgencia'); // 'panel' | 'agendar' | 'urgencia'
 
   if (vista === 'agendar') {
     return <AgendarCitaView onVolver={() => setVista('panel')} />;

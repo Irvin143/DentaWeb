@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, ShieldAlert, Zap, BoxSelect, Link2Off, Droplets, Activity, Plus, Camera, Clock, PhoneCall } from 'lucide-react';
+import { ArrowLeft, ShieldAlert, Zap, BoxSelect, Link2Off, Droplets, Activity, Plus, Camera, Clock, PhoneCall, User } from 'lucide-react';
 
 export default function UrgenciaView({ onVolver }) {
   const [form, setForm] = useState({
