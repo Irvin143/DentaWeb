@@ -29,7 +29,7 @@ const botonSecundario =
   'inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-xl border border-outline-variant px-4 text-xs font-semibold text-on-surface transition-colors hover:bg-surface-container';
 
 const botonPrimario =
-  'flex cursor-pointer items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-teal-600/20 transition-colors hover:bg-teal-700';
+  'flex cursor-pointer justify-center items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-teal-600/20 transition-colors hover:bg-teal-700';
 
 function presentarPalabra(texto) {
   const palabra = String(texto ?? '').trim().split(/\s+/)[0] ?? '';
@@ -50,7 +50,7 @@ export default function PanelPacientePage() {
   const primerNombre = presentarPalabra(usuario?.nombre);
   const saludo = saludoPorHora();
 
-  const [vista, setVista] = useState('urgencia'); // 'panel' | 'agendar' | 'urgencia'
+  const [vista, setVista] = useState('panel'); // 'panel' | 'agendar' | 'urgencia'
 
   if (vista === 'agendar') {
     return <AgendarCitaView onVolver={() => setVista('panel')} />;
