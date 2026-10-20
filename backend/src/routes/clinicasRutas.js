@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import * as clinicaController from '../controllers/clinicas.controller.js';
-import { exigirAcceso } from '../middleware/auth.js';
+import { exigirAcceso, exigirSesion} from '../middleware/auth.js';
 
 const router = Router();
+
+// clinicasRutas.js
+router.get('/por-servicio/:idServicio', exigirSesion, clinicaController.listarPorServicio);
 
 router.use(exigirAcceso(['admin', 'clinica']));
 

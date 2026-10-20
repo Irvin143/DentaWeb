@@ -52,6 +52,20 @@ export const listar = async (req, res) => {
     }
 };
 
+// clinicas.controller.js
+export async function listarPorServicio(req, res, next) {
+    try {
+        const id = Number(req.params.idServicio);
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({ error: 'Servicio inválido' });
+        }
+        const sedes = await clinicaService.obtenerSedesPorServicio(id);
+        res.json(sedes);
+    } catch (err) {
+        next(err);
+    }
+}
+
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const mayus = (v) => v?.toString().trim().toLocaleUpperCase('es-MX') || '';
 

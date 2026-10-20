@@ -38,6 +38,16 @@ export const listar = async (req, res) => {
     }
 };
 
+export async function listarCatalogo(req, res, next) {
+    try {
+        const servicios = await servicioService.obtenerCatalogoServicios();
+        res.json(servicios);
+    } catch (err) {
+        next(err);
+    }
+}
+
+
 export const obtenerPorId = async (req, res) => {
     const { id } = req.params;
     if (!idValido(id)) return res.status(400).json({ error: 'ID inválido' });

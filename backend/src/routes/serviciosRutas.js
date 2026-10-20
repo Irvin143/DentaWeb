@@ -5,10 +5,9 @@ import { exigirAcceso, exigirSesion } from '../middleware/auth.js';
 const router = Router();
 
 // Catálogo para pacientes: cualquier usuario con sesión, solo lectura.
-// IMPORTANTE: va ANTES de '/:id', si no Express toma "catalogo" como un id.
-// router.get('/catalogo', exigirSesion, servicioController.listarCatalogo);
+// Va ANTES del router.use y de '/:id'.
+router.get('/catalogo', exigirSesion, servicioController.listarCatalogo);
 
-// Todo lo demás: solo administración y clínica, como antes
 router.use(exigirAcceso(['admin', 'clinica']));
 
 router.get('/', servicioController.listar);

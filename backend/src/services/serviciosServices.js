@@ -89,6 +89,30 @@ export const obtenerServicios = async ({
     return rows;
 };
 
+// ---------- CATÁLOGO PARA PACIENTES ----------
+// Solo servicios activos con una relación activa a una clínica.
+// Devuelve únicamente los campos que el paciente necesita.
+export const obtenerCatalogoServicios = async () => {
+    const { rows } = await conexion.query(`
+        SELECT
+            s.idServicio AS id_servicio,
+            s.nombre,
+            s.descripcion
+        FROM Servicios s
+        WHERE s.activo
+          AND EXISTS (
+              SELECT 1
+              FROM Clinica_Servicio cs
+              WHERE cs.idServicio = s.idServicio AND cs.activo
+          )
+        ORDER BY s.nombre, s.idServicio;
+    `);
+    return rows;
+};
+
+
+
+
 // ---------- OBTENER POR ID ----------
 export const obtenerServicioPorId = async (id) => {
     const { rows } = await conexion.query(

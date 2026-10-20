@@ -117,6 +117,9 @@ export const clinicasApi = {
   listar() {
     return apiRequest("/api/clinicas", { method: "GET" });
   },
+  listarSedes(id) {
+    return apiRequest(`/api/clinicas/por-servicio/${id}`, { method: "GET" });
+  },
 
   crear(payload) {
     return apiRequest("/api/clinicas", { method: "POST", body: payload });
@@ -293,6 +296,10 @@ export const serviciosApi = {
   listar() {
     return apiRequest("/api/servicios", { method: "GET" });
   },
+  listarCatalogo() {
+    return apiRequest("/api/servicios/catalogo", { method: "GET" });
+  },
+
   crear(payload) {
     return apiRequest("/api/servicios", { method: "POST", body: payload });
   },

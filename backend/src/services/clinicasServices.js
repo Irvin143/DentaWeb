@@ -42,6 +42,25 @@ export const obtenerClinicas = async ({ filtroActivo = 'todos' } = {}) => {
     return rows;
 };
 
+// Sedes (clínicas) activas que ofrecen un servicio activo
+export const obtenerSedesPorServicio = async (idServicio) => {
+    const { rows } = await conexion.query(
+        `
+        SELECT
+            c.idClinica AS id_sede,
+            c.nombre,
+            c.direccion
+        FROM Clinicas c
+        JOIN Clinica_Servicio cs ON cs.idClinica = c.idClinica AND cs.activo
+        JOIN Servicios s ON s.idServicio = cs.idServicio AND s.activo
+        WHERE cs.idServicio = $1::int
+        ORDER BY c.nombre;
+        `,
+        [idServicio]
+    );
+    return rows;
+};
+
 export const crearClinica = async ({
     correo, contrasena, nombre, direccion = null, identificacion_fiscal = null,
 }) => {

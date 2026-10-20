@@ -6,7 +6,6 @@ import {
   Building2,
   Calendar as CalendarIcon,
   CheckCircle2,
-  ChevronDown,
   Clock,
   Loader2,
   MapPin,
@@ -14,7 +13,7 @@ import {
   User,
 } from 'lucide-react';
 // TODO: ajusta la ruta a donde tengas tu api.js
-import { serviciosApi } from '../../services/api.js';
+import { serviciosApi, clinicasApi } from '../../services/api.js';
 
 // Adapta la respuesta del backend a lo que usa la vista.
 // Si tus campos se llaman distinto, solo cambia esta función.
@@ -28,11 +27,20 @@ function normalizarServicio(s) {
   };
 }
 
+// Igual que arriba: si tus campos de sede se llaman distinto, cambia solo esta función.
+function normalizarSede(s) {
+  return {
+    id: String(s.id_sede ?? s.id_clinica ?? s.id),
+    nombre: s.nombre,
+    direccion: s.direccion ?? '',
+  };
+}
+
 export default function AgendarCitaView({ onVolver }) {
   // Estado del formulario listo para conectarse a la API
   const [form, setForm] = useState({
     id_servicio: '',
-    id_sede: '1',
+    id_sede: '',
     id_especialista: '1',
     fecha: '2024-10-30',
     hora: '10:30 AM',
@@ -52,7 +60,7 @@ export default function AgendarCitaView({ onVolver }) {
     setErrorServicios(false);
 
     serviciosApi
-      .listar()
+      .listarCatalogo()
       .then((res) => {
         if (cancelado) return;
         // Acepta un arreglo directo o { data: [...] } / { servicios: [...] }
@@ -72,6 +80,51 @@ export default function AgendarCitaView({ onVolver }) {
       cancelado = true;
     };
   }, [intento]);
+
+  const [sedes, setSedes] = useState([]);
+  const [cargandoSedes, setCargandoSedes] = useState(false);
+  const [errorSedes, setErrorSedes] = useState(false);
+  const [intentoSedes, setIntentoSedes] = useState(0); // para el botón "Reintentar"
+
+  // Cada vez que cambia el servicio: limpia la sede elegida y consulta las sedes que lo ofrecen
+  useEffect(() => {
+    setSedes([]);
+    setErrorSedes(false);
+    setForm((f) => ({ ...f, id_sede: '' }));
+
+    if (!form.id_servicio) {
+      setCargandoSedes(false);
+      return undefined;
+    }
+
+    let cancelado = false;
+    setCargandoSedes(true);
+
+    clinicasApi
+      .listarSedes(form.id_servicio)
+      .then((res) => {
+        if (cancelado) return;
+        const lista = Array.isArray(res) ? res : res?.data ?? res?.sedes ?? [];
+        const normalizadas = lista.map(normalizarSede);
+        setSedes(normalizadas);
+        // Si solo hay una sede, la deja seleccionada
+        if (normalizadas.length === 1) {
+          setForm((f) => ({ ...f, id_sede: normalizadas[0].id }));
+        }
+      })
+      .catch((err) => {
+        if (cancelado) return;
+        console.error('Error al cargar sedes:', err);
+        setErrorSedes(true);
+      })
+      .finally(() => {
+        if (!cancelado) setCargandoSedes(false);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [form.id_servicio, intentoSedes]);
 
   // Días estáticos para el prototipo (Luego se pueden generar dinámicamente)
   const dias = [
@@ -215,14 +268,56 @@ export default function AgendarCitaView({ onVolver }) {
               <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500">
                 <Building2 size={18} /> Sede de atención
               </h2>
-              <span className="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-semibold text-teal-700">Tu sede habitual</span>
+              <span className="text-xs text-slate-400">Según el servicio</span>
             </div>
-            <div className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 p-3 hover:bg-slate-50">
-              <div>
-                <p className="font-bold text-slate-800">DentalWeb Miraflores Centro</p>
-                <p className="text-xs text-slate-500">Gabinete 02 • Av. José Larco 743, Piso 4</p>
+            {!form.id_servicio && (
+              <p className="py-2 text-sm text-slate-500">Elige un servicio para ver las sedes disponibles.</p>
+            )}
+            {cargandoSedes && (
+              <p className="flex items-center gap-2 py-2 text-sm text-slate-500">
+                <Loader2 size={16} className="animate-spin" /> Buscando sedes...
+              </p>
+            )}
+            {errorSedes && (
+              <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+                <p className="flex items-center gap-2 font-semibold">
+                  <AlertCircle size={16} /> No pudimos cargar las sedes
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIntentoSedes((n) => n + 1)}
+                  className="mt-1 cursor-pointer text-xs font-semibold underline"
+                >
+                  Reintentar
+                </button>
               </div>
-              <ChevronDown size={20} className="text-slate-400" />
+            )}
+            {form.id_servicio && !cargandoSedes && !errorSedes && sedes.length === 0 && (
+              <p className="py-2 text-sm text-slate-500">Por ahora ninguna sede ofrece este servicio.</p>
+            )}
+            <div className="flex flex-col gap-2">
+              {sedes.map((sede) => {
+                const activa = form.id_sede === sede.id;
+                return (
+                  <button
+                    key={sede.id}
+                    type="button"
+                    aria-pressed={activa}
+                    onClick={() => setForm({ ...form, id_sede: sede.id })}
+                    className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
+                      activa ? 'border-teal-600 bg-teal-50' : 'border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-bold text-slate-800">{sede.nombre}</span>
+                      {sede.direccion && (
+                        <span className="block truncate text-xs text-slate-500">{sede.direccion}</span>
+                      )}
+                    </span>
+                    {activa && <CheckCircle2 size={18} className="shrink-0 text-teal-600" />}
+                  </button>
+                );
+              })}
             </div>
           </section>
 
@@ -336,7 +431,7 @@ export default function AgendarCitaView({ onVolver }) {
           <div className="text-center">
             <button
               type="submit"
-              disabled={cargando || !form.id_servicio}
+              disabled={cargando || !form.id_servicio || !form.id_sede}
               className="w-full cursor-pointer rounded-xl bg-teal-600 py-3.5 font-bold text-white shadow-lg transition-all hover:bg-teal-700 hover:shadow-xl disabled:cursor-not-allowed disabled:bg-slate-400"
             >
               {cargando ? 'Procesando...' : <><CalendarIcon size={18} className="mr-2 inline" /> Confirmar cita</>}
