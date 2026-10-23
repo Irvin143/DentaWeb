@@ -4,6 +4,13 @@ import { CatalogoPage } from '../../../components/CatalogoPage.jsx';
 import { ChecklistContrasena, errorContrasena } from '../../../components/ChecklistContrasena.jsx';
 import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../../components/avisosFormulario.jsx';
 import { clinicasApi } from '../../../services/api.js';
+import {
+  avisoCpInexistente,
+  ajustarConCatalogo,
+  aplicarCodigoPostal,
+  cargarCatalogoSepomex,
+  entradaSepomex,
+} from '../../../utils/sepomex.js';
 
 // Mobile: compacto. Desktop (md:): más amplio y cómodo
 const inputClass =
@@ -52,11 +59,11 @@ const CAMPOS_DIRECCION = [
   { campo: 'calle', etiqueta: 'Calle', max: 150, tipo: 'texto', placeholder: 'Ej. AV. JUÁREZ', ancho: true },
   { campo: 'numero_exterior', etiqueta: 'Número exterior', max: 20, tipo: 'numero', placeholder: 'Ej. 123' },
   { campo: 'numero_interior', etiqueta: 'Número interior', max: 20, tipo: 'numero', placeholder: 'Ej. 4B' },
-  { campo: 'colonia', etiqueta: 'Colonia', max: 100, tipo: 'texto', placeholder: 'Ej. CENTRO' },
   { campo: 'codigo_postal', etiqueta: 'Código postal', max: 5, tipo: 'cp', placeholder: 'Ej. 80000', inputMode: 'numeric' },
-  { campo: 'ciudad', etiqueta: 'Ciudad', max: 100, tipo: 'texto', placeholder: 'Ej. CULIACÁN' },
   { campo: 'estado', etiqueta: 'Estado', max: 100, tipo: 'texto', placeholder: 'Ej. SINALOA' },
-  { campo: 'pais', etiqueta: 'País', max: 100, tipo: 'texto', placeholder: 'Ej. MÉXICO' },
+  { campo: 'ciudad', etiqueta: 'Ciudad', max: 100, tipo: 'texto', placeholder: 'Ej. CULIACÁN' },
+  { campo: 'colonia', etiqueta: 'Colonia', max: 100, tipo: 'texto', placeholder: 'Ej. CENTRO' },
+  { campo: 'pais', etiqueta: 'País', max: 100, tipo: 'pais' },
   { campo: 'referencias', etiqueta: 'Referencias', max: 300, tipo: 'texto', placeholder: 'Ej. ENTRE CALLE X Y CALLE Y, FRENTE AL PARQUE', ancho: true },
 ];
 
@@ -128,7 +135,7 @@ const hayDireccionCapturada = (form) =>
    Validador global del formulario
    ------------------------------------------------------------ */
 
-const validarFormulario = (form, creando, clinicas = []) => {
+const validarFormulario = (form, creando, clinicas = [], catalogoCp = null) => {
   const errores = {};
 
   const errNombre = validarNombreClinica(form.nombre);
@@ -136,9 +143,12 @@ const validarFormulario = (form, creando, clinicas = []) => {
 
   // Dirección: cada campo + regla "si hay dirección, la calle es obligatoria"
   CAMPOS_DIRECCION.forEach((config) => {
+    if (config.campo === 'pais') return;
     const err = validarCampoDireccion(config, form[config.campo] ?? '');
     if (err) errores[config.campo] = err;
   });
+  const cpInexistente = avisoCpInexistente(catalogoCp, form.codigo_postal);
+  if (cpInexistente) errores.codigo_postal = cpInexistente;
   if (!errores.calle && hayDireccionCapturada(form) && !form.calle.trim()) {
     errores.calle = 'La calle es obligatoria si capturas una dirección';
   }
@@ -205,9 +215,24 @@ const construirDireccion = (form) => {
   CAMPOS_DIRECCION.forEach(({ campo }) => {
     direccion[campo] = mayus(form[campo]) || null;
   });
-  direccion.pais = direccion.pais ?? PAIS_POR_DEFECTO;
+  direccion.pais = PAIS_POR_DEFECTO;
   return direccion;
 };
+
+const claseSoloLectura = `${inputClass} cursor-default bg-slate-50 text-slate-700`;
+
+function CargarSepomexAlAbrir({ onCargado }) {
+  useEffect(() => {
+    let vivo = true;
+    cargarCatalogoSepomex().then((cat) => {
+      if (vivo) onCargado(cat);
+    });
+    return () => {
+      vivo = false;
+    };
+  }, [onCargado]);
+  return null;
+}
 
 const mapearClinica = (c) => ({
   id: c.id_clinica,
@@ -248,10 +273,28 @@ export default function ClinicasPage() {
   const [erroresCampos, setErroresCampos] = useState({});
   const [guardando, setGuardando] = useState(false);
   const formularioRef = useRef(null);
+  const catalogoRef = useRef(null);
+  const [catalogoCp, setCatalogoCp] = useState(null);
   const [verContrasena, setVerContrasena] = useState(false);
   const [verConfirmar, setVerConfirmar] = useState(false);
 
   const creando = editandoId === null;
+
+  const alCargarCatalogo = useCallback((cat) => {
+    catalogoRef.current = cat;
+    setCatalogoCp(cat);
+    setForm((prev) => {
+      const next = ajustarConCatalogo(prev, cat);
+      const aviso = avisoCpInexistente(cat, next.codigo_postal);
+      setErroresCampos((errs) => {
+        const copia = { ...errs };
+        if (aviso) copia.codigo_postal = aviso;
+        else if (copia.codigo_postal === 'Ese código postal no existe.') delete copia.codigo_postal;
+        return copia;
+      });
+      return next;
+    });
+  }, []);
 
   const cargar = useCallback(async () => {
     try {
@@ -287,13 +330,12 @@ export default function ClinicasPage() {
         valor = valor.replace(LIMPIAR_NUMERO, '').toUpperCase();
         break;
       case 'codigo_postal':
-        valor = valor.replace(LIMPIAR_CP, '');
+        valor = valor.replace(LIMPIAR_CP, '').slice(0, 5);
         break;
       case 'calle':
       case 'colonia':
       case 'ciudad':
       case 'estado':
-      case 'pais':
       case 'referencias':
         valor = valor.replace(LIMPIAR_DIRECCION, '').toUpperCase();
         break;
@@ -310,18 +352,28 @@ export default function ClinicasPage() {
         break;
     }
 
-    setForm((prev) => ({ ...prev, [campo]: valor }));
+    setForm((prev) => {
+      if (campo === 'codigo_postal') {
+        return aplicarCodigoPostal({ ...prev, pais: PAIS_POR_DEFECTO }, catalogoRef.current, valor);
+      }
+      return { ...prev, [campo]: valor, pais: PAIS_POR_DEFECTO };
+    });
 
     // Al editar cualquier campo de dirección se limpia también el aviso de la
     // calle obligatoria, porque puede haber dejado de aplicar
     setErroresCampos((prev) => {
       const esDireccion = CAMPOS_DIRECCION.some((c) => c.campo === campo);
-      if (!prev[campo] && !(esDireccion && prev.calle)) return prev;
+      if (!prev[campo] && !(esDireccion && prev.calle) && campo !== 'codigo_postal') return prev;
       const copia = { ...prev };
       delete copia[campo];
       if (esDireccion && campo !== 'calle' && copia.calle?.includes('obligatoria')) {
         delete copia.calle;
       }
+      const avisoCp = campo === 'codigo_postal'
+        ? avisoCpInexistente(catalogoRef.current, valor)
+        : null;
+      if (avisoCp) copia.codigo_postal = avisoCp;
+      else if (campo === 'codigo_postal') delete copia.codigo_postal;
       return copia;
     });
   };
@@ -330,7 +382,7 @@ export default function ClinicasPage() {
      HANDLE BLUR para validar un campo al salir
      ------------------------------------------------------------ */
   const handleBlur = (campo) => () => {
-    const todos = validarFormulario(form, creando, clinicas);
+    const todos = validarFormulario(form, creando, clinicas, catalogoRef.current);
     setErroresCampos((prev) => {
       const copia = { ...prev };
       if (todos[campo]) copia[campo] = todos[campo];
@@ -350,7 +402,10 @@ export default function ClinicasPage() {
      GUARDAR
      ------------------------------------------------------------ */
   const handleGuardar = async () => {
-    const errores = validarFormulario(form, creando, clinicas);
+    const catalogo = await cargarCatalogoSepomex();
+    catalogoRef.current = catalogo;
+    setCatalogoCp(catalogo);
+    const errores = validarFormulario(form, creando, clinicas, catalogo);
 
     if (Object.keys(errores).length > 0) {
       setErroresCampos(errores);
@@ -405,15 +460,17 @@ export default function ClinicasPage() {
     CAMPOS_DIRECCION.forEach(({ campo }) => {
       direccion[campo] = (c[campo] ?? '').toString().toUpperCase();
     });
-    if (!direccion.pais) direccion.pais = PAIS_POR_DEFECTO;
+    direccion.pais = PAIS_POR_DEFECTO;
 
-    setForm({
-      ...FORM_INICIAL,
-      ...direccion,
-      nombre: (c.nombre ?? '').toUpperCase(),
-      identificacion_fiscal: (c.identificacion_fiscal ?? '').toUpperCase(),
-      idusuario: c.id_usuario != null ? String(c.id_usuario) : '',
-    });
+    setForm(
+      ajustarConCatalogo({
+        ...FORM_INICIAL,
+        ...direccion,
+        nombre: (c.nombre ?? '').toUpperCase(),
+        identificacion_fiscal: (c.identificacion_fiscal ?? '').toUpperCase(),
+        idusuario: c.id_usuario != null ? String(c.id_usuario) : '',
+      }, catalogoRef.current)
+    );
   };
 
   const handleEliminar = async (id) => {
@@ -435,8 +492,14 @@ export default function ClinicasPage() {
   /* ------------------------------------------------------------
      FORMULARIO
      ------------------------------------------------------------ */
+  const entradaCp = entradaSepomex(catalogoCp, form.codigo_postal);
+  const coloniasCp = entradaCp?.colonias ?? [];
+  const bloquearGeo = Boolean(entradaCp);
+  const coloniaLista = bloquearGeo && coloniasCp.length > 1;
+
   const formularioClinica = (
     <>
+    <CargarSepomexAlAbrir onCargado={alCargarCatalogo} />
     <AvisoGeneral mensaje={error} />
     <div ref={formularioRef} className="flex max-h-[65vh] flex-col gap-3 overflow-y-auto pr-1 md:max-h-[72vh] md:gap-7 md:px-2">
 
@@ -484,30 +547,50 @@ export default function ClinicasPage() {
           Opcional. Si capturas una dirección, la calle es obligatoria.
         </p>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
-          {CAMPOS_DIRECCION.map(({ campo, etiqueta, max, placeholder, inputMode, ancho }) => (
+          {CAMPOS_DIRECCION.map(({ campo, etiqueta, max, placeholder, inputMode, ancho }) => {
+            const soloLectura =
+              campo === 'pais' ||
+              ((campo === 'estado' || campo === 'ciudad') && bloquearGeo) ||
+              (campo === 'colonia' && bloquearGeo && coloniasCp.length === 1);
+            return (
             <div
               key={campo}
               data-campo={campo}
               className={ancho ? 'md:col-span-2' : undefined}
             >
               <Etiqueta>{etiqueta}:</Etiqueta>
-              <input
-                type="text"
-                inputMode={inputMode}
-                maxLength={max}
-                placeholder={placeholder}
-                className={claseConError(campo)}
-                value={form[campo]}
-                onChange={handleChange(campo)}
-                onBlur={handleBlur(campo)}
-              />
-              {erroresCampos[campo] && (
-                <p className="mt-1 text-xs text-red-600">
-                  {erroresCampos[campo]}
-                </p>
+              {campo === 'colonia' && coloniaLista ? (
+                <select
+                  className={claseConError(campo)}
+                  value={form.colonia}
+                  onChange={handleChange('colonia')}
+                  onBlur={handleBlur('colonia')}
+                >
+                  <option value="">Selecciona una colonia</option>
+                  {coloniasCp.map((colonia) => (
+                    <option key={colonia} value={colonia}>
+                      {colonia}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  inputMode={inputMode}
+                  maxLength={max}
+                  placeholder={campo === 'pais' ? undefined : placeholder}
+                  className={soloLectura ? claseSoloLectura : claseConError(campo)}
+                  value={campo === 'pais' ? PAIS_POR_DEFECTO : form[campo]}
+                  onChange={soloLectura ? undefined : handleChange(campo)}
+                  onBlur={soloLectura ? undefined : handleBlur(campo)}
+                  readOnly={soloLectura}
+                  aria-readonly={soloLectura || undefined}
+                />
               )}
+              <AvisoCampo mensaje={erroresCampos[campo]} />
             </div>
-          ))}
+            );
+          })}
         </div>
       </Seccion>
 
