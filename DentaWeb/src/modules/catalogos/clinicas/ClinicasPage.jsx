@@ -16,9 +16,15 @@ const inputClass =
 // Correo
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Nombre / dirección: letras, números, espacios y signos comunes de dirección
+// Nombre / textos de dirección: letras, números, espacios y signos comunes
 const REGEX_NOMBRE = /^[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ][A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,#°&/-]*$/;
 const REGEX_DIRECCION = /^[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ][A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,#°&/-]*$/;
+
+// Números exterior / interior: 12, 12-A, S/N, 4B
+const REGEX_NUMERO = /^[A-Z0-9][A-Z0-9/-]*$/;
+
+// Código postal (México): 5 dígitos
+const REGEX_CP = /^\d{5}$/;
 
 // RFC / NIT / RUC: alfanumérico con guiones y puntos
 const REGEX_RFC = /^[A-Z0-9][A-Z0-9.-]*$/;
@@ -26,14 +32,37 @@ const REGEX_RFC = /^[A-Z0-9][A-Z0-9.-]*$/;
 // Filtros en tiempo real
 const LIMPIAR_NOMBRE = /[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,#°&/-]/g;
 const LIMPIAR_DIRECCION = /[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s'.,#°&/-]/g;
+const LIMPIAR_NUMERO = /[^A-Za-z0-9/-]/g;
+const LIMPIAR_CP = /\D/g;
 const LIMPIAR_RFC = /[^A-Za-z0-9.-]/g;
 const LIMPIAR_CORREO = /[^A-Za-z0-9@._+-]/g;
 
 // Longitudes máximas según el DER
 const MAX_NOMBRE = 150;
-const MAX_DIRECCION = 300;
 const MAX_RFC = 50;
 const MAX_CORREO = 150;
+
+const PAIS_POR_DEFECTO = 'MÉXICO';
+
+/* ------------------------------------------------------------
+   Campos de la dirección (atomizada)
+   tipo: 'texto' | 'numero' | 'cp'
+   ------------------------------------------------------------ */
+const CAMPOS_DIRECCION = [
+  { campo: 'calle', etiqueta: 'Calle', max: 150, tipo: 'texto', placeholder: 'Ej. AV. JUÁREZ', ancho: true },
+  { campo: 'numero_exterior', etiqueta: 'Número exterior', max: 20, tipo: 'numero', placeholder: 'Ej. 123' },
+  { campo: 'numero_interior', etiqueta: 'Número interior', max: 20, tipo: 'numero', placeholder: 'Ej. 4B' },
+  { campo: 'colonia', etiqueta: 'Colonia', max: 100, tipo: 'texto', placeholder: 'Ej. CENTRO' },
+  { campo: 'codigo_postal', etiqueta: 'Código postal', max: 5, tipo: 'cp', placeholder: 'Ej. 80000', inputMode: 'numeric' },
+  { campo: 'ciudad', etiqueta: 'Ciudad', max: 100, tipo: 'texto', placeholder: 'Ej. CULIACÁN' },
+  { campo: 'estado', etiqueta: 'Estado', max: 100, tipo: 'texto', placeholder: 'Ej. SINALOA' },
+  { campo: 'pais', etiqueta: 'País', max: 100, tipo: 'texto', placeholder: 'Ej. MÉXICO' },
+  { campo: 'referencias', etiqueta: 'Referencias', max: 300, tipo: 'texto', placeholder: 'Ej. ENTRE CALLE X Y CALLE Y, FRENTE AL PARQUE', ancho: true },
+];
+
+const NOMBRES_CAMPO = Object.fromEntries(
+  CAMPOS_DIRECCION.map((c) => [c.campo, c.etiqueta.toLowerCase()])
+);
 
 /* ------------------------------------------------------------
    Validadores por campo (devuelven string o null)
@@ -50,13 +79,22 @@ const validarNombreClinica = (valor) => {
   return null;
 };
 
-const validarDireccion = (valor) => {
+// Valida un campo individual de la dirección (todos opcionales por sí solos)
+const validarCampoDireccion = (config, valor) => {
   const v = valor.trim();
-  if (!v) return null; // opcional
-  if (v.length > MAX_DIRECCION)
-    return `La dirección no puede exceder ${MAX_DIRECCION} caracteres`;
-  if (!REGEX_DIRECCION.test(v))
-    return 'La dirección contiene caracteres no permitidos';
+  if (!v) return null;
+  const nombre = NOMBRES_CAMPO[config.campo];
+  if (v.length > config.max)
+    return `El campo ${nombre} no puede exceder ${config.max} caracteres`;
+
+  if (config.tipo === 'cp') {
+    if (!REGEX_CP.test(v)) return 'El código postal debe tener 5 dígitos';
+  } else if (config.tipo === 'numero') {
+    if (!REGEX_NUMERO.test(v))
+      return `El campo ${nombre} solo admite letras, números, guiones y diagonales`;
+  } else if (!REGEX_DIRECCION.test(v)) {
+    return `El campo ${nombre} contiene caracteres no permitidos`;
+  }
   return null;
 };
 
@@ -80,6 +118,12 @@ const validarCorreo = (valor, { obligatorio = false } = {}) => {
   return null;
 };
 
+// ¿El usuario capturó algo de la dirección? (el país por defecto no cuenta)
+const hayDireccionCapturada = (form) =>
+  CAMPOS_DIRECCION.some(
+    ({ campo }) => campo !== 'pais' && (form[campo] ?? '').trim() !== ''
+  );
+
 /* ------------------------------------------------------------
    Validador global del formulario
    ------------------------------------------------------------ */
@@ -90,8 +134,14 @@ const validarFormulario = (form, creando, clinicas = []) => {
   const errNombre = validarNombreClinica(form.nombre);
   if (errNombre) errores.nombre = errNombre;
 
-  const errDir = validarDireccion(form.direccion);
-  if (errDir) errores.direccion = errDir;
+  // Dirección: cada campo + regla "si hay dirección, la calle es obligatoria"
+  CAMPOS_DIRECCION.forEach((config) => {
+    const err = validarCampoDireccion(config, form[config.campo] ?? '');
+    if (err) errores[config.campo] = err;
+  });
+  if (!errores.calle && hayDireccionCapturada(form) && !form.calle.trim()) {
+    errores.calle = 'La calle es obligatoria si capturas una dirección';
+  }
 
   const errRfc = validarRFC(form.identificacion_fiscal);
   if (errRfc) errores.identificacion_fiscal = errRfc;
@@ -126,7 +176,15 @@ const validarFormulario = (form, creando, clinicas = []) => {
 
 const FORM_INICIAL = {
   nombre: '',
-  direccion: '',
+  calle: '',
+  numero_exterior: '',
+  numero_interior: '',
+  colonia: '',
+  codigo_postal: '',
+  ciudad: '',
+  estado: '',
+  pais: PAIS_POR_DEFECTO,
+  referencias: '',
   identificacion_fiscal: '',
   idusuario: '',
   correo: '',
@@ -137,12 +195,24 @@ const FORM_INICIAL = {
 const comoLista = (resp, clave) =>
   Array.isArray(resp) ? resp : resp?.[clave] ?? resp?.data ?? [];
 
-const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
+const mayus = (valor) => (valor ?? '').trim().toLocaleUpperCase('es-MX');
+
+// Arma el objeto de dirección que espera el backend (o null si no hay dirección)
+const construirDireccion = (form) => {
+  if (!hayDireccionCapturada(form)) return null;
+
+  const direccion = {};
+  CAMPOS_DIRECCION.forEach(({ campo }) => {
+    direccion[campo] = mayus(form[campo]) || null;
+  });
+  direccion.pais = direccion.pais ?? PAIS_POR_DEFECTO;
+  return direccion;
+};
 
 const mapearClinica = (c) => ({
   id: c.id_clinica,
   nombre: c.nombre,
-  direccion: c.direccion,
+  direccion: c.direccion, // texto armado por el backend
   identificacion_fiscal: c.identificacion_fiscal,
   correo_usuario: c.correo_usuario,
   estado: c.activo ? 'Activa' : 'Inactiva',
@@ -212,7 +282,19 @@ export default function ClinicasPage() {
       case 'nombre':
         valor = valor.replace(LIMPIAR_NOMBRE, '').toUpperCase();
         break;
-      case 'direccion':
+      case 'numero_exterior':
+      case 'numero_interior':
+        valor = valor.replace(LIMPIAR_NUMERO, '').toUpperCase();
+        break;
+      case 'codigo_postal':
+        valor = valor.replace(LIMPIAR_CP, '');
+        break;
+      case 'calle':
+      case 'colonia':
+      case 'ciudad':
+      case 'estado':
+      case 'pais':
+      case 'referencias':
         valor = valor.replace(LIMPIAR_DIRECCION, '').toUpperCase();
         break;
       case 'identificacion_fiscal':
@@ -230,10 +312,16 @@ export default function ClinicasPage() {
 
     setForm((prev) => ({ ...prev, [campo]: valor }));
 
+    // Al editar cualquier campo de dirección se limpia también el aviso de la
+    // calle obligatoria, porque puede haber dejado de aplicar
     setErroresCampos((prev) => {
-      if (!prev[campo]) return prev;
+      const esDireccion = CAMPOS_DIRECCION.some((c) => c.campo === campo);
+      if (!prev[campo] && !(esDireccion && prev.calle)) return prev;
       const copia = { ...prev };
       delete copia[campo];
+      if (esDireccion && campo !== 'calle' && copia.calle?.includes('obligatoria')) {
+        delete copia.calle;
+      }
       return copia;
     });
   };
@@ -278,7 +366,7 @@ export default function ClinicasPage() {
 
       const datosBase = {
         nombre: mayus(form.nombre),
-        direccion: mayus(form.direccion) || null,
+        direccion: construirDireccion(form),
         identificacion_fiscal: mayus(form.identificacion_fiscal) || null,
       };
 
@@ -296,7 +384,7 @@ export default function ClinicasPage() {
       }
 
       resetFormulario();
-       cargar();
+      cargar();
       return true;
     } catch (err) {
       setError(err.message || 'Error al guardar la clínica');
@@ -312,10 +400,17 @@ export default function ClinicasPage() {
     setEditandoId(id);
     setError(null);
     setErroresCampos({});
+
+    const direccion = {};
+    CAMPOS_DIRECCION.forEach(({ campo }) => {
+      direccion[campo] = (c[campo] ?? '').toString().toUpperCase();
+    });
+    if (!direccion.pais) direccion.pais = PAIS_POR_DEFECTO;
+
     setForm({
       ...FORM_INICIAL,
+      ...direccion,
       nombre: (c.nombre ?? '').toUpperCase(),
-      direccion: (c.direccion ?? '').toUpperCase(),
       identificacion_fiscal: (c.identificacion_fiscal ?? '').toUpperCase(),
       idusuario: c.id_usuario != null ? String(c.id_usuario) : '',
     });
@@ -338,7 +433,7 @@ export default function ClinicasPage() {
       : inputClass;
 
   /* ------------------------------------------------------------
-     FORMULARIO (misma vista, solo agregamos clases y mensajes)
+     FORMULARIO
      ------------------------------------------------------------ */
   const formularioClinica = (
     <>
@@ -381,23 +476,38 @@ export default function ClinicasPage() {
               </p>
             )}
           </div>
-          <div data-campo="direccion" className="md:col-span-2">
-            <Etiqueta>Dirección completa:</Etiqueta>
-            <input
-              type="text"
-              maxLength={MAX_DIRECCION}
-              placeholder="CALLE, NÚMERO, CIUDAD"
-              className={claseConError('direccion')}
-              value={form.direccion}
-              onChange={handleChange('direccion')}
-              onBlur={handleBlur('direccion')}
-            />
-            {erroresCampos.direccion && (
-              <p className="mt-1 text-xs text-red-600">
-                {erroresCampos.direccion}
-              </p>
-            )}
-          </div>
+        </div>
+      </Seccion>
+
+      <Seccion titulo="Dirección">
+        <p className="text-xs text-slate-500 md:text-sm">
+          Opcional. Si capturas una dirección, la calle es obligatoria.
+        </p>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
+          {CAMPOS_DIRECCION.map(({ campo, etiqueta, max, placeholder, inputMode, ancho }) => (
+            <div
+              key={campo}
+              data-campo={campo}
+              className={ancho ? 'md:col-span-2' : undefined}
+            >
+              <Etiqueta>{etiqueta}:</Etiqueta>
+              <input
+                type="text"
+                inputMode={inputMode}
+                maxLength={max}
+                placeholder={placeholder}
+                className={claseConError(campo)}
+                value={form[campo]}
+                onChange={handleChange(campo)}
+                onBlur={handleBlur(campo)}
+              />
+              {erroresCampos[campo] && (
+                <p className="mt-1 text-xs text-red-600">
+                  {erroresCampos[campo]}
+                </p>
+              )}
+            </div>
+          ))}
         </div>
       </Seccion>
 
