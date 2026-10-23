@@ -7,9 +7,18 @@ import { serviciosApi, clinicasApi } from '../../../services/api.js';
 const inputClass =
   'w-full rounded-xl border border-slate-200 bg-white p-3 outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500';
 
+// Categorías que acepta el backend
+const CATEGORIAS = [
+  { valor: 'consulta', etiqueta: 'Consulta', ejemplo: 'Ej. LIMPIEZA DENTAL' },
+  { valor: 'estudio', etiqueta: 'Estudio', ejemplo: 'Ej. RADIOGRAFÍA PANORÁMICA' },
+];
+
+const CATEGORIA_POR_DEFECTO = 'consulta';
+
 const FORM_INICIAL = {
   nombre: '',
   descripcion: '',
+  categoria: CATEGORIA_POR_DEFECTO,
   idsClinicas: [], // arreglo de IDs (números)
 };
 
@@ -18,6 +27,10 @@ const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
 // Acepta un arreglo directo o la lista envuelta en un objeto
 const comoLista = (resp, clave) =>
   Array.isArray(resp) ? resp : resp?.[clave] ?? resp?.data ?? [];
+
+// Etiqueta legible de una categoría ('estudio' → 'Estudio')
+const etiquetaCategoria = (valor) =>
+  CATEGORIAS.find((c) => c.valor === valor)?.etiqueta ?? 'Consulta';
 
 // Obtiene las clínicas de un servicio. Espera `clinicas: [{ id_clinica, nombre }]`
 // y mantiene compatibilidad con el formato anterior (una sola clínica).
@@ -34,6 +47,7 @@ const mapearServicio = (s) => ({
   id: s.id_servicio,
   nombre: s.nombre,
   descripcion: s.descripcion,
+  categoria: etiquetaCategoria(s.categoria),
   clinica: clinicasDeServicio(s)
     .map((c) => c.nombre)
     .filter(Boolean)
@@ -90,9 +104,17 @@ export default function ServiciosPage() {
     [clinicas, form.idsClinicas]
   );
 
+  const ejemploNombre =
+    CATEGORIAS.find((c) => c.valor === form.categoria)?.ejemplo ?? CATEGORIAS[0].ejemplo;
+
   const handleChange = (campo) => (e) => {
     const valor = e.target.value.toLocaleUpperCase('es-MX');
     setForm((prev) => ({ ...prev, [campo]: valor }));
+  };
+
+  const seleccionarCategoria = (valor) => {
+    setForm((prev) => ({ ...prev, categoria: valor }));
+    setErroresCampos((prev) => ({ ...prev, categoria: undefined }));
   };
 
   const toggleClinica = (id) => {
@@ -128,6 +150,9 @@ export default function ServiciosPage() {
   // Devuelve true si guardó bien (para que el modal pueda cerrarse)
   const handleGuardar = async () => {
     const errores = {};
+    if (!CATEGORIAS.some((c) => c.valor === form.categoria)) {
+      errores.categoria = 'Selecciona el tipo de servicio';
+    }
     if (form.idsClinicas.length === 0) errores.idsClinicas = 'Selecciona al menos una clínica';
     if (!form.nombre.trim()) errores.nombre = 'El nombre es obligatorio';
     else if (form.nombre.trim().length > 100) errores.nombre = 'El nombre no puede exceder 100 caracteres';
@@ -146,6 +171,7 @@ export default function ServiciosPage() {
       const payload = {
         nombre: mayus(form.nombre),
         descripcion: form.descripcion.trim() ? mayus(form.descripcion) : null,
+        categoria: form.categoria,
         idsClinicas: form.idsClinicas,
       };
       if (editandoId) {
@@ -175,6 +201,7 @@ export default function ServiciosPage() {
     setForm({
       nombre: (s.nombre ?? '').toLocaleUpperCase('es-MX'),
       descripcion: (s.descripcion ?? '').toLocaleUpperCase('es-MX'),
+      categoria: s.categoria ?? CATEGORIA_POR_DEFECTO,
       idsClinicas: clinicasDeServicio(s).map((c) => Number(c.id_clinica)),
     });
   };
@@ -193,6 +220,33 @@ export default function ServiciosPage() {
     <>
       <AvisoGeneral mensaje={error} />
       <div ref={formularioRef} className="flex flex-col gap-4">
+        <div data-campo="categoria">
+          <label className="mb-1 block text-sm font-medium text-slate-700">
+            Tipo de servicio:<span className="ml-0.5 text-red-500">*</span>
+          </label>
+          <div className="grid grid-cols-2 gap-2" role="group" aria-label="Tipo de servicio">
+            {CATEGORIAS.map(({ valor, etiqueta }) => {
+              const activa = form.categoria === valor;
+              return (
+                <button
+                  key={valor}
+                  type="button"
+                  aria-pressed={activa}
+                  onClick={() => seleccionarCategoria(valor)}
+                  className={`cursor-pointer rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${
+                    activa
+                      ? 'border-teal-600 bg-teal-50 text-teal-700'
+                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {etiqueta}
+                </button>
+              );
+            })}
+          </div>
+          <AvisoCampo mensaje={erroresCampos.categoria} />
+        </div>
+
         <div data-campo="idsClinicas">
           <div className="mb-1 flex items-center justify-between">
             <label className="block text-sm font-medium text-slate-700">
@@ -246,7 +300,7 @@ export default function ServiciosPage() {
           <input
             type="text"
             maxLength={100}
-            placeholder="Ej. LIMPIEZA DENTAL"
+            placeholder={ejemploNombre}
             className={inputClass}
             value={form.nombre}
             onChange={handleChange('nombre')}
@@ -271,9 +325,9 @@ export default function ServiciosPage() {
   return (
     <CatalogoPage
       titulo="Servicios"
-      subtitulo="Gestiona los servicios que ofrece cada clínica."
+      subtitulo="Gestiona las consultas y estudios que ofrece cada clínica."
       textoBotonNuevo="Agregar servicio"
-      placeholderBusqueda="Buscar por nombre, descripción o clínica..."
+      placeholderBusqueda="Buscar por nombre, descripción, tipo o clínica..."
       datos={servicios.map(mapearServicio)}
       cargando={cargando}
       errorCarga={errorCarga}
