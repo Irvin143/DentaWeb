@@ -39,7 +39,9 @@ const validarBody = (body = {}) => {
     const telefono = String(body.telefono).replace(/\D/g, '');
     const cedula = textoOpcional(body.cedula);
     const idusuario = body.idusuario ?? null;
-    const idclinica = body.idclinica ?? null;
+
+    // undefined = no viene (en PUT no se tocan las clínicas del odontólogo)
+    let ids_clinicas = body.ids_clinicas ?? undefined;
 
     if (!nombre) return { error: 'El nombre es obligatorio' };
     if (nombre.length > 100) return { error: 'El nombre no puede exceder 100 caracteres' };
@@ -50,8 +52,16 @@ const validarBody = (body = {}) => {
     if (idusuario !== null && !idValido(idusuario)) {
         return { error: 'idusuario debe ser un entero positivo' };
     }
-    if (idclinica !== null && !idValido(idclinica)) {
-        return { error: 'idclinica debe ser un entero positivo' };
+
+    if (ids_clinicas !== undefined) {
+        if (!Array.isArray(ids_clinicas)) {
+            return { error: 'ids_clinicas debe ser un arreglo' };
+        }
+        if (ids_clinicas.some((id) => !idValido(id))) {
+            return { error: 'Cada id de clínica debe ser un entero positivo' };
+        }
+        // Números únicos
+        ids_clinicas = [...new Set(ids_clinicas.map(Number))];
     }
 
     return {
@@ -61,8 +71,8 @@ const validarBody = (body = {}) => {
             ape_mat,
             telefono,
             cedula,
+            ids_clinicas,
             idusuario: idusuario === null ? null : Number(idusuario),
-            idclinica: idclinica === null ? null : Number(idclinica),
         },
     };
 };
@@ -83,7 +93,7 @@ export const listar = async (req, res) => {
         const odontologos = await odontologoService.obtenerOdontologos({
             filtroActivo,
             idUsuario: sub,
-            paquete,  
+            paquete,
         });
         res.json(odontologos);
     } catch (err) {
@@ -111,17 +121,18 @@ export const crear = async (req, res) => {
         return res.status(400).json({ error: 'Correo y contraseña son obligatorios' });
     }
 
-    if(datos.idclinica == null) {
-        return res.status(400).json({ error: 'No se proporciono id de clínica' });
+    // Al crear se necesita al menos una clínica
+    if (!datos.ids_clinicas?.length) {
+        return res.status(400).json({ error: 'Selecciona al menos una clínica' });
     }
 
     const credenciales = validarCredenciales(req.body);
     if (credenciales.error) return res.status(400).json({ error: credenciales.error });
 
-    const ocupado = await conflictoTelefono(datos.telefono);
-    if (ocupado) return res.status(409).json({ error: ocupado });
-
     try {
+        const ocupado = await conflictoTelefono(datos.telefono);
+        if (ocupado) return res.status(409).json({ error: ocupado });
+
         const creado = await odontologoService.crearOdontologo({
             correo: credenciales.correo,
             contrasena: credenciales.contrasena,
@@ -130,7 +141,7 @@ export const crear = async (req, res) => {
             ape_mat: datos.ape_mat,
             telefono: datos.telefono,
             cedula: datos.cedula,
-            id_clinica: datos.idclinica,
+            ids_clinicas: datos.ids_clinicas,
         });
 
         // La función SQL devuelve solo ids; traemos el registro completo
@@ -140,14 +151,18 @@ export const crear = async (req, res) => {
         responderError(res, err);
     }
 };
+
 export const actualizar = async (req, res) => {
     const { id } = req.params;
     if (!idValido(id)) return res.status(400).json({ error: 'ID inválido' });
+
     const { datos, error } = validarBody(req.body);
     if (error) return res.status(400).json({ error });
-    const ocupado = await conflictoTelefono(datos.telefono, { idOdontologo: Number(id) });
-    if (ocupado) return res.status(409).json({ error: ocupado });
+
     try {
+        const ocupado = await conflictoTelefono(datos.telefono, { idOdontologo: Number(id) });
+        if (ocupado) return res.status(409).json({ error: ocupado });
+
         const odontologo = await odontologoService.actualizarOdontologo(Number(id), datos);
         if (!odontologo) return res.status(404).json({ error: 'Odontólogo no encontrado o desactivado' });
         res.json(odontologo);
@@ -158,7 +173,7 @@ export const actualizar = async (req, res) => {
 
 export const eliminar = async (req, res) => {
     const { id } = req.params;
-    
+
     if (!idValido(id)) return res.status(400).json({ error: 'ID inválido' });
     try {
         const ok = await odontologoService.eliminarOdontologo(Number(id));

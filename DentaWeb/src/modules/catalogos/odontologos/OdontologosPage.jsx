@@ -141,9 +141,9 @@ const validarFormulario = (
     if (duplicado) errores.cedula = 'Ya existe un odontólogo con esa cédula';
   }
 
-  // --- Clínica (obligatoria solo al crear, según tu lógica original) ---
-  if (creando && !form.idclinica) {
-    errores.idclinica = 'La clínica es obligatoria';
+  // --- Clínicas (al menos una al crear, según tu lógica original) ---
+  if (creando && form.ids_clinicas.length === 0) {
+    errores.ids_clinicas = 'Selecciona al menos una clínica';
   }
 
   // --- Credenciales (solo al crear) ---
@@ -173,7 +173,7 @@ const FORM_INICIAL = {
   ape_mat: '',
   telefono: '',
   cedula: '',
-  idclinica: '',
+  ids_clinicas: [], // arreglo de ids (número)
   idusuario: '',
   correo: '',
   contrasena: '',
@@ -185,6 +185,11 @@ const comoLista = (resp, clave) =>
 
 const mayus = (valor) => valor.trim().toLocaleUpperCase('es-MX');
 
+// Nombres de las clínicas del odontólogo, separados por coma
+const nombresClinicas = (o) =>
+  o.nombre_clinica ??
+  (Array.isArray(o.clinicas) ? o.clinicas.map((c) => c.nombre).join(', ') : '');
+
 const mapearOdontologo = (o) => ({
   id: o.id_odontologo,
   nombre:
@@ -193,7 +198,7 @@ const mapearOdontologo = (o) => ({
   cedula: o.cedula,
   telefono: o.telefono,
   correo_usuario: o.correo_usuario,
-  clinica: o.nombre_clinica,
+  clinica: nombresClinicas(o),
   estado: o.activo ? 'Activo' : 'Inactivo',
 });
 
@@ -273,12 +278,13 @@ export default function OdontologosPage() {
     cargarCatalogos();
   }, [cargar, cargarCatalogos]);
 
+  // Clínicas activas, más las ya asignadas aunque estén inactivas
   const opcionesClinica = useMemo(
     () =>
       clinicas.filter(
-        (c) => c.activo || String(c.id_clinica) === String(form.idclinica)
+        (c) => c.activo || form.ids_clinicas.includes(Number(c.id_clinica))
       ),
-    [clinicas, form.idclinica]
+    [clinicas, form.ids_clinicas]
   );
 
   /* ------------------------------------------------------------
@@ -302,7 +308,6 @@ export default function OdontologosPage() {
       case 'correo':
         valor = valor.replace(LIMPIAR_CORREO, '').toLowerCase();
         break;
-      case 'idclinica':
       case 'contrasena':
       case 'confirmarContrasena':
         break;
@@ -316,6 +321,24 @@ export default function OdontologosPage() {
       if (!prev[campo]) return prev;
       const copia = { ...prev };
       delete copia[campo];
+      return copia;
+    });
+  };
+
+  // Marca / desmarca una clínica en la lista
+  const toggleClinica = (idClinica) => {
+    const id = Number(idClinica);
+    setForm((prev) => ({
+      ...prev,
+      ids_clinicas: prev.ids_clinicas.includes(id)
+        ? prev.ids_clinicas.filter((x) => x !== id)
+        : [...prev.ids_clinicas, id],
+    }));
+
+    setErroresCampos((prev) => {
+      if (!prev.ids_clinicas) return prev;
+      const copia = { ...prev };
+      delete copia.ids_clinicas;
       return copia;
     });
   };
@@ -375,7 +398,7 @@ export default function OdontologosPage() {
         ape_mat: mayus(form.ape_mat),
         telefono: form.telefono.trim().replace(/[\s()-]/g, ''),
         cedula: mayus(form.cedula),
-        idclinica: form.idclinica ? Number(form.idclinica) : null,
+        ids_clinicas: form.ids_clinicas.map(Number),
       };
 
       if (editandoId) {
@@ -405,6 +428,14 @@ export default function OdontologosPage() {
   const handleEditar = (id) => {
     const o = odontologos.find((x) => x.id_odontologo === id);
     if (!o) return;
+
+    // El backend manda ids_clinicas; si no viniera, se arma desde clinicas
+    const idsClinicas = Array.isArray(o.ids_clinicas)
+      ? o.ids_clinicas
+      : Array.isArray(o.clinicas)
+        ? o.clinicas.map((c) => c.id_clinica)
+        : [];
+
     setEditandoId(id);
     setError(null);
     setErroresCampos({});
@@ -415,7 +446,7 @@ export default function OdontologosPage() {
       ape_mat: (o.ape_mat ?? '').toUpperCase(),
       telefono: o.telefono ?? '',
       cedula: o.cedula ?? '',
-      idclinica: o.id_clinica != null ? String(o.id_clinica) : '',
+      ids_clinicas: idsClinicas.map(Number),
       idusuario: o.id_usuario != null ? String(o.id_usuario) : '',
     });
   };
@@ -540,26 +571,56 @@ export default function OdontologosPage() {
               </p>
             )}
           </div>
-          <div data-campo="idclinica">
-            <Etiqueta requerido={creando}>Clínica:</Etiqueta>
-            <select
-              className={claseConError('idclinica')}
-              value={form.idclinica}
-              onChange={handleChange('idclinica')}
-              onBlur={handleBlur('idclinica')}
+
+          <div data-campo="ids_clinicas" className="md:col-span-2">
+            <Etiqueta requerido={creando}>
+              Clínicas donde trabaja
+              {form.ids_clinicas.length > 0 && (
+                <span className="ml-2 font-normal text-slate-500">
+                  ({form.ids_clinicas.length}{' '}
+                  {form.ids_clinicas.length === 1 ? 'seleccionada' : 'seleccionadas'})
+                </span>
+              )}
+              :
+            </Etiqueta>
+            <div
+              className={`max-h-48 overflow-y-auto rounded-lg border bg-white p-1 md:rounded-xl md:p-2 ${
+                erroresCampos.ids_clinicas ? 'border-red-400' : 'border-slate-200'
+              }`}
             >
-              <option value="">
-                {creando ? 'Selecciona una clínica' : 'Sin clínica'}
-              </option>
-              {opcionesClinica.map((c) => (
-                <option key={c.id_clinica} value={c.id_clinica}>
-                  {c.nombre}
-                </option>
-              ))}
-            </select>
-            {erroresCampos.idclinica && (
+              {opcionesClinica.length === 0 ? (
+                <p className="px-2 py-2 text-sm text-slate-500">
+                  No hay clínicas disponibles.
+                </p>
+              ) : (
+                opcionesClinica.map((c) => {
+                  const id = Number(c.id_clinica);
+                  const marcada = form.ids_clinicas.includes(id);
+                  return (
+                    <label
+                      key={c.id_clinica}
+                      className={`flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors md:gap-3 md:py-2 md:text-base ${
+                        marcada ? 'bg-teal-50 text-teal-800' : 'text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 cursor-pointer accent-teal-600"
+                        checked={marcada}
+                        onChange={() => toggleClinica(id)}
+                      />
+                      <span className="flex-1">{c.nombre}</span>
+                      {!c.activo && (
+                        <span className="text-xs text-slate-400">Inactiva</span>
+                      )}
+                    </label>
+                  );
+                })
+              )}
+            </div>
+            {erroresCampos.ids_clinicas && (
               <p className="mt-1 text-xs text-red-600">
-                {erroresCampos.idclinica}
+                {erroresCampos.ids_clinicas}
               </p>
             )}
           </div>
@@ -659,7 +720,7 @@ export default function OdontologosPage() {
   return (
     <CatalogoPage
       titulo="Odontólogos"
-      subtitulo="Gestiona el personal odontológico y su clínica asignada."
+      subtitulo="Gestiona el personal odontológico y las clínicas donde trabaja."
       textoBotonNuevo="Agregar odontólogo"
       placeholderBusqueda="Buscar por nombre, cédula, correo o clínica..."
       datos={odontologos.map(mapearOdontologo)}
