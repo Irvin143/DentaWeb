@@ -1,6 +1,7 @@
-import * as servicioService from '../services/serviciosServices.js';
+import * as servicioService from '../services/catalogos/serviciosServices.js';
 
 const FILTROS_VALIDOS = ['true', 'false', 'todos'];
+const CATEGORIAS_VALIDAS = ['consulta', 'estudio'];
 
 const responderError = (res, err) => {
     if (err.status) return res.status(err.status).json({ error: err.message });
@@ -10,29 +11,17 @@ const responderError = (res, err) => {
 
 const idValido = (valor) => Number.isInteger(Number(valor)) && Number(valor) > 0;
 
-// Valida y normaliza el body (POST y PUT)
-const validarBody = (body = {}) => {
-    const nombre = body.nombre?.toString().trim();
-    const descripcion = body.descripcion?.toString().trim() || null;
-    const idclinica = body.idclinica ?? null;
-
-    if (!idclinica) return { error: 'La clínica es obligatoria' };
-
-    if (!nombre) return { error: 'El nombre es obligatorio' };
-    if (nombre.length > 100) return { error: 'El nombre no puede exceder 100 caracteres' };
-
-    return { datos: { nombre, descripcion, idclinica } };
-};
 
 export const listar = async (req, res) => {
     const filtroActivo = req.query.activo ?? 'todos';
+    const categoria = req.query.categoria ?? null;
     const { paquete, sub } = req.usuario || {};
 
     if (!FILTROS_VALIDOS.includes(filtroActivo)) {
         return res.status(400).json({ error: "activo debe ser 'true', 'false' o 'todos'" });
     }
     try {
-        res.json(await servicioService.obtenerServicios({ filtroActivo, idUsuario: sub, paquete }));
+        res.json(await servicioService.obtenerServicios({ filtroActivo, idUsuario: sub, paquete, categoria }));
     } catch (err) {
         responderError(res, err);
     }
@@ -40,13 +29,13 @@ export const listar = async (req, res) => {
 
 export async function listarCatalogo(req, res, next) {
     try {
-        const servicios = await servicioService.obtenerCatalogoServicios();
+        const categoria = req.query.categoria ?? null;
+        const servicios = await servicioService.obtenerCatalogoServicios({ categoria });
         res.json(servicios);
     } catch (err) {
         next(err);
     }
 }
-
 
 export const obtenerPorId = async (req, res) => {
     const { id } = req.params;
@@ -59,9 +48,11 @@ export const obtenerPorId = async (req, res) => {
         responderError(res, err);
     }
 };
-const validarBodyCrear = (body) => {
+
+const validarBody = (body) => {
     const { nombre } = body;
     const descripcion = body.descripcion ?? '';
+    const categoria = body.categoria ?? 'consulta';
     const ids = body.idsClinicas ?? (body.idclinica ? [body.idclinica] : []);
 
     if (typeof nombre !== 'string' || !nombre.trim())
@@ -70,6 +61,12 @@ const validarBodyCrear = (body) => {
         return { error: 'El nombre no puede exceder 100 caracteres' };
     if (typeof descripcion !== 'string')
         return { error: 'La descripción debe ser texto' };
+
+    const catValida = String(categoria).trim().toLowerCase();
+    if (!CATEGORIAS_VALIDAS.includes(catValida)) {
+        return { error: "La categoría debe ser 'consulta' o 'estudio'" };
+    }
+
     if (!Array.isArray(ids) || ids.length === 0)
         return { error: 'Debe asignarse al menos una clínica' };
 
@@ -81,14 +78,14 @@ const validarBodyCrear = (body) => {
         datos: {
             nombre: nombre.trim(),
             descripcion: descripcion.trim() || null,
+            categoria: catValida,
             idsClinicas: [...new Set(idsClinicas)],
         },
     };
 };
 
 export const crear = async (req, res) => {
-    const { datos, error } = validarBodyCrear(req.body);
-
+    const { datos, error } = validarBody(req.body);
     if (error) return res.status(400).json({ error });
     try {
         const servicio = await servicioService.crearServicio(datos);

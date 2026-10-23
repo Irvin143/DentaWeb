@@ -1,4 +1,4 @@
-import conexion from '../services/conexion.js'; // la misma ruta que usas en los demás services
+import conexion from '../conexion.js'; // la misma ruta que usas en los demás services
 import bcrypt from 'bcrypt';
 
 const SALT_ROUNDS = 12;

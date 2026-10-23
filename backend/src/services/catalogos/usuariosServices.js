@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import conexion from '../services/conexion.js'; // la misma ruta que usas en los demás services
+import conexion from '../conexion.js'; // la misma ruta que usas en los demás services
 
 const SALT_ROUNDS = 10;
 

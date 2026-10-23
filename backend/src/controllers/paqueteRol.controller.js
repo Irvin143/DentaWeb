@@ -1,4 +1,4 @@
-import * as paqueteRolService from '../services/paqueteRolServices.js';
+import * as paqueteRolService from '../services/catalogos/paqueteRolServices.js';
 
 const FILTROS_VALIDOS = ['true', 'false', 'todos'];
 

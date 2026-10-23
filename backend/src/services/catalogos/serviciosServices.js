@@ -1,4 +1,6 @@
-import conexion from '../services/conexion.js'; // la misma ruta que usas en los demás services
+import conexion from '../conexion.js'; // la misma ruta que usas en los demás services
+
+const CATEGORIAS_VALIDAS = ['consulta', 'estudio'];
 
 const errorHttp = (status, mensaje) => {
     const error = new Error(mensaje);
@@ -10,7 +12,21 @@ const manejarErrorPg = (err) => {
     // Solo se dispara si tienes un índice único (ej. sobre nombre WHERE activo)
     if (err.code === '23505') throw errorHttp(409, 'Ya existe un servicio activo con ese nombre');
     if (err.code === '23503') throw errorHttp(400, 'La clínica indicada no existe');
+    if (err.code === '23514') throw errorHttp(400, "La categoría debe ser 'consulta' o 'estudio'");
     throw err;
+};
+
+// Normaliza y valida la categoría.
+// undefined / null / '' → valorPorDefecto; cualquier otro valor debe ser válido.
+const normalizarCategoria = (categoria, valorPorDefecto = null) => {
+    if (categoria === undefined || categoria === null || categoria === '') {
+        return valorPorDefecto;
+    }
+    const valor = String(categoria).trim().toLowerCase();
+    if (!CATEGORIAS_VALIDAS.includes(valor)) {
+        throw errorHttp(400, "La categoría debe ser 'consulta' o 'estudio'");
+    }
+    return valor;
 };
 
 // Ejecuta varias consultas como una sola operación: o se guardan todas o ninguna
@@ -36,6 +52,7 @@ const SELECT_BASE = `
         s.idServicio AS id_servicio,
         s.nombre,
         s.descripcion,
+        s.categoria,
         s.activo,
         cs.idClinica AS id_clinica,
         c.nombre AS nombre_clinica
@@ -50,13 +67,18 @@ const SELECT_BASE = `
     LEFT JOIN Clinicas c ON c.idClinica = cs.idClinica
 `;
 
-const RETURNING_SERVICIO = 'RETURNING idServicio AS id_servicio, nombre, descripcion, activo';
+const RETURNING_SERVICIO =
+    'RETURNING idServicio AS id_servicio, nombre, descripcion, categoria, activo';
 
+// ---------- LISTAR ----------
+// categoria (opcional): 'consulta' | 'estudio'; si no se manda, devuelve todas
 export const obtenerServicios = async ({
     filtroActivo = 'todos',
     idUsuario = null,
-    paquete = null
+    paquete = null,
+    categoria = null,
 } = {}) => {
+    const categoriaFiltro = normalizarCategoria(categoria);
     const esClinica = paquete === 'Clinica';
     let idClinicaFiltro = null;
 
@@ -74,6 +96,7 @@ export const obtenerServicios = async ({
         SELECT s.idServicio AS id_servicio,
                s.nombre,
                s.descripcion,
+               s.categoria,
                s.activo,
                COALESCE(
                  json_agg(
@@ -87,36 +110,43 @@ export const obtenerServicios = async ({
         LEFT JOIN Clinicas c ON c.idClinica = cs.idClinica
         WHERE ($1::text = 'todos' OR s.activo = ($1::text = 'true'))
           AND ($2::int IS NULL OR cs.idClinica = $2::int)
+          AND ($3::text IS NULL OR s.categoria = $3::text)
         GROUP BY s.idServicio
-        ORDER BY s.nombre, s.idServicio;
+        ORDER BY s.categoria, s.nombre, s.idServicio;
     `;
 
-    const { rows } = await conexion.query(query, [filtroActivo, idClinicaFiltro]);
+    const { rows } = await conexion.query(query, [filtroActivo, idClinicaFiltro, categoriaFiltro]);
     return rows;
 };
+
 // ---------- CATÁLOGO PARA PACIENTES ----------
 // Solo servicios activos con una relación activa a una clínica.
 // Devuelve únicamente los campos que el paciente necesita.
-export const obtenerCatalogoServicios = async () => {
-    const { rows } = await conexion.query(`
+// categoria (opcional): 'consulta' | 'estudio'
+export const obtenerCatalogoServicios = async ({ categoria = null } = {}) => {
+    const categoriaFiltro = normalizarCategoria(categoria);
+
+    const { rows } = await conexion.query(
+        `
         SELECT
             s.idServicio AS id_servicio,
             s.nombre,
-            s.descripcion
+            s.descripcion,
+            s.categoria
         FROM Servicios s
         WHERE s.activo
+          AND ($1::text IS NULL OR s.categoria = $1::text)
           AND EXISTS (
               SELECT 1
               FROM Clinica_Servicio cs
               WHERE cs.idServicio = s.idServicio AND cs.activo
           )
-        ORDER BY s.nombre, s.idServicio;
-    `);
+        ORDER BY s.categoria, s.nombre, s.idServicio;
+        `,
+        [categoriaFiltro]
+    );
     return rows;
 };
-
-
-
 
 // ---------- OBTENER POR ID ----------
 export const obtenerServicioPorId = async (id) => {
@@ -129,15 +159,23 @@ export const obtenerServicioPorId = async (id) => {
 };
 
 // ---------- CREAR ----------
-// Crea el servicio y lo liga a la clínica en una sola transacción
-export const crearServicio = async ({ nombre, descripcion, idsClinicas = [] }) => {
+// Crea el servicio y lo liga a las clínicas en una sola transacción.
+// categoria: 'consulta' (por defecto) | 'estudio'
+export const crearServicio = async ({
+    nombre,
+    descripcion,
+    categoria = 'consulta',
+    idsClinicas = [],
+}) => {
+    const categoriaFinal = normalizarCategoria(categoria, 'consulta');
+
     try {
         return await enTransaccion(async (cliente) => {
             const { rows } = await cliente.query(
-                `INSERT INTO Servicios (nombre, descripcion)
-                 VALUES ($1, $2)
+                `INSERT INTO Servicios (nombre, descripcion, categoria)
+                 VALUES ($1, $2, $3)
                  ${RETURNING_SERVICIO}`,
-                [nombre, descripcion]
+                [nombre, descripcion, categoriaFinal]
             );
             const servicio = rows[0];
 
@@ -159,25 +197,30 @@ export const crearServicio = async ({ nombre, descripcion, idsClinicas = [] }) =
 
 // ---------- ACTUALIZAR (solo registros activos) ----------
 // Reemplaza nombre y descripción; si descripcion es null, se borra.
+// categoria: si no viene, se conserva la actual.
 // Si llega idclinica, cambia la clínica del servicio (o la crea si no tenía)
-export const actualizarServicio = async (id, { nombre, descripcion, idclinica }) => {
+export const actualizarServicio = async (id, { nombre, descripcion, categoria, idclinica }) => {
+    const categoriaFinal = normalizarCategoria(categoria); // null = no cambiar
+
     try {
         return await enTransaccion(async (cliente) => {
             const { rows } = await cliente.query(
                 `UPDATE Servicios
-                 SET nombre = $2, descripcion = $3
-                 WHERE idServicio = $1 
+                 SET nombre = $2,
+                     descripcion = $3,
+                     categoria = COALESCE($4::text, categoria)
+                 WHERE idServicio = $1
                  ${RETURNING_SERVICIO}`,
-                [id, nombre, descripcion]
+                [id, nombre, descripcion, categoriaFinal]
             );
             const servicio = rows[0];
-            if (!servicio) return null; // no existe o está desactivado
+            if (!servicio) return null; // no existe
 
             if (idclinica != null) {
                 const { rowCount } = await cliente.query(
                     `UPDATE Clinica_Servicio
                      SET idClinica = $2
-                     WHERE idServicio = $1 `,
+                     WHERE idServicio = $1`,
                     [id, idclinica]
                 );
                 if (rowCount === 0) {

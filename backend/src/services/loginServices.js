@@ -1,4 +1,4 @@
-import conexion from '../services/conexion.js';
+import conexion from './conexion.js';
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
 

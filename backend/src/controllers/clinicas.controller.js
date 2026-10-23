@@ -1,4 +1,4 @@
-import * as clinicaService from '../services/clinicasServices.js';
+import * as clinicaService from '../services/catalogos/clinicasServices.js';
 import { errorContrasena } from './login.controller.js';
 
 const FILTROS_VALIDOS = ['true', 'false', 'todos'];

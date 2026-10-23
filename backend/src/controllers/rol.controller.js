@@ -1,4 +1,4 @@
-import * as rolService from '../services/rolServices.js';
+import * as rolService from '../services/catalogos/rolServices.js';
 
 const FILTROS_VALIDOS = ['true', 'false', 'todos'];
 

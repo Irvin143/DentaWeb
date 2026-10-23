@@ -1,4 +1,4 @@
-import conexion from '../services/conexion.js';
+import conexion from '../conexion.js';
 
 export const obtenerEspecialidades = async ({ limite, offset }) => {
     const [datos, conteo] = await Promise.all([

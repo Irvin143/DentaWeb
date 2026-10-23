@@ -1,4 +1,4 @@
-import * as tipoUsuarioService from '../services/tipoUsuariosServices.js';
+import * as tipoUsuarioService from '../services/catalogos/tipoUsuariosServices.js';
 
 const FILTROS_VALIDOS = ['true', 'false', 'todos'];
 

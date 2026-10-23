@@ -1,4 +1,4 @@
-import * as usuarioService from '../services/usuariosServices.js';
+import * as usuarioService from '../services/catalogos/usuariosServices.js';
 import { errorContrasena } from './login.controller.js';
 
 const FILTROS_VALIDOS = ['true', 'false', 'todos'];

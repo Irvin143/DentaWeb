@@ -1,4 +1,4 @@
-import * as estudiosService from '../services/estudiosServices.js';
+import * as estudiosService from '../services/catalogos/estudiosServices.js';
 
 const esTexto = (v, max) => typeof v === 'string' && v.trim().length > 0 && v.length <= max;
 const esOpcional = (v, max) => v === undefined || v === null || (typeof v === 'string' && v.length <= max);

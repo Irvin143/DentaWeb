@@ -1,4 +1,4 @@
-import conexion from "./conexion.js"; // ajusta a como exportas tu conexión real
+import conexion from "../conexion.js"; // ajusta a como exportas tu conexión real
 
 export const obtenerPacientes = async ({ paquete, idUsuario } = {}) => {
     const esOdontologo = paquete === 'Odontologo';

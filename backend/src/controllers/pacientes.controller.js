@@ -1,4 +1,4 @@
-import * as pacientesService from '../services/pacienteServices.js';
+import * as pacientesService from '../services/catalogos/pacienteServices.js';
 
 export async function obtenerPacientes(req, res, next) {
     try {

@@ -1,4 +1,4 @@
-import * as tipoCitaService from '../services/tipoCitaServices.js';
+import * as tipoCitaService from '../services/catalogos/tipoCitaServices.js';
 
 const FILTROS_VALIDOS = ['true', 'false', 'todos'];
 

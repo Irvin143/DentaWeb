@@ -1,4 +1,4 @@
-import * as odontologoService from '../services/odontologosServices.js';
+import * as odontologoService from '../services/catalogos/odontologosServices.js';
 import { errorContrasena, errorTelefono } from './login.controller.js';
 import { conflictoTelefono } from '../services/telefonoUnico.js';
 
