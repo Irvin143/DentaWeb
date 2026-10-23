@@ -10,7 +10,7 @@ const DURACION_TOAST = 3000;
 const DURACION_SALIDA = 300;
 
 const navItems = [
-  { path: '/panel', label: 'Panel Principal', icon: LayoutGrid },
+  { path: '/panel', label: 'Panel principal', icon: LayoutGrid },
   { path: '/panel-paciente', label: 'Mi panel', icon: CalendarCheck },
   { path: '/pacientes', label: 'Pacientes', icon: Users },
   { path: '/odontologos', label: 'Odontólogos', icon: Stethoscope },
@@ -20,7 +20,7 @@ const navItems = [
   { path: '/especialidades', label: 'Especialidades', icon: GraduationCap },
   { path: '/estudios', label: 'Estudios', icon: Scan },
   { path: '/tipos-cita', label: 'Tipos de cita', icon: CalendarClock },
-  { path: '/paquetes', label: 'Paquetes Roles', icon: Package },
+  { path: '/paquetes', label: 'Paquetes de roles', icon: Package },
   { path: '/roles', label: 'Roles', icon: Shield },
   { path: '/tipos-usuario', label: 'Tipos de usuario', icon: IdCard },
   { path: '/usuarios', label: 'Usuarios', icon: UserCog },
