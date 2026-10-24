@@ -627,11 +627,11 @@ export default function OdontologosPage() {
         </div>
       </Seccion>
 
-      {/* Llave de acceso */}
+      {/* Datos de acceso */}
       {creando && (
         <fieldset className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 pb-3 pt-1 md:gap-5 md:rounded-xl md:px-5 md:pb-5 md:pt-2">
           <legend className="inline-flex items-center gap-1 px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm">
-            <KeyRound size={14} aria-hidden="true" /> Crear llave de acceso
+            <KeyRound size={14} aria-hidden="true" /> Datos de acceso
           </legend>
           <p className="hidden text-sm text-slate-500 md:block">
             Con estos datos el odontólogo iniciará sesión en el sistema.
