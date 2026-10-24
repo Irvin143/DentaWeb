@@ -1,4 +1,5 @@
 // Recorte SEPOMEX vía github.com/Swumplurd/cp-mexico (datos de Correos de México). Recorte de septiembre 2021.
+// Si Correos no trae ciudad, el compactado deja el municipio en "ciudad".
 
 const URL_CATALOGO = '/sepomex.json';
 

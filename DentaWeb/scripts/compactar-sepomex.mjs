@@ -49,12 +49,21 @@ async function uno(nombre) {
     if (!/^\d{5}$/.test(cp)) continue;
     const colonia = mayus(fila.d_asenta);
     if (!colonia) continue;
+    const ciudadOrigen = mayus(fila.d_ciudad);
+    const ciudad = ciudadOrigen || mayus(fila.D_mnpio || fila.d_mnpio);
     if (!out[cp]) {
       out[cp] = {
         estado: mayus(fila.d_estado),
-        ciudad: mayus(fila.d_ciudad),
+        ciudad,
         colonias: [],
       };
+    } else if (!out[cp].ciudad && ciudad) {
+      out[cp].ciudad = ciudad;
+    } else if (ciudadOrigen && out[cp].ciudad !== ciudadOrigen) {
+      out[cp].ciudad = ciudadOrigen;
+    }
+    if (!ciudadOrigen && ciudad && !globalThis.__ruralEjemplo) {
+      globalThis.__ruralEjemplo = { cp, ciudad, estado: mayus(fila.d_estado) };
     }
     if (!out[cp].colonias.includes(colonia)) out[cp].colonias.push(colonia);
   }
@@ -92,3 +101,4 @@ console.log('80000', out['80000']
   ? { estado: out['80000'].estado, ciudad: out['80000'].ciudad, n: out['80000'].colonias.length }
   : 'NO');
 console.log('unaEjemplo', una[0], out[una[0]]);
+console.log('ruralEjemplo', globalThis.__ruralEjemplo ?? 'NO');

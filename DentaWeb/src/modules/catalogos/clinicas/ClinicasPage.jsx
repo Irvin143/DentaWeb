@@ -56,6 +56,7 @@ const PAIS_POR_DEFECTO = 'MÉXICO';
    tipo: 'texto' | 'numero' | 'cp'
    ------------------------------------------------------------ */
 const CAMPOS_DIRECCION = [
+  { campo: 'pais', etiqueta: 'País', max: 100, tipo: 'pais', ancho: true },
   { campo: 'calle', etiqueta: 'Calle', max: 150, tipo: 'texto', placeholder: 'Ej. AV. JUÁREZ', ancho: true },
   { campo: 'numero_exterior', etiqueta: 'Número exterior', max: 20, tipo: 'numero', placeholder: 'Ej. 123' },
   { campo: 'numero_interior', etiqueta: 'Número interior', max: 20, tipo: 'numero', placeholder: 'Ej. 4B' },
@@ -63,7 +64,6 @@ const CAMPOS_DIRECCION = [
   { campo: 'estado', etiqueta: 'Estado', max: 100, tipo: 'texto', placeholder: 'Ej. SINALOA' },
   { campo: 'ciudad', etiqueta: 'Ciudad', max: 100, tipo: 'texto', placeholder: 'Ej. CULIACÁN' },
   { campo: 'colonia', etiqueta: 'Colonia', max: 100, tipo: 'texto', placeholder: 'Ej. CENTRO' },
-  { campo: 'pais', etiqueta: 'País', max: 100, tipo: 'pais' },
   { campo: 'referencias', etiqueta: 'Referencias', max: 300, tipo: 'texto', placeholder: 'Ej. ENTRE CALLE X Y CALLE Y, FRENTE AL PARQUE', ancho: true },
 ];
 
