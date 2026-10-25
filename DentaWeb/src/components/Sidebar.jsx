@@ -209,8 +209,7 @@ export function Sidebar() {
   return (
     <>
       {/* Barra superior (solo mobile) */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3 shadow-sm md:hidden">
-        <Marca />
+      <header className="sticky top-0 z-30 flex items-center border-b border-slate-100 bg-white px-4 py-3 shadow-sm md:hidden">
         <button
           type="button"
           onClick={() => setAbierto(true)}
@@ -221,6 +220,10 @@ export function Sidebar() {
         >
           <Menu size={22} />
         </button>
+
+        <div className="absolute left-1/2 -translate-x-1/2">
+          <Marca />
+        </div>
       </header>
 
       {/* Fondo oscuro (solo mobile, cuando el menú está abierto) */}
@@ -234,26 +237,30 @@ export function Sidebar() {
         />
       )}
 
-      <button
-        type="button"
-        onClick={() => setColapsada((valor) => !valor)}
-        aria-label={colapsada ? 'Mostrar menú' : 'Ocultar menú'}
-        className={`fixed top-5 z-30 hidden h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-700 md:flex ${
-          colapsada ? 'left-2' : 'left-64 -translate-x-1/2'
-        }`}
-      >
-        {colapsada ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-      </button>
+        <button
+          type="button"
+          onClick={() => setColapsada((valor) => !valor)}
+          aria-label={colapsada ? 'Mostrar menú' : 'Ocultar menú'}
+          className={`fixed top-5 z-30 hidden h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-300 ease-in-out hover:bg-slate-50 hover:text-slate-700 md:flex ${
+            colapsada ? 'left-2' : 'left-64 -translate-x-1/2'
+          }`}
+        >
+          {colapsada ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        </button>
 
       {/* Sidebar: panel deslizante en mobile, fijo en escritorio */}
       <aside
         id="menu-lateral"
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 min-h-0 flex-col justify-between overflow-hidden border-r border-slate-100 bg-white p-4 shadow-sm transition-[transform,visibility] duration-200 md:z-auto md:h-full md:translate-x-0 ${
-          colapsada ? 'md:hidden' : 'md:visible md:static'
+        className={`fixed inset-y-0 left-0 z-50 w-64 min-h-0 overflow-hidden bg-white transition-[translate,transform,visibility,width,box-shadow] duration-300 ease-in-out md:static md:z-auto md:h-full md:shrink-0 md:translate-x-0 ${
+          colapsada
+            ? 'md:invisible md:w-0 md:border-r-0 md:shadow-none'
+            : 'md:visible md:w-64 border-r border-slate-100 shadow-sm'
         } ${abierto ? 'translate-x-0' : '-translate-x-full invisible'}`}
       >
-        <section className="min-h-0 flex-1 overflow-y-auto">
-          <header className="mb-8 flex items-center justify-between">
+        {/* Contenedor interno con ancho fijo: el contenido no se comprime al animar */}
+        <div className="flex h-full w-64 min-h-0 flex-col justify-between p-4">
+          <section className="min-h-0 flex-1 overflow-y-auto">
+            <header className="mb-8 flex items-center justify-between">
             <Marca />
             <button
               type="button"
@@ -264,8 +271,6 @@ export function Sidebar() {
               <X size={20} />
             </button>
           </header>
-
-          {/* Menú de navegación */}
           <nav aria-label="Navegación principal" >
             <ul className="m-0 list-none space-y-1.5 p-0">
               {itemsVisibles.map((item) => (
@@ -307,53 +312,54 @@ export function Sidebar() {
           </nav>
         </section>
 
-        {/* Perfil de usuario y cierre de sesión */}
-        <footer ref={tarjetaRef} className="mt-4 shrink-0 border-t border-slate-100 pt-4">
-          <button
-            type="button"
-            onClick={() => setMenuUsuario((valor) => !valor)}
-            aria-expanded={menuUsuario}
-            className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-slate-50"
-          >
-            <span
-              aria-hidden="true"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 font-bold text-slate-600"
+          {/* Perfil de usuario y cierre de sesión */}
+          <footer ref={tarjetaRef} className="mt-4 shrink-0 border-t border-slate-100 pt-4">
+            <button
+              type="button"
+              onClick={() => setMenuUsuario((valor) => !valor)}
+              aria-expanded={menuUsuario}
+              className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-slate-50"
             >
-              {nombre.charAt(0).toUpperCase()}
-            </span>
-            <span className="flex min-w-0 flex-col">
-              <strong className="truncate text-sm font-bold text-slate-800">{nombre}</strong>
-              <small className="truncate text-xs text-slate-500">{etiquetaRol}</small>
-            </span>
-          </button>
-          {menuUsuario && (
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuUsuario(false);
-                  setConfirmarSalida(true);
-                }}
-                className="mt-1 flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
+              <span
+                aria-hidden="true"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 font-bold text-slate-600"
               >
-                <LogOut size={18} aria-hidden="true" />
-                Cerrar sesión
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuUsuario(false);
-                  setModalPasswordAbierto(true);
-                  setAbierto(false);
-                }}
-                className="mt-1 flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
-              >
-                <KeyRound size={18} aria-hidden="true" />
-                Cambiar contraseña
-              </button>
-            </>
-          )}
-        </footer>
+                {nombre.charAt(0).toUpperCase()}
+              </span>
+              <span className="flex min-w-0 flex-col">
+                <strong className="truncate text-sm font-bold text-slate-800">{nombre}</strong>
+                <small className="truncate text-xs text-slate-500">{etiquetaRol}</small>
+              </span>
+            </button>
+            {menuUsuario && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuUsuario(false);
+                    setConfirmarSalida(true);
+                  }}
+                  className="mt-1 flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
+                >
+                  <LogOut size={18} aria-hidden="true" />
+                  Cerrar sesión
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuUsuario(false);
+                    setModalPasswordAbierto(true);
+                    setAbierto(false);
+                  }}
+                  className="mt-1 flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
+                >
+                  <KeyRound size={18} aria-hidden="true" />
+                  Cambiar contraseña
+                </button>
+              </>
+            )}
+          </footer>
+        </div>
       </aside>
 
       {confirmarSalida && (
