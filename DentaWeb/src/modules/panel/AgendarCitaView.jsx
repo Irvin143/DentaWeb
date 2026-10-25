@@ -104,6 +104,7 @@ function NavegacionPasos({
   cargando,
   onAtras,
   onContinuar,
+  onConfirmar,
 }) {
   return (
     <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -122,6 +123,7 @@ function NavegacionPasos({
 
       {paso < TOTAL_PASOS ? (
         <button
+          key="continuar"
           type="button"
           onClick={onContinuar}
           disabled={!puedeContinuar}
@@ -130,8 +132,12 @@ function NavegacionPasos({
           Continuar <ArrowRight size={16} />
         </button>
       ) : (
+        // type="button" + key propia: si fuera submit, el mismo clic que pasa del paso 2 al 3
+        // convertiría el botón en submit y enviaría el formulario sin que el paciente confirme.
         <button
-          type="submit"
+          key="confirmar"
+          type="button"
+          onClick={onConfirmar}
           disabled={cargando || !puedeConfirmar}
           className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-teal-600 px-6 py-3.5 font-bold text-white shadow-lg transition-all hover:bg-teal-700 hover:shadow-xl disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none sm:min-w-56"
         >
@@ -221,7 +227,7 @@ export default function AgendarCitaView({ onVolver }) {
 
       {/* En móvil: una columna. En lg+: contenido del paso a la izquierda y resumen a la derecha */}
       <form
-        onSubmit={cita.confirmar}
+        onSubmit={(e) => e.preventDefault()}
         className="grid grid-cols-1 gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-12 lg:grid-rows-1"
       >
         {/* COLUMNA IZQUIERDA: contenido del paso */}
@@ -276,6 +282,7 @@ export default function AgendarCitaView({ onVolver }) {
             cargando={cita.cargando}
             onAtras={cita.volverPaso}
             onContinuar={cita.continuar}
+            onConfirmar={cita.confirmar}
           />
         </div>
 

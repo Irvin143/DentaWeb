@@ -122,3 +122,15 @@ export function normalizarSede(s) {
     direccion: s.direccion ?? '',
   };
 }
+
+/* ============================================================
+    MAPAS
+   ============================================================ */
+
+// Enlace a Google Maps con la dirección de la sede (no necesita API key).
+// En el celular abre la app de Maps. Devuelve null si la sede no tiene dirección.
+export function urlMapa(sede) {
+  const direccion = sede?.direccion?.trim();
+  if (!direccion) return null;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion)}`;
+}

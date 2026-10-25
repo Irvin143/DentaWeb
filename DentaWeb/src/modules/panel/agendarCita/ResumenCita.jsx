@@ -9,9 +9,10 @@ import {
   Stethoscope,
   User,
 } from 'lucide-react';
+import { EnlaceMapa } from './SelectorSede.jsx';
 
 // Una fila del resumen (icono, título, valor y, opcionalmente, "Editar")
-function FilaResumen({ icono: Icono, titulo, valor, detalle, onEditar }) {
+function FilaResumen({ icono: Icono, titulo, valor, detalle, extra, onEditar }) {
   return (
     <div className="flex items-start gap-3 py-3">
       <span
@@ -27,6 +28,7 @@ function FilaResumen({ icono: Icono, titulo, valor, detalle, onEditar }) {
           <>
             <p className="break-words text-sm font-bold text-slate-800">{valor}</p>
             {detalle && <p className="break-words text-xs text-slate-500">{detalle}</p>}
+            {extra}
           </>
         ) : (
           <p className="text-sm text-slate-400">Pendiente</p>
@@ -77,6 +79,7 @@ export default function ResumenCita({
           titulo="Sede"
           valor={sede?.nombre}
           detalle={sede?.direccion}
+          extra={sede ? <EnlaceMapa sede={sede} className="mt-1" /> : undefined}
           onEditar={editar(1)}
         />
         <FilaResumen icono={CalendarIcon} titulo="Fecha" valor={fechaTexto} onEditar={editar(2)} />
