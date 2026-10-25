@@ -1,11 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  Eye,
-  EyeOff,
-  Mail,
-  Lock,
-  ArrowRight,
-} from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { authApi } from "../../services/api.js";
 import { ToastContainer } from "../../components/Toast.jsx";
@@ -22,6 +16,7 @@ const DentalWebLogin = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [cierreMensaje, setCierreMensaje] = useState(() => Date.now() < avisoCierreHasta);
+  const cargando = isSubmitting || Boolean(successMessage);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -268,6 +263,17 @@ const DentalWebLogin = () => {
             Regístrate aquí
           </Link>
         </p>
+            <div
+              aria-hidden={!cargando}
+              className={`absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-3xl bg-white/70 backdrop-blur-sm transition-opacity duration-300 ${
+                cargando ? "opacity-100" : "pointer-events-none opacity-0"
+              }`}
+            >
+              <Loader2 size={36} className="animate-spin text-login-active" />
+              <p className="text-sm font-medium text-login-heading">
+                {successMessage ? "Redirigiendo..." : "Iniciando sesión..."}
+              </p>
+            </div>
       </div>
 
       {/* Footer */}
