@@ -30,10 +30,6 @@ export const DIAS_A_MOSTRAR = 5;
 export const UMBRAL_BUSCADOR = 6;
 export const MAX_MOTIVO = 500;
 
-// TODO: reemplazar por los horarios con disponibilidad que devuelva el backend
-export const HORAS_MANANA = ['09:00 AM', '10:30 AM', '11:45 AM'];
-export const HORAS_TARDE = ['03:30 PM', '04:30 PM', '05:15 PM'];
-
 // Contenedor blanco con borde que comparten todas las secciones
 export const CLASE_TARJETA = 'rounded-2xl border border-slate-200 bg-white p-5 lg:p-6';
 
@@ -86,6 +82,26 @@ export function etiquetaMeses(dias) {
     : `${mesA} - ${mesB} ${ultimo.getFullYear()}`;
 }
 
+// '14:30' → '02:30 PM'
+export function formatearHora(hhmm) {
+  if (!hhmm) return '';
+  const [h, m] = hhmm.split(':').map(Number);
+  const sufijo = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${sufijo}`;
+}
+
+// Misma forma que devuelve generarDias, a partir de una fecha 'AAAA-MM-DD'
+export function diaDesdeISO(fechaISO) {
+  const date = new Date(`${fechaISO}T00:00:00`);
+  return {
+    fecha: fechaISO,
+    diaSemana: NOMBRES_DIA[date.getDay()],
+    diaNumero: String(date.getDate()).padStart(2, '0'),
+    date,
+  };
+}
+
 // '2026-10-30' → 'Viernes, 30 de octubre'
 export function formatearFecha(fechaISO) {
   if (!fechaISO) return '';
@@ -124,7 +140,7 @@ export function normalizarSede(s) {
 }
 
 /* ============================================================
-    MAPAS
+   MAPAS
    ============================================================ */
 
 // Enlace a Google Maps con la dirección de la sede (no necesita API key).

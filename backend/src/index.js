@@ -64,6 +64,9 @@ app.use('/api/tipos-usuario', tipoUsuarioRoutes);
 import usuarioRoutes from './routes/usuariosRutas.js';
 app.use('/api/usuarios', usuarioRoutes);
 
+import agendarRoutes from './routes/citas/agendarRutas.js';
+app.use('/api/agendar', agendarRoutes);
+
 app.use((err, req, res, next) => {
     if (err.status) {
         return res.status(err.status).json({ error: err.message });

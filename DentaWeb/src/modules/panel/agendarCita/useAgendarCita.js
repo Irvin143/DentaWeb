@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 // TODO: ajusta la ruta a donde tengas tu api.js (la carpeta agendarCita está junto a AgendarCitaView.jsx)
-// TODO: cuando exista, importa también citasApi
-import { serviciosApi, clinicasApi } from '../../../services/api.js';
+import { serviciosApi, clinicasApi, agendarCitasApi } from '../../../services/api.js';
 import {
   TOTAL_PASOS,
   UMBRAL_BUSCADOR,
   formatearFecha,
+  formatearHora,
   normalizarServicio,
   normalizarSede,
   normalizarTexto,
@@ -135,6 +135,56 @@ function useSedes(idServicio) {
 }
 
 /* ============================================================
+   Horarios libres de la sede en la fecha elegida.
+   Si ese día no hay ninguno, el backend también devuelve el próximo día con espacio.
+   ============================================================ */
+function useHorarios(idSede, fecha) {
+  const [horas, setHoras] = useState([]); // ['09:00', '09:30', ...]
+  const [proximoDia, setProximoDia] = useState(null); // 'AAAA-MM-DD' | null
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState(false);
+  const [intento, setIntento] = useState(0); // para el botón "Reintentar"
+
+  useEffect(() => {
+    setHoras([]);
+    setProximoDia(null);
+    setError(false);
+
+    if (!idSede || !fecha) {
+      setCargando(false);
+      return undefined;
+    }
+
+    let cancelado = false;
+    setCargando(true);
+
+    agendarCitasApi
+      .horarios(idSede, fecha)
+      .then((res) => {
+        if (cancelado) return;
+        setHoras(res?.horas ?? []);
+        setProximoDia(res?.proximo_dia ?? null);
+      })
+      .catch((err) => {
+        if (cancelado) return;
+        console.error('Error al cargar horarios:', err);
+        setError(true);
+      })
+      .finally(() => {
+        if (!cancelado) setCargando(false);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [idSede, fecha, intento]);
+
+  const reintentar = useCallback(() => setIntento((n) => n + 1), []);
+
+  return { horas, proximoDia, cargando, error, reintentar };
+}
+
+/* ============================================================
    Todo el estado y las acciones del flujo de agendar cita
    ============================================================ */
 const FORM_INICIAL = {
@@ -157,6 +207,7 @@ export function useAgendarCita() {
   const catalogo = useServicios();
   const sedesData = useSedes(form.id_servicio);
   const { sedes } = sedesData;
+  const horariosData = useHorarios(form.id_sede, form.fecha);
 
   // Si solo hay una sede, la deja seleccionada
   useEffect(() => {
@@ -172,7 +223,7 @@ export function useAgendarCita() {
     servicio: servicioActivo,
     sede: sedeActiva,
     fechaTexto: formatearFecha(form.fecha),
-    hora: form.hora,
+    hora: formatearHora(form.hora),
     motivo: form.motivo,
   };
 
@@ -198,7 +249,15 @@ export function useAgendarCita() {
   const seleccionarSede = (id) =>
     setForm((f) => (f.id_sede === id ? f : { ...f, id_sede: id, hora: '' }));
 
-  const seleccionarFecha = (fecha) => setForm((f) => ({ ...f, fecha }));
+  // Al cambiar de día se pierde la hora: los horarios libres son otros
+  const seleccionarFecha = (fecha) =>
+    setForm((f) => (f.fecha === fecha ? f : { ...f, fecha, hora: '' }));
+
+  // Salta al próximo día con horarios libres (cuando el día elegido está lleno)
+  const irAProximoDia = () => {
+    if (horariosData.proximoDia) seleccionarFecha(horariosData.proximoDia);
+  };
+
   const seleccionarHora = (hora) => setForm((f) => ({ ...f, hora }));
   const cambiarMotivo = (motivo) => setForm((f) => ({ ...f, motivo }));
 
@@ -211,18 +270,23 @@ export function useAgendarCita() {
     setCargando(true);
     setErrorEnvio(null);
     try {
-      console.log('Datos listos para enviar a la BD:', form);
-      // TODO: conectar con api.js (convertir la hora a HH:mm de 24 h antes de enviar):
-      // const cita = await citasApi.crear(form);
-      // setOdontologoAsignado(cita.odontologo ?? null);
-      await new Promise((resolver) => setTimeout(resolver, 1000)); // simulación
+      // El backend vuelve a validar la disponibilidad y asigna al odontólogo
+      const cita = await agendarCitasApi.crear({
+        id_servicio: Number(form.id_servicio),
+        id_sede: Number(form.id_sede),
+        fecha: form.fecha,
+        hora: form.hora, // 'HH:mm' de 24 h
+        motivo: form.motivo.trim() || null,
+      });
+      setOdontologoAsignado(cita?.odontologo ?? null);
       setConfirmada(true);
     } catch (err) {
       if (err.status === 409) {
-        // El horario se ocupó mientras el paciente confirmaba
-        setErrorEnvio('Ese horario ya no está disponible. Elige otro para continuar.');
+        // El horario se ocupó mientras el paciente confirmaba (o ya tiene una cita a esa hora)
+        setErrorEnvio(err.message || 'Ese horario ya no está disponible. Elige otro para continuar.');
         setPaso(2);
         setForm((f) => ({ ...f, hora: '' }));
+        horariosData.reintentar(); // vuelve a pedir los horarios libres
       } else {
         setErrorEnvio(err.message || 'No pudimos agendar tu cita. Intenta de nuevo.');
       }
@@ -240,6 +304,7 @@ export function useAgendarCita() {
     odontologoAsignado,
     catalogo,
     sedesData,
+    horariosData,
     servicioActivo,
     resumen,
     puedeContinuar,
@@ -251,6 +316,7 @@ export function useAgendarCita() {
     seleccionarSede,
     seleccionarFecha,
     seleccionarHora,
+    irAProximoDia,
     cambiarMotivo,
     confirmar,
   };

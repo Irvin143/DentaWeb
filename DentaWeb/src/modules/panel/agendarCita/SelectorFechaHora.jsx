@@ -1,17 +1,35 @@
 import React, { useMemo, useState } from 'react';
-import { Calendar as CalendarIcon, CheckCircle2, Clock, MapPin, Plus } from 'lucide-react';
+import {
+  AlertCircle,
+  Calendar as CalendarIcon,
+  CheckCircle2,
+  Clock,
+  Loader2,
+  MapPin,
+  Plus,
+} from 'lucide-react';
 import {
   CLASE_TARJETA,
   DIAS_A_MOSTRAR,
-  HORAS_MANANA,
-  HORAS_TARDE,
   MAX_MOTIVO,
+  diaDesdeISO,
   etiquetaMeses,
+  formatearFecha,
+  formatearHora,
   generarDias,
 } from './utilidades.js';
 
 function SeccionFecha({ fecha, onSeleccionar }) {
-  const dias = useMemo(() => generarDias(DIAS_A_MOSTRAR), []);
+  const diasBase = useMemo(() => generarDias(DIAS_A_MOSTRAR), []);
+
+  // Si el próximo día disponible queda fuera de la tira, se agrega al final
+  const dias = useMemo(
+    () =>
+      !fecha || diasBase.some((d) => d.fecha === fecha)
+        ? diasBase
+        : [...diasBase, diaDesdeISO(fecha)],
+    [diasBase, fecha]
+  );
 
   return (
     <section className={CLASE_TARJETA}>
@@ -19,7 +37,7 @@ function SeccionFecha({ fecha, onSeleccionar }) {
         <CalendarIcon size={18} className="text-teal-600" /> {etiquetaMeses(dias)}
       </h2>
       {/* Móvil: scroll horizontal. Escritorio: los días se reparten todo el ancho */}
-      <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-2 lg:grid lg:grid-cols-5 lg:overflow-visible lg:pb-0">
+      <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-2 lg:grid lg:auto-cols-fr lg:grid-flow-col lg:overflow-visible lg:pb-0">
         {dias.map((dia) => {
           const activo = fecha === dia.fecha;
           return (
@@ -44,7 +62,14 @@ function SeccionFecha({ fecha, onSeleccionar }) {
   );
 }
 
-function SeccionHorario({ fecha, hora, duracion, onSeleccionar }) {
+// horariosData: { horas, proximoDia, cargando, error, reintentar } de useHorarios
+function SeccionHorario({ fecha, hora, horariosData, onSeleccionar, onProximoDia }) {
+  const { horas, proximoDia, cargando, error, reintentar } = horariosData;
+
+  // 'HH:mm' se compara bien como texto
+  const manana = horas.filter((h) => h < '12:00');
+  const tarde = horas.filter((h) => h >= '12:00');
+
   const botonHora = (h) => (
     <button
       key={h}
@@ -55,8 +80,19 @@ function SeccionHorario({ fecha, hora, duracion, onSeleccionar }) {
       }`}
     >
       {hora === h && <CheckCircle2 size={14} className="mr-1 inline" />}
-      {h}
+      {formatearHora(h)}
     </button>
+  );
+
+  const turno = (titulo, lista) => (
+    <div>
+      <p className="mb-2 text-xs font-semibold uppercase text-slate-500">{titulo}</p>
+      {lista.length > 0 ? (
+        <div className="grid grid-cols-3 gap-3">{lista.map(botonHora)}</div>
+      ) : (
+        <p className="text-sm text-slate-400">Sin horarios en este turno</p>
+      )}
+    </div>
   );
 
   return (
@@ -65,22 +101,56 @@ function SeccionHorario({ fecha, hora, duracion, onSeleccionar }) {
         <h2 className="flex items-center gap-2 text-sm font-bold text-slate-800">
           <Clock size={18} className="text-teal-600" /> Horarios disponibles
         </h2>
-        {duracion && <span className="text-xs text-slate-500">Duración: {duracion} min</span>}
       </div>
 
-      {!fecha ? (
-        <p className="py-2 text-sm text-slate-500">Elige un día para ver los horarios.</p>
-      ) : (
-        /* Móvil: turnos apilados. Escritorio: mañana y tarde lado a lado */
+      {!fecha && <p className="py-2 text-sm text-slate-500">Elige un día para ver los horarios.</p>}
+
+      {fecha && cargando && (
+        <p className="flex items-center gap-2 py-2 text-sm text-slate-500">
+          <Loader2 size={16} className="animate-spin" /> Buscando horarios...
+        </p>
+      )}
+
+      {fecha && error && (
+        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+          <p className="flex items-center gap-2 font-semibold">
+            <AlertCircle size={16} /> No pudimos cargar los horarios
+          </p>
+          <button
+            type="button"
+            onClick={reintentar}
+            className="mt-1 cursor-pointer text-xs font-semibold underline"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
+
+      {/* Día sin espacios: se ofrece saltar al próximo día disponible */}
+      {fecha && !cargando && !error && horas.length === 0 && (
+        <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+          <p className="font-semibold text-slate-800">No hay horarios disponibles este día.</p>
+          {proximoDia ? (
+            <button
+              type="button"
+              onClick={onProximoDia}
+              className="mt-2 cursor-pointer font-semibold text-teal-600 hover:text-teal-700"
+            >
+              Ver próximo día disponible: {formatearFecha(proximoDia)} →
+            </button>
+          ) : (
+            <p className="mt-1">
+              Tampoco encontramos espacios en los próximos días en esta sede. Intenta con otra sede.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Móvil: turnos apilados. Escritorio: mañana y tarde lado a lado */}
+      {fecha && !cargando && !error && horas.length > 0 && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase text-slate-500">Turno mañana</p>
-            <div className="grid grid-cols-3 gap-3">{HORAS_MANANA.map(botonHora)}</div>
-          </div>
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase text-slate-500">Turno tarde</p>
-            <div className="grid grid-cols-3 gap-3">{HORAS_TARDE.map(botonHora)}</div>
-          </div>
+          {turno('Turno mañana', manana)}
+          {turno('Turno tarde', tarde)}
         </div>
       )}
     </section>
@@ -132,8 +202,10 @@ export default function SelectorFechaHora({
   hora,
   motivo,
   servicioActivo,
+  horariosData,
   onFecha,
   onHora,
+  onProximoDia,
   onMotivo,
 }) {
   return (
@@ -142,8 +214,9 @@ export default function SelectorFechaHora({
       <SeccionHorario
         fecha={fecha}
         hora={hora}
-        duracion={servicioActivo?.duracion}
+        horariosData={horariosData}
         onSeleccionar={onHora}
+        onProximoDia={onProximoDia}
       />
       <SeccionMotivo
         valor={motivo}

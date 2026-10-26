@@ -352,3 +352,16 @@ export const tiposUsuarioApi = {
     return apiRequest(`/api/tipos-usuario/${id}/reactivar`, { method: "PATCH" });
   },
 };
+
+export const agendarCitasApi = {
+  horarios(idSede, fecha) {
+    return apiRequest("/api/agendar/disponibilidad", {
+      method: "GET",
+      query: { idsede: idSede, fecha },
+    });
+  },
+  
+  crear(payload) {
+    return apiRequest("/api/agendar/citas", { method: "POST", body: payload });
+  },
+};
