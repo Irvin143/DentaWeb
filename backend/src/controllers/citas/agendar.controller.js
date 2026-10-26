@@ -85,6 +85,9 @@ export const crear = async (req, res) => {
             idTipo: idtipo != null ? Number(idtipo) : null,
         });
         res.status(201).json(cita);
+
+        // El correo se manda después de responder y sin esperar: si falla, la cita sigue agendada
+        agendarService.notificarCitaPorCorreo(cita.id_cita);
     } catch (err) {
         responderError(res, err);
     }

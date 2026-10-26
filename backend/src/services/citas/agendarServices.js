@@ -1,4 +1,5 @@
 import conexion from '../conexion.js'; // la misma ruta que usas en los demás services
+import { correoConfigurado, enviarConfirmacionCita } from './correoServices.js';
 
 const errorHttp = (status, mensaje) => {
     const error = new Error(mensaje);
@@ -216,6 +217,8 @@ export const crearCita = async ({
 
         await cliente.query('COMMIT');
 
+
+
         return {
             id_cita: creada.id_cita,
             fecha,
@@ -232,5 +235,64 @@ export const crearCita = async ({
         manejarErrorPg(err);
     } finally {
         cliente.release();
+    }
+};
+
+/* ============================================================
+   CORREO DE CITA AGENDADA
+   ============================================================ */
+
+// Dirección en una sola línea (igual que en el service de clínicas)
+const DIRECCION_COMPLETA = `
+    concat_ws(', ',
+        NULLIF(concat_ws(' ', d.calle, d.numero_exterior,
+               CASE WHEN d.numero_interior IS NOT NULL THEN 'Int. ' || d.numero_interior END), ''),
+        d.colonia,
+        NULLIF(concat_ws(' ', 'CP', d.codigo_postal), 'CP'),
+        d.ciudad,
+        d.estado
+    )
+`;
+
+// Datos de una cita para armar el correo. fecha y hora salen como texto para evitar
+// problemas de zona horaria con el driver.
+const obtenerDatosParaCorreo = async (idCita) => {
+    const { rows } = await conexion.query(
+        `SELECT
+            to_char(c.fecha, 'YYYY-MM-DD') AS fecha,
+            to_char(c.hora, 'HH24:MI') AS hora,
+            u.correo AS correo_paciente,
+            p.nombre AS nombre_paciente,
+            s.nombre AS servicio,
+            cl.nombre AS sede,
+            ${DIRECCION_COMPLETA} AS direccion,
+            CONCAT_WS(' ', o.nombre, o.ape_pat, o.ape_mat) AS odontologo
+         FROM citas c
+         JOIN pacientes p         ON p.idPaciente = c.idPaciente
+         JOIN usuarios u          ON u.idUsuario = p.idUsuario
+         JOIN clinica_servicio cs ON cs.idClinica_Servicio = c.idClinica_Servicio
+         JOIN servicios s         ON s.idServicio = cs.idServicio
+         JOIN clinicas cl         ON cl.idClinica = cs.idClinica
+         LEFT JOIN direcciones d  ON d.idDireccion = cl.idDireccion
+         JOIN odontologos o       ON o.idOdontologo = c.idOdontologo
+         WHERE c.idCita = $1::int`,
+        [idCita]
+    );
+    return rows[0] ?? null;
+};
+
+// Manda al paciente un correo con los datos de su cita. Nunca lanza error: la cita ya está
+// guardada, y si el correo falla solo se registra en la consola.
+export const notificarCitaPorCorreo = async (idCita) => {
+    try {
+        console.log(`[correo] preparando datos de la cita ${idCita}`);
+        if (!correoConfigurado()) return; // sin SMTP configurado no se envía nada
+        const datos = await obtenerDatosParaCorreo(idCita);
+        console.log(`[correo] datos de la cita ${idCita}:`, datos);
+        if (!datos?.correo_paciente) return;
+        console.log(`[correo] enviando confirmación de cita ${idCita} a ${datos.correo_paciente}`);
+        await enviarConfirmacionCita(datos);
+    } catch (err) {
+        console.error(`[correo] no se pudo enviar el correo de la cita ${idCita}: ${err.message}`);
     }
 };
