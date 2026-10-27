@@ -93,7 +93,11 @@ export default function ResumenCita({
             titulo="Odontólogo"
             valor={odontologo?.nombre ?? 'Asignación automática'}
             detalle={
-              odontologo ? undefined : 'Según la disponibilidad de la sede, fecha y hora elegidas'
+              odontologo
+                ? odontologo.cedula
+                  ? `Cédula profesional: ${odontologo.cedula}`
+                  : undefined
+                : 'Según la disponibilidad de la sede, fecha y hora elegidas'
             }
           />
         )}

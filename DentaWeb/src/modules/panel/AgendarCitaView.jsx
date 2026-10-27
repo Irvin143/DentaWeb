@@ -54,28 +54,81 @@ function Progreso({ paso }) {
   );
 }
 
-// Paso 3: odontólogo asignado y avisos antes de confirmar
-// odontologo: { nombre } cuando el backend ya lo asignó; null mientras es automático
-function PasoConfirmar({ odontologo }) {
+// Paso 3: odontólogo que atenderá la cita y avisos antes de confirmar.
+// propuesta: { odontologo, consultado, cargando, error, reintentar } de useAgendarCita.
+// odontologoAsignado: el que el servidor asignó al confirmar (si ya se confirmó).
+function PasoConfirmar({ propuesta, odontologoAsignado, onElegirOtroHorario }) {
+  const odontologo = odontologoAsignado ?? propuesta.odontologo;
+  const sinDisponibilidad = propuesta.consultado && !propuesta.odontologo;
+
   return (
     <>
       <section className={CLASE_TARJETA}>
         <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500">
           <User size={18} /> Tu odontólogo
         </h2>
-        <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-slate-500">
-            <User size={30} />
-          </div>
-          <div className="flex-1">
-            <p className="font-bold text-slate-800">{odontologo?.nombre ?? 'Asignación automática'}</p>
-            <p className="text-sm text-slate-600">
-              {odontologo
-                ? 'Atenderá tu cita en la sede, fecha y hora elegidas.'
-                : 'Te asignaremos al odontólogo disponible en la sede, fecha y hora que elegiste. Verás su nombre al confirmar.'}
+
+        {propuesta.cargando && (
+          <p className="flex items-center gap-2 py-2 text-sm text-slate-500">
+            <Loader2 size={16} className="animate-spin" /> Buscando a tu odontólogo...
+          </p>
+        )}
+
+        {/* El horario se llenó mientras el paciente decidía */}
+        {sinDisponibilidad && (
+          <div className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
+            <p className="flex items-center gap-2 font-semibold">
+              <AlertCircle size={16} /> Ese horario ya no está disponible.
             </p>
+            <button
+              type="button"
+              onClick={onElegirOtroHorario}
+              className="mt-1 cursor-pointer text-xs font-semibold underline"
+            >
+              Elegir otro horario
+            </button>
           </div>
-        </div>
+        )}
+
+        {/* No se pudo consultar: se puede confirmar igual, el servidor asigna al odontólogo */}
+        {propuesta.error && (
+          <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
+            <p>
+              No pudimos mostrar a tu odontólogo ahora. Si confirmas, te asignaremos uno disponible.
+            </p>
+            <button
+              type="button"
+              onClick={propuesta.reintentar}
+              className="mt-1 cursor-pointer text-xs font-semibold text-teal-600 underline"
+            >
+              Reintentar
+            </button>
+          </div>
+        )}
+
+        {odontologo && (
+          <>
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-slate-500">
+                <User size={30} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="break-words font-bold text-slate-800">{odontologo.nombre}</p>
+                {odontologo.cedula && (
+                  <p className="text-sm text-slate-600">
+                    Cédula profesional: {odontologo.cedula}
+                  </p>
+                )}
+              </div>
+            </div>
+            {!odontologoAsignado && (
+              <p className="mt-3 text-xs text-slate-500">
+                Si el horario se ocupa antes de que confirmes, te asignaremos a otro odontólogo
+                disponible.
+              </p>
+            )}
+          </>
+        )}
       </section>
 
       <section className={CLASE_TARJETA}>
@@ -266,7 +319,13 @@ export default function AgendarCitaView({ onVolver }) {
             />
           )}
 
-          {paso === 3 && <PasoConfirmar odontologo={cita.odontologoAsignado} />}
+          {paso === 3 && (
+            <PasoConfirmar
+              propuesta={cita.propuesta}
+              odontologoAsignado={cita.odontologoAsignado}
+              onElegirOtroHorario={() => cita.irAPaso(2)}
+            />
+          )}
 
           {cita.errorEnvio && (
             <div

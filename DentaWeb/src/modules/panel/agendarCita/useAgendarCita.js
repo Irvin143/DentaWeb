@@ -185,6 +185,57 @@ function useHorarios(idSede, fecha) {
 }
 
 /* ============================================================
+   Odontólogo que se asignaría a la cita (solo se consulta en el paso de confirmar).
+   Es una propuesta: al confirmar, el servidor vuelve a calcular y puede asignar a otro.
+   consultado = ya hubo respuesta; con consultado y sin odontologo, el horario se llenó.
+   ============================================================ */
+function useOdontologoPropuesto(idSede, fecha, hora, activo) {
+  const [odontologo, setOdontologo] = useState(null);
+  const [consultado, setConsultado] = useState(false);
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState(false);
+  const [intento, setIntento] = useState(0); // para el botón "Reintentar"
+
+  useEffect(() => {
+    setOdontologo(null);
+    setConsultado(false);
+    setError(false);
+
+    if (!activo || !idSede || !fecha || !hora) {
+      setCargando(false);
+      return undefined;
+    }
+
+    let cancelado = false;
+    setCargando(true);
+
+    agendarCitasApi
+      .odontologoPropuesto(idSede, fecha, hora)
+      .then((res) => {
+        if (cancelado) return;
+        setOdontologo(res?.odontologo ?? null);
+        setConsultado(true);
+      })
+      .catch((err) => {
+        if (cancelado) return;
+        console.error('Error al consultar el odontólogo:', err);
+        setError(true);
+      })
+      .finally(() => {
+        if (!cancelado) setCargando(false);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [activo, idSede, fecha, hora, intento]);
+
+  const reintentar = useCallback(() => setIntento((n) => n + 1), []);
+
+  return { odontologo, consultado, cargando, error, reintentar };
+}
+
+/* ============================================================
    Todo el estado y las acciones del flujo de agendar cita
    ============================================================ */
 const FORM_INICIAL = {
@@ -208,6 +259,12 @@ export function useAgendarCita() {
   const sedesData = useSedes(form.id_servicio);
   const { sedes } = sedesData;
   const horariosData = useHorarios(form.id_sede, form.fecha);
+  const propuesta = useOdontologoPropuesto(
+    form.id_sede,
+    form.fecha,
+    form.hora,
+    paso === TOTAL_PASOS && !confirmada
+  );
 
   // Si solo hay una sede, la deja seleccionada
   useEffect(() => {
@@ -231,7 +288,13 @@ export function useAgendarCita() {
     (paso === 1 && Boolean(form.id_servicio && form.id_sede)) ||
     (paso === 2 && Boolean(form.fecha && form.hora));
 
-  const puedeConfirmar = Boolean(form.id_servicio && form.id_sede && form.fecha && form.hora);
+  // No se puede confirmar mientras se busca al odontólogo, ni si ya no queda ninguno libre.
+  // Si la consulta falla, se deja confirmar: el servidor asigna al odontólogo de todos modos.
+  const sinDisponibilidad = propuesta.consultado && !propuesta.odontologo;
+  const puedeConfirmar =
+    Boolean(form.id_servicio && form.id_sede && form.fecha && form.hora) &&
+    !propuesta.cargando &&
+    !sinDisponibilidad;
 
   /* ---------- navegación ---------- */
   const irAPaso = (n) => {
@@ -305,6 +368,7 @@ export function useAgendarCita() {
     catalogo,
     sedesData,
     horariosData,
+    propuesta,
     servicioActivo,
     resumen,
     puedeContinuar,

@@ -42,6 +42,33 @@ export const listar = async (req, res) => {
     }
 };
 
+// GET /agendar/odontologo-propuesto?idsede=1&fecha=2026-10-28&hora=09:30
+// Odontólogo que se asignaría hoy a ese horario. Responde { odontologo: {...} | null }
+export const proponerOdontologo = async (req, res) => {
+    const { idsede, fecha, hora } = req.query;
+
+    if (!idValido(idsede)) {
+        return res.status(400).json({ error: 'idsede debe ser un entero positivo' });
+    }
+    if (!fechaValida(fecha)) {
+        return res.status(400).json({ error: 'fecha debe tener el formato AAAA-MM-DD' });
+    }
+    if (!horaValida(hora)) {
+        return res.status(400).json({ error: 'hora debe tener el formato HH:mm' });
+    }
+
+    try {
+        const odontologo = await agendarService.obtenerOdontologoPropuesto({
+            idClinica: Number(idsede),
+            fecha,
+            hora,
+        });
+        res.json({ odontologo });
+    } catch (err) {
+        responderError(res, err);
+    }
+};
+
 // POST /citas
 // body: { id_servicio, id_sede, fecha: 'AAAA-MM-DD', hora: 'HH:mm', motivo?, idtipo? }
 // El paciente sale de la sesión; el odontólogo lo asigna el sistema.

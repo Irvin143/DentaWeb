@@ -209,15 +209,13 @@ export const crearCita = async ({
 
         // 5. Nombre del odontólogo asignado, para mostrárselo al paciente
         const { rows: odontologo } = await cliente.query(
-            `SELECT CONCAT_WS(' ', nombre, ape_pat, ape_mat) AS nombre
+            `SELECT CONCAT_WS(' ', nombre, ape_pat, ape_mat) AS nombre, cedula
              FROM odontologos
              WHERE idOdontologo = $1`,
             [creada.candidato.idodontologo]
         );
 
         await cliente.query('COMMIT');
-
-
 
         return {
             id_cita: creada.id_cita,
@@ -227,6 +225,7 @@ export const crearCita = async ({
             odontologo: {
                 id_odontologo: creada.candidato.idodontologo,
                 nombre: odontologo[0]?.nombre ?? null,
+                cedula: odontologo[0]?.cedula ?? null,
             },
         };
     } catch (err) {
@@ -285,14 +284,34 @@ const obtenerDatosParaCorreo = async (idCita) => {
 // guardada, y si el correo falla solo se registra en la consola.
 export const notificarCitaPorCorreo = async (idCita) => {
     try {
-        console.log(`[correo] preparando datos de la cita ${idCita}`);
         if (!correoConfigurado()) return; // sin SMTP configurado no se envía nada
         const datos = await obtenerDatosParaCorreo(idCita);
-        console.log(`[correo] datos de la cita ${idCita}:`, datos);
         if (!datos?.correo_paciente) return;
-        console.log(`[correo] enviando confirmación de cita ${idCita} a ${datos.correo_paciente}`);
         await enviarConfirmacionCita(datos);
     } catch (err) {
         console.error(`[correo] no se pudo enviar el correo de la cita ${idCita}: ${err.message}`);
     }
+};
+
+/* ============================================================
+   ODONTÓLOGO PROPUESTO
+   ============================================================ */
+
+// Odontólogo al que se asignaría la cita ahora mismo, con el mismo criterio que usa crearCita.
+// Es solo una propuesta para mostrarla antes de confirmar: al confirmar se vuelve a calcular,
+// así que si alguien toma ese horario antes, se asigna a otro disponible.
+// Devuelve null si ya no queda nadie libre a esa hora.
+export const obtenerOdontologoPropuesto = async ({ idClinica, fecha, hora }) => {
+    const { rows: candidatos } = await conexion.query(SQL_CANDIDATOS, [idClinica, fecha, hora]);
+    if (candidatos.length === 0) return null;
+
+    const { rows } = await conexion.query(
+        `SELECT idOdontologo AS id_odontologo,
+                CONCAT_WS(' ', nombre, ape_pat, ape_mat) AS nombre,
+                cedula
+         FROM odontologos
+         WHERE idOdontologo = $1`,
+        [candidatos[0].idodontologo]
+    );
+    return rows[0] ?? null;
 };

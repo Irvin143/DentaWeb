@@ -360,8 +360,15 @@ export const agendarCitasApi = {
       query: { idsede: idSede, fecha },
     });
   },
-  
+
   crear(payload) {
     return apiRequest("/api/agendar/citas", { method: "POST", body: payload });
   },
+  
+  odontologoPropuesto(idSede, fecha, hora) {
+  return apiRequest("/api/agendar/odontologo-propuesto", {
+    method: "GET",
+    query: { idsede: idSede, fecha, hora },
+  });
+},
 };
