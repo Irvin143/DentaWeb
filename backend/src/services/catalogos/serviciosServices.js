@@ -29,6 +29,19 @@ const normalizarCategoria = (categoria, valorPorDefecto = null) => {
     return valor;
 };
 
+// Valida la lista de clínicas: arreglo de enteros positivos, sin repetir.
+// undefined / null → undefined (significa "no tocar las clínicas").
+const normalizarIdsClinicas = (ids) => {
+    if (ids === undefined || ids === null) return undefined;
+    if (!Array.isArray(ids)) throw errorHttp(400, 'idsClinicas debe ser un arreglo');
+
+    const limpios = [...new Set(ids.map(Number))];
+    if (limpios.some((n) => !Number.isInteger(n) || n <= 0)) {
+        throw errorHttp(400, 'idsClinicas contiene valores no válidos');
+    }
+    return limpios;
+};
+
 // Ejecuta varias consultas como una sola operación: o se guardan todas o ninguna
 const enTransaccion = async (trabajo) => {
     const cliente = await conexion.connect();
@@ -102,14 +115,14 @@ export const obtenerServicios = async ({
                  json_agg(
                    json_build_object('id_clinica', c.idClinica, 'nombre', c.nombre)
                    ORDER BY c.nombre
-                 ) FILTER (WHERE c.idClinica IS NOT NULL),
+                 ) FILTER (WHERE c.idClinica IS NOT NULL AND cs.activo),
                  '[]'::json
                ) AS clinicas
         FROM Servicios s
         LEFT JOIN Clinica_Servicio cs ON cs.idServicio = s.idServicio
         LEFT JOIN Clinicas c ON c.idClinica = cs.idClinica
         WHERE ($1::text = 'todos' OR s.activo = ($1::text = 'true'))
-          AND ($2::int IS NULL OR cs.idClinica = $2::int)
+          AND ($2::int IS NULL OR (cs.idClinica = $2::int AND cs.activo))
           AND ($3::text IS NULL OR s.categoria = $3::text)
         GROUP BY s.idServicio
         ORDER BY s.categoria, s.nombre, s.idServicio;
@@ -168,6 +181,7 @@ export const crearServicio = async ({
     idsClinicas = [],
 }) => {
     const categoriaFinal = normalizarCategoria(categoria, 'consulta');
+    const clinicas = normalizarIdsClinicas(idsClinicas) ?? [];
 
     try {
         return await enTransaccion(async (cliente) => {
@@ -179,28 +193,39 @@ export const crearServicio = async ({
             );
             const servicio = rows[0];
 
-            if (idsClinicas.length > 0) {
+            if (clinicas.length > 0) {
                 await cliente.query(
                     `INSERT INTO Clinica_Servicio (idServicio, idClinica)
                         SELECT $1, UNNEST($2::int[])
                         ON CONFLICT DO NOTHING`,
-                    [servicio.id_servicio, idsClinicas]
+                    [servicio.id_servicio, clinicas]
                 );
             }
 
-            return { ...servicio, ids_clinicas: idsClinicas };
+            return { ...servicio, ids_clinicas: clinicas };
         });
     } catch (err) {
         manejarErrorPg(err);
     }
 };
 
-// ---------- ACTUALIZAR (solo registros activos) ----------
+// ---------- ACTUALIZAR ----------
 // Reemplaza nombre y descripción; si descripcion es null, se borra.
 // categoria: si no viene, se conserva la actual.
-// Si llega idclinica, cambia la clínica del servicio (o la crea si no tenía)
-export const actualizarServicio = async (id, { nombre, descripcion, categoria, idclinica }) => {
+// idsClinicas: si viene, sincroniza las clínicas del servicio (las nuevas se agregan, las que
+// ya no aparecen se dan de baja sin borrarlas, porque las citas dependen de esa relación).
+// Si no viene, las clínicas no se tocan. idclinica (una sola) se acepta por compatibilidad.
+export const actualizarServicio = async (
+    id,
+    { nombre, descripcion, categoria, idsClinicas, idclinica }
+) => {
     const categoriaFinal = normalizarCategoria(categoria); // null = no cambiar
+    const clinicas = normalizarIdsClinicas(
+        idsClinicas ?? (idclinica != null ? [idclinica] : undefined)
+    );
+    if (clinicas && clinicas.length === 0) {
+        throw errorHttp(400, 'El servicio debe tener al menos una clínica');
+    }
 
     try {
         return await enTransaccion(async (cliente) => {
@@ -215,25 +240,41 @@ export const actualizarServicio = async (id, { nombre, descripcion, categoria, i
             );
             const servicio = rows[0];
             if (!servicio) return null; // no existe
+            if (clinicas === undefined) return servicio;
 
-            if (idclinica != null) {
-                const { rowCount } = await cliente.query(
-                    `UPDATE Clinica_Servicio
-                     SET idClinica = $2
-                     WHERE idServicio = $1`,
-                    [id, idclinica]
-                );
-                if (rowCount === 0) {
-                    await cliente.query(
-                        `INSERT INTO Clinica_Servicio (idServicio, idClinica)
-                         VALUES ($1, $2)`,
-                        [id, idclinica]
-                    );
-                }
-                return { ...servicio, id_clinica: idclinica };
-            }
+            // Clínicas que ya tenían relación pero estaban dadas de baja: se reactivan
+            await cliente.query(
+                `UPDATE Clinica_Servicio
+                 SET activo = true
+                 WHERE idServicio = $1::int
+                   AND idClinica = ANY($2::int[])
+                   AND NOT activo`,
+                [id, clinicas]
+            );
 
-            return servicio;
+            // Clínicas nuevas: se crea la relación
+            await cliente.query(
+                `INSERT INTO Clinica_Servicio (idServicio, idClinica)
+                 SELECT $1::int, c
+                 FROM unnest($2::int[]) AS c
+                 WHERE NOT EXISTS (
+                     SELECT 1 FROM Clinica_Servicio x
+                     WHERE x.idServicio = $1::int AND x.idClinica = c
+                 )`,
+                [id, clinicas]
+            );
+
+            // Clínicas que ya no aparecen: se dan de baja
+            await cliente.query(
+                `UPDATE Clinica_Servicio
+                 SET activo = false
+                 WHERE idServicio = $1::int
+                   AND activo
+                   AND NOT (idClinica = ANY($2::int[]))`,
+                [id, clinicas]
+            );
+
+            return { ...servicio, ids_clinicas: clinicas };
         });
     } catch (err) {
         manejarErrorPg(err);
@@ -241,24 +282,20 @@ export const actualizarServicio = async (id, { nombre, descripcion, categoria, i
 };
 
 // ---------- ELIMINAR (lógico) ----------
-// Desactiva el servicio y su relación con la clínica
-export const eliminarServicio = async (id) =>
-    enTransaccion(async (cliente) => {
-        const { rowCount } = await cliente.query(
-            'UPDATE Servicios SET activo = false WHERE idServicio = $1 AND activo',
-            [id]
-        );
-        if (rowCount === 0) return false; // no existe o ya estaba desactivado
-
-        await cliente.query(
-            'UPDATE Clinica_Servicio SET activo = false WHERE idServicio = $1',
-            [id]
-        );
-        return true;
-    });
+// Desactiva el servicio. Las relaciones con las clínicas no se tocan, así al reactivarlo
+// vuelve a las mismas clínicas. Todas las consultas del paciente también exigen que el
+// servicio esté activo, así que deja de ofrecerse de inmediato.
+export const eliminarServicio = async (id) => {
+    const { rowCount } = await conexion.query(
+        'UPDATE Servicios SET activo = false WHERE idServicio = $1 AND activo',
+        [id]
+    );
+    return rowCount > 0; // false = no existe o ya estaba desactivado
+};
 
 // ---------- REACTIVAR ----------
-// Reactiva el servicio y su relación con la clínica
+// Reactiva el servicio. Si no le queda ninguna clínica activa (servicios eliminados con la
+// versión anterior, que daba de baja todas las relaciones), también las reactiva.
 export const reactivarServicio = async (id) => {
     try {
         return await enTransaccion(async (cliente) => {
@@ -272,7 +309,13 @@ export const reactivarServicio = async (id) => {
             if (!rows[0]) return null; // no existe o ya estaba activo
 
             await cliente.query(
-                'UPDATE Clinica_Servicio SET activo = true WHERE idServicio = $1',
+                `UPDATE Clinica_Servicio
+                 SET activo = true
+                 WHERE idServicio = $1::int
+                   AND NOT EXISTS (
+                       SELECT 1 FROM Clinica_Servicio x
+                       WHERE x.idServicio = $1::int AND x.activo
+                   )`,
                 [id]
             );
             return rows[0];
