@@ -15,7 +15,7 @@ const manejarErrorPg = (err) => {
     if (err.code === '23503') throw errorHttp(400, 'El usuario indicado no existe');
     if (err.code === '23502') throw errorHttp(400, 'La calle de la dirección es obligatoria');
     throw err;
-};
+};  
 
 // Campos atómicos de la tabla direcciones
 const CAMPOS_DIRECCION = [
