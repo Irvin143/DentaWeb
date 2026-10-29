@@ -372,3 +372,17 @@ export const agendarCitasApi = {
   });
 },
 };
+
+export const urgenciasApi = {
+  // Sedes que pueden recibir una urgencia: [{ id_sede, nombre, direccion }]
+  sedes() {
+    return apiRequest("/api/urgencias/sedes", { method: "GET" });
+  },
+
+  // Agenda la urgencia como una cita en el primer espacio libre de hoy.
+  // payload: { id_sede, motivo, sintomas, hora_llegada }  (hora_llegada null = lo antes posible)
+  // Devuelve { id_cita, fecha, hora, hora_fin, odontologo, sede }
+  crear(payload) {
+    return apiRequest("/api/urgencias", { method: "POST", body: payload });
+  },
+};

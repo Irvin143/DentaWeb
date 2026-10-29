@@ -253,7 +253,7 @@ export default function AgendarCitaView({ onVolver }) {
     // w-full + min-h-full: ocupa todo el espacio disponible del contenedor padre
     <div
       ref={raizRef}
-      className="min-h-full w-full bg-surface p-4 md:p-8 lg:flex lg:h-full lg:flex-col lg:overflow-hidden lg:px-10 lg:py-8"
+      className="flex min-h-full w-full flex-col bg-surface p-4 md:p-8 lg:h-full lg:overflow-hidden lg:px-10 lg:py-8"
     >
       {/* Header */}
       <header className="mb-6 flex items-center justify-between lg:shrink-0">
@@ -281,7 +281,7 @@ export default function AgendarCitaView({ onVolver }) {
       {/* En móvil: una columna. En lg+: contenido del paso a la izquierda y resumen a la derecha */}
       <form
         onSubmit={(e) => e.preventDefault()}
-        className="grid grid-cols-1 gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-12 lg:grid-rows-1"
+        className="grid flex-1 grid-cols-1 gap-6 lg:min-h-0 lg:grid-cols-12 lg:grid-rows-1"
       >
         {/* COLUMNA IZQUIERDA: contenido del paso */}
         <div
@@ -327,6 +327,29 @@ export default function AgendarCitaView({ onVolver }) {
             />
           )}
 
+        </div>
+
+        {/* COLUMNA DERECHA: resumen que se va llenando.
+            En móvil solo se ve en el último paso (arriba del contenido). */}
+        <div
+          className={
+            paso === TOTAL_PASOS
+              ? 'order-first lg:order-none lg:col-span-5 lg:h-full lg:min-h-0 lg:overflow-y-auto xl:col-span-4'
+              : 'hidden lg:col-span-5 lg:block lg:h-full lg:min-h-0 lg:overflow-y-auto xl:col-span-4'
+          }
+        >
+          <ResumenCita
+            {...cita.resumen}
+            onEditarPaso={paso === TOTAL_PASOS ? cita.irAPaso : undefined}
+          />
+        </div>
+      </form>
+
+      {/* Barra de acciones: siempre a la vista, aunque el contenido crezca.
+          En móvil queda pegada al borde inferior de la pantalla; en PC se alinea con la
+          columna del contenido y no se mueve. */}
+      <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-slate-200 bg-surface px-4 py-3 md:-mx-8 md:px-8 lg:static lg:mx-0 lg:grid lg:shrink-0 lg:grid-cols-12 lg:gap-6 lg:border-0 lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-4">
+        <div className="flex flex-col gap-3 lg:col-span-7 lg:pr-2 xl:col-span-8">
           {cita.errorEnvio && (
             <div
               className="flex items-start gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-700"
@@ -346,22 +369,7 @@ export default function AgendarCitaView({ onVolver }) {
             onConfirmar={cita.confirmar}
           />
         </div>
-
-        {/* COLUMNA DERECHA: resumen que se va llenando.
-            En móvil solo se ve en el último paso (arriba del contenido). */}
-        <div
-          className={
-            paso === TOTAL_PASOS
-              ? 'order-first lg:order-none lg:col-span-5 lg:h-full lg:min-h-0 lg:overflow-y-auto xl:col-span-4'
-              : 'hidden lg:col-span-5 lg:block lg:h-full lg:min-h-0 lg:overflow-y-auto xl:col-span-4'
-          }
-        >
-          <ResumenCita
-            {...cita.resumen}
-            onEditarPaso={paso === TOTAL_PASOS ? cita.irAPaso : undefined}
-          />
-        </div>
-      </form>
+      </div>
     </div>
   );
 }
