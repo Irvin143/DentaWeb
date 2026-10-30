@@ -311,6 +311,7 @@ export default function AgendarCitaView({ onVolver }) {
               hora={form.hora}
               motivo={form.motivo}
               servicioActivo={cita.servicioActivo}
+              diasData={cita.diasData}
               horariosData={cita.horariosData}
               onProximoDia={cita.irAProximoDia}
               onFecha={cita.seleccionarFecha}

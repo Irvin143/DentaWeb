@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 // TODO: ajusta la ruta a donde tengas tu api.js (la carpeta agendarCita está junto a AgendarCitaView.jsx)
 import { serviciosApi, clinicasApi, agendarCitasApi } from '../../../services/api.js';
 import {
+  DIAS_A_CONSULTAR,
   TOTAL_PASOS,
   UMBRAL_BUSCADOR,
   formatearFecha,
@@ -135,6 +136,52 @@ function useSedes(idServicio) {
 }
 
 /* ============================================================
+   Días en los que la sede tiene horarios libres (solo esos se ofrecen en la tira de días)
+   ============================================================ */
+function useDiasDisponibles(idSede) {
+  const [dias, setDias] = useState([]); // ['AAAA-MM-DD', ...]
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState(false);
+  const [intento, setIntento] = useState(0); // para el botón "Reintentar"
+
+  useEffect(() => {
+    setDias([]);
+    setError(false);
+
+    if (!idSede) {
+      setCargando(false);
+      return undefined;
+    }
+
+    let cancelado = false;
+    setCargando(true);
+
+    agendarCitasApi
+      .dias(idSede, DIAS_A_CONSULTAR)
+      .then((res) => {
+        if (cancelado) return;
+        setDias(res?.dias ?? []);
+      })
+      .catch((err) => {
+        if (cancelado) return;
+        console.error('Error al cargar los días disponibles:', err);
+        setError(true);
+      })
+      .finally(() => {
+        if (!cancelado) setCargando(false);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [idSede, intento]);
+
+  const reintentar = useCallback(() => setIntento((n) => n + 1), []);
+
+  return { dias, cargando, error, reintentar };
+}
+
+/* ============================================================
    Horarios libres de la sede en la fecha elegida.
    Si ese día no hay ninguno, el backend también devuelve el próximo día con espacio.
    ============================================================ */
@@ -258,6 +305,7 @@ export function useAgendarCita() {
   const catalogo = useServicios();
   const sedesData = useSedes(form.id_servicio);
   const { sedes } = sedesData;
+  const diasData = useDiasDisponibles(form.id_sede);
   const horariosData = useHorarios(form.id_sede, form.fecha);
   const propuesta = useOdontologoPropuesto(
     form.id_sede,
@@ -305,12 +353,15 @@ export function useAgendarCita() {
   const volverPaso = () => irAPaso(paso - 1);
 
   /* ---------- selección ---------- */
-  // Al cambiar de servicio se pierden la sede y la hora: dependen de él
+  // Al cambiar de servicio se pierden la sede, el día y la hora: dependen de él
   const seleccionarServicio = (id) =>
-    setForm((f) => (f.id_servicio === id ? f : { ...f, id_servicio: id, id_sede: '', hora: '' }));
+    setForm((f) =>
+      f.id_servicio === id ? f : { ...f, id_servicio: id, id_sede: '', fecha: '', hora: '' }
+    );
 
+  // Cada sede tiene sus propios días y horarios libres
   const seleccionarSede = (id) =>
-    setForm((f) => (f.id_sede === id ? f : { ...f, id_sede: id, hora: '' }));
+    setForm((f) => (f.id_sede === id ? f : { ...f, id_sede: id, fecha: '', hora: '' }));
 
   // Al cambiar de día se pierde la hora: los horarios libres son otros
   const seleccionarFecha = (fecha) =>
@@ -367,6 +418,7 @@ export function useAgendarCita() {
     odontologoAsignado,
     catalogo,
     sedesData,
+    diasData,
     horariosData,
     propuesta,
     servicioActivo,

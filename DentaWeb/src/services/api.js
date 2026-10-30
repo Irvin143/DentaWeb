@@ -366,11 +366,17 @@ export const agendarCitasApi = {
   },
   
   odontologoPropuesto(idSede, fecha, hora) {
-  return apiRequest("/api/agendar/odontologo-propuesto", {
-    method: "GET",
-    query: { idsede: idSede, fecha, hora },
-  });
-},
+    return apiRequest("/api/agendar/odontologo-propuesto", {
+      method: "GET",
+      query: { idsede: idSede, fecha, hora },
+    });
+  },
+  dias(idSede, dias) {
+    return apiRequest("/api/agendar/dias-disponibles", {
+      method: "GET",
+      query: { idsede: idSede, dias },
+    });
+  },
 };
 
 export const urgenciasApi = {

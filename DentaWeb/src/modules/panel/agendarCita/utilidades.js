@@ -24,7 +24,8 @@ export const FILTROS_CATEGORIA = [
 ];
 
 export const NOMBRES_DIA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-export const DIAS_A_MOSTRAR = 5;
+// Cuántos días hacia adelante se buscan días con horarios libres
+export const DIAS_A_CONSULTAR = 30;
 
 // A partir de cuántos servicios aparece el buscador
 export const UMBRAL_BUSCADOR = 6;
@@ -46,31 +47,6 @@ export const normalizarTexto = (texto) =>
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 
-const aISO = (fecha) =>
-  `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(
-    fecha.getDate()
-  ).padStart(2, '0')}`;
-
-// Próximos días hábiles (sin domingos), a partir de mañana.
-// TODO: reemplazar por los días con disponibilidad que devuelva el backend.
-export function generarDias(cantidad) {
-  const dias = [];
-  const cursor = new Date();
-  cursor.setDate(cursor.getDate() + 1);
-  while (dias.length < cantidad) {
-    if (cursor.getDay() !== 0) {
-      dias.push({
-        fecha: aISO(cursor),
-        diaSemana: NOMBRES_DIA[cursor.getDay()],
-        diaNumero: String(cursor.getDate()).padStart(2, '0'),
-        date: new Date(cursor),
-      });
-    }
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return dias;
-}
-
 export function etiquetaMeses(dias) {
   const formato = new Intl.DateTimeFormat('es-MX', { month: 'long' });
   const primero = dias[0].date;
@@ -91,7 +67,7 @@ export function formatearHora(hhmm) {
   return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${sufijo}`;
 }
 
-// Misma forma que devuelve generarDias, a partir de una fecha 'AAAA-MM-DD'
+// Arma el día (semana, número y fecha) a partir de una fecha 'AAAA-MM-DD'
 export function diaDesdeISO(fechaISO) {
   const date = new Date(`${fechaISO}T00:00:00`);
   return {
