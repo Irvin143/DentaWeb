@@ -40,3 +40,23 @@ export const cancelarMiCita = async (req, res) => {
         responderError(res, error);
     }
 };
+
+export const reagendarMiCita = async (req, res) => {
+    try {
+        const idCita = Number.parseInt(req.params.id, 10);
+        if (!Number.isInteger(idCita)) {
+            return res.status(400).json({ error: 'El id de la cita no es válido' });
+        }
+
+        const { fecha, hora } = req.body ?? {};
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha ?? '') || !/^([01]\d|2[0-3]):[0-5]\d$/.test(hora ?? '')) {
+            return res.status(400).json({ error: 'Indica la nueva fecha (AAAA-MM-DD) y hora (HH:mm)' });
+        }
+
+        const idPaciente = await obtenerIdPaciente(idUsuarioDe(req));
+        const cita = await reagendarCita({ idCita, idPaciente, fecha, hora });
+        res.json(cita);
+    } catch (error) {
+        responderError(res, error);
+    }
+};

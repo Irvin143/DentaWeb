@@ -7,16 +7,19 @@ import {
   CalendarClock,
   CalendarPlus,
   CalendarX,
-  Loader2,
   X,
 } from 'lucide-react';
-// TODO: ajusta la ruta al archivo donde tienes apiRequest y las demás APIs
+
 import { citasApi } from '../../services/api.js';
+import CancelarCitaModal from './misCita/ModalCancelar.jsx';
+import ReagendarCitaModal from './misCita/ModalReagendar.jsx';
+import { ToastContainer } from '../../components/Toast.jsx';
+import { fechaCorta, fechaLarga, hora, mayuscula } from './misCita/Utils.js';
 
 /* ---------- Constantes ---------- */
 const TONOS = {
   Pendiente: 'bg-amber-100 text-amber-800',
-  Concluida: 'bg-green-100 text-green-800',
+  Atendida: 'bg-green-100 text-green-800',
   Cancelada: 'bg-error-container text-error',
   'No asistió': 'bg-error-container text-error',
 };
@@ -31,24 +34,12 @@ const FILTROS = [
 // Solo las citas pendientes se pueden reagendar o cancelar
 const ESTADOS_ACCIONABLES = ['Pendiente'];
 
-/* ---------- Utilidades ---------- */
-const mayuscula = (t) => t.charAt(0).toUpperCase() + t.slice(1);
-
-const fechaCorta = (f) =>
-  f.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/\./g, '');
-
-const fechaLarga = (f) =>
-  f.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
-
-const hora = (f) =>
-  f.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
-
 const puedeActuar = (c) => c.fecha >= new Date() && ESTADOS_ACCIONABLES.includes(c.estado);
 
 /* ---------- Adaptador: respuesta del backend -> formato de la pantalla ---------- */
 const ESTADOS = {
   pendiente: 'Pendiente',
-  concluida: 'Concluida',
+  atendida: 'Atendida',
   cancelada: 'Cancelada',
   no_asistio: 'No asistió',
 };
@@ -67,12 +58,57 @@ function adaptarCita(c) {
 
   return {
     id: c.id,
+    idSede: c.id_sede,
     fecha,
     motivo: c.motivo ?? 'Consulta',
     doctor: c.doctor ?? '—',
     // Un estado desconocido se muestra tal cual, sin botones de acción
     estado: ESTADOS[clave] ?? String(c.estado ?? 'Sin estado'),
   };
+}
+
+/* ---------- Toasts (para tu ToastContainer) ---------- */
+// Cada toast: { id, tipo: 'exito' | 'error', mensaje, visible }
+// Entra con visible=false y pasa a true en el siguiente cuadro para que se anime;
+// al cerrarse vuelve a false y se quita cuando termina la animación.
+function useToasts() {
+  const [toasts, setToasts] = useState([]);
+  const siguienteId = useRef(0);
+  const temporizadores = useRef(new Set());
+
+  const programar = useCallback((fn, ms) => {
+    const t = setTimeout(() => {
+      temporizadores.current.delete(t);
+      fn();
+    }, ms);
+    temporizadores.current.add(t);
+  }, []);
+
+  // Al salir de la página no quedan temporizadores pendientes
+  useEffect(() => {
+    const pendientes = temporizadores.current;
+    return () => pendientes.forEach(clearTimeout);
+  }, []);
+
+  const cerrar = useCallback(
+    (id) => {
+      setToasts((actuales) => actuales.map((t) => (t.id === id ? { ...t, visible: false } : t)));
+      programar(() => setToasts((actuales) => actuales.filter((t) => t.id !== id)), 300);
+    },
+    [programar],
+  );
+
+  const mostrar = useCallback(
+    (tipo, mensaje, duracion = 5000) => {
+      const id = ++siguienteId.current;
+      setToasts((actuales) => [...actuales, { id, tipo, mensaje, visible: false }]);
+      programar(() => setToasts((actuales) => actuales.map((t) => (t.id === id ? { ...t, visible: true } : t))), 20);
+      programar(() => cerrar(id), duracion);
+    },
+    [programar, cerrar],
+  );
+
+  return { toasts, mostrar, cerrar };
 }
 
 /* ---------- Página ---------- */
@@ -85,8 +121,8 @@ export default function CitasTablaPage() {
   const [descendente, setDescendente] = useState(true);
 
   const [porCancelar, setPorCancelar] = useState(null);
-  const [cancelando, setCancelando] = useState(false);
-  const [errorCancelar, setErrorCancelar] = useState('');
+  const [porReagendar, setPorReagendar] = useState(null);
+  const { toasts, mostrar, cerrar: cerrarToast } = useToasts();
 
   const cargar = useCallback(async (signal) => {
     setCargando(true);
@@ -124,25 +160,17 @@ export default function CitasTablaPage() {
       .sort((a, b) => (descendente ? b.fecha - a.fecha : a.fecha - b.fecha));
   }, [citas, filtro, descendente]);
 
-  function abrirCancelacion(cita) {
-    setErrorCancelar('');
-    setPorCancelar(cita);
+  function alCancelar(cita) {
+    setCitas((actuales) => actuales.map((c) => (c.id === cita.id ? { ...c, estado: 'Cancelada' } : c)));
+    setPorCancelar(null);
+    mostrar('exito', 'Tu cita fue cancelada.');
   }
 
-  async function confirmarCancelacion() {
-    const cita = porCancelar;
-    setCancelando(true);
-    setErrorCancelar('');
-    try {
-      await citasApi.cancelar(cita.id);
-      setCitas((actuales) => actuales.map((c) => (c.id === cita.id ? { ...c, estado: 'Cancelada' } : c)));
-      setPorCancelar(null);
-    } catch (error) {
-      // El diálogo se queda abierto para que puedas reintentar.
-      setErrorCancelar(error.message || 'No se pudo cancelar la cita.');
-    } finally {
-      setCancelando(false);
-    }
+  function alReagendar({ fecha, hora: horaNueva }) {
+    const nueva = new Date(`${fecha}T${horaNueva}`);
+    setCitas((actuales) => actuales.map((c) => (c.id === porReagendar.id ? { ...c, fecha: nueva } : c)));
+    setPorReagendar(null);
+    mostrar('exito', `Tu cita se reagendó para el ${fechaLarga(nueva)} a las ${hora(nueva)}.`);
   }
 
   const IconoOrden = descendente ? ArrowDown : ArrowUp;
@@ -271,17 +299,18 @@ export default function CitasTablaPage() {
                     <td className="px-5 py-4">
                       {puedeActuar(c) ? (
                         <div className="flex justify-end gap-2">
-                          <Link
-                            to={`/citas/${c.id}/reagendar`}
+                          <button
+                            type="button"
+                            onClick={() => setPorReagendar(c)}
                             aria-label={`Reagendar cita de ${c.motivo} del ${fechaCorta(c.fecha)}`}
                             className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-outline-variant px-3 py-1.5 text-xs font-medium text-on-surface transition-colors hover:bg-surface"
                           >
                             <CalendarClock size={14} className="text-primary" aria-hidden="true" />
                             Reagendar
-                          </Link>
+                          </button>
                           <button
                             type="button"
-                            onClick={() => abrirCancelacion(c)}
+                            onClick={() => setPorCancelar(c)}
                             aria-label={`Cancelar cita de ${c.motivo} del ${fechaCorta(c.fecha)}`}
                             className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-outline-variant px-3 py-1.5 text-xs font-medium text-error transition-colors hover:bg-error-container"
                           >
@@ -310,14 +339,13 @@ export default function CitasTablaPage() {
       </article>
 
       {porCancelar && (
-        <ConfirmarCancelacion
-          cita={porCancelar}
-          cancelando={cancelando}
-          error={errorCancelar}
-          onConservar={() => setPorCancelar(null)}
-          onConfirmar={confirmarCancelacion}
-        />
+        <CancelarCitaModal cita={porCancelar} onCancelada={alCancelar} onCerrar={() => setPorCancelar(null)} />
       )}
+      {porReagendar && (
+        <ReagendarCitaModal cita={porReagendar} onReagendada={alReagendar} onCerrar={() => setPorReagendar(null)} />
+      )}
+
+      <ToastContainer toasts={toasts} onCerrar={cerrarToast} />
     </section>
   );
 }
@@ -333,77 +361,4 @@ function FilasCargando() {
       ))}
     </tr>
   ));
-}
-
-/* ---------- Diálogo de confirmación ---------- */
-function ConfirmarCancelacion({ cita, cancelando, error, onConservar, onConfirmar }) {
-  const botonConservar = useRef(null);
-  const cerrar = useRef(onConservar);
-  const ocupado = useRef(cancelando);
-  cerrar.current = onConservar;
-  ocupado.current = cancelando;
-
-  // Se enfoca el botón seguro una sola vez, al abrir el diálogo.
-  useEffect(() => {
-    botonConservar.current?.focus();
-    const alPresionar = (e) => {
-      if (e.key === 'Escape' && !ocupado.current) cerrar.current();
-    };
-    window.addEventListener('keydown', alPresionar);
-    return () => window.removeEventListener('keydown', alPresionar);
-  }, []);
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={() => !cancelando && onConservar()}
-    >
-      <div
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby="titulo-cancelar"
-        aria-describedby="detalle-cancelar"
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-2xl border border-outline-variant bg-on-primary p-6"
-      >
-        <span className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-error-container text-error">
-          <CalendarX size={20} aria-hidden="true" />
-        </span>
-        <h2 id="titulo-cancelar" className="text-lg font-bold text-on-surface">
-          ¿Cancelar esta cita?
-        </h2>
-        <p id="detalle-cancelar" className="mt-2 text-sm text-on-surface-variant">
-          {cita.motivo} con {cita.doctor}, el {fechaLarga(cita.fecha)} a las {hora(cita.fecha)}. Si cambias
-          de opinión, tendrás que agendar una nueva cita.
-        </p>
-
-        {error && (
-          <p role="alert" className="mt-4 rounded-xl bg-error-container px-3 py-2 text-sm text-error">
-            {error}
-          </p>
-        )}
-
-        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <button
-            ref={botonConservar}
-            type="button"
-            onClick={onConservar}
-            disabled={cancelando}
-            className="cursor-pointer rounded-xl border border-outline-variant px-4 py-2.5 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container disabled:cursor-default disabled:opacity-60"
-          >
-            Conservar cita
-          </button>
-          <button
-            type="button"
-            onClick={onConfirmar}
-            disabled={cancelando}
-            className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-error px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-default disabled:opacity-60"
-          >
-            {cancelando && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
-            {cancelando ? 'Cancelando…' : error ? 'Reintentar' : 'Sí, cancelar'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
 }

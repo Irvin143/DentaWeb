@@ -394,4 +394,8 @@ export const citasApi = {
   cancelar(id) {
     return apiRequest(`/api/citas/${id}/cancelar`, { method: "PATCH" });
   },
+  reagendar(id, payload) {
+    return apiRequest(`/api/citas/${id}/reagendar`, { method: "PATCH", body: payload });
+  },
 };
+
