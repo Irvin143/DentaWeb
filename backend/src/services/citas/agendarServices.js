@@ -55,7 +55,7 @@ export const obtenerHorariosDisponibles = async ({ idClinica, fecha }) => {
    ============================================================ */
 
 // Estado con el que nace una cita agendada por el paciente
-const ESTADO_INICIAL = 'confirmada';
+const ESTADO_INICIAL = 'PENDIENTE';
 
 // Paciente ligado a la cuenta que inició sesión
 export const obtenerIdPacientePorUsuario = async (idUsuario) => {

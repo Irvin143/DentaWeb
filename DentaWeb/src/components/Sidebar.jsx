@@ -12,6 +12,7 @@ const DURACION_SALIDA = 300;
 const navItems = [
   { path: '/panel', label: 'Panel principal', icon: LayoutGrid },
   { path: '/panel-paciente', label: 'Mi panel', icon: CalendarCheck },
+  { path: '/mis-citas', label: 'Mis citas', icon: CalendarCheck },
   { path: '/pacientes', label: 'Pacientes', icon: Users },
   { path: '/odontologos', label: 'Odontólogos', icon: Stethoscope },
   { path: '/clinicas', label: 'Clínicas', icon: Building2 },

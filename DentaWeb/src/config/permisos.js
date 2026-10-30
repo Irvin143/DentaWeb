@@ -3,6 +3,7 @@
 export const PERMISOS_RUTAS = {
     // '/panel':            ['admin'],
     '/panel-paciente':   ['paciente'],
+    '/mis-citas':         ['paciente'],
     '/pacientes':        ['admin', 'clinica', 'odontologo'],
     '/odontologos':      ['admin', 'clinica'],
     '/clinicas':         ['admin'],

@@ -22,6 +22,7 @@ import TipoCitaPage from "../modules/catalogos/tipoCita/TipoCItaPage.jsx";
 import TiposUsuarioPage from "../modules/catalogos/tiposUsuarios/TiposUsuariosPage.jsx";
 import UsuariosPage from "../modules/catalogos/usuarios/UsuariosPage.jsx";
 import PanelPacientePage from "../modules/panel/PanelPacientePage.jsx";
+import MisCItas from "../modules/panel/MisCitas.jsx";
 
 function RedirigirInicio() {
   const destino = primeraRutaPermitida(getAuth()?.usuario);
@@ -45,6 +46,7 @@ export default function App() {
         <Route element={<ProtectedLayout />}>
           <Route path="/panel" element={<RedirigirInicio />} />
           <Route path="/panel-paciente" element={<PanelPacientePage />} />
+          <Route path="/mis-citas" element={<MisCItas />} />
           <Route path="/clinicas" element={<ClinicasPage />} />
           <Route path="/pacientes" element={<PacientesPage />} />
           <Route path="/odontologos" element={<OdontologosPage />} />

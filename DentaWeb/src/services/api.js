@@ -386,3 +386,12 @@ export const urgenciasApi = {
     return apiRequest("/api/urgencias", { method: "POST", body: payload });
   },
 };
+
+export const citasApi = {
+  listar(options) {
+    return apiRequest("/api/citas", { method: "GET", ...options });
+  },
+  cancelar(id) {
+    return apiRequest(`/api/citas/${id}/cancelar`, { method: "PATCH" });
+  },
+};

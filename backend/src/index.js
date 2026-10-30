@@ -70,6 +70,9 @@ app.use('/api/agendar', agendarRoutes);
 import urgenciaRoutes from './routes/citas/urgencia.route.js';
 app.use('/api/urgencias', urgenciaRoutes);
 
+import misCitasRoutes from './routes/citas/misCitas.route.js';
+app.use('/api/citas', misCitasRoutes);
+
 app.use((err, req, res, next) => {
     if (err.status) {
         return res.status(err.status).json({ error: err.message });
