@@ -10,6 +10,7 @@ import {
   User,
 } from 'lucide-react';
 import { useAgendarCita } from './agendarCita/useAgendarCita.js';
+import { ToastContainer } from '../../components/Toast.jsx';
 import SelectorServicio from './agendarCita/SelectorServicio.jsx';
 import SelectorSede from './agendarCita/SelectorSede.jsx';
 import SelectorFechaHora from './agendarCita/SelectorFechaHora.jsx';
@@ -239,6 +240,7 @@ export default function AgendarCitaView({ onVolver }) {
         ref={raizRef}
         className="min-h-full w-full bg-surface p-4 md:p-8 lg:flex lg:h-full lg:flex-col lg:overflow-y-auto lg:px-10 lg:py-8"
       >
+        <ToastContainer toasts={cita.toasts} onCerrar={cita.cerrarToast} />
         <CitaConfirmada
           resumen={cita.resumen}
           odontologo={cita.odontologoAsignado}
@@ -255,6 +257,8 @@ export default function AgendarCitaView({ onVolver }) {
       ref={raizRef}
       className="flex min-h-full w-full flex-col bg-surface p-4 md:p-8 lg:h-full lg:overflow-hidden lg:px-10 lg:py-8"
     >
+      <ToastContainer toasts={cita.toasts} onCerrar={cita.cerrarToast} />
+
       {/* Header */}
       <header className="mb-6 flex items-center justify-between lg:shrink-0">
         <div className="flex items-center gap-4">
@@ -351,14 +355,6 @@ export default function AgendarCitaView({ onVolver }) {
           columna del contenido y no se mueve. */}
       <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-slate-200 bg-surface px-4 py-3 md:-mx-8 md:px-8 lg:static lg:mx-0 lg:grid lg:shrink-0 lg:grid-cols-12 lg:gap-6 lg:border-0 lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-4">
         <div className="flex flex-col gap-3 lg:col-span-7 lg:pr-2 xl:col-span-8">
-          {cita.errorEnvio && (
-            <div
-              className="flex items-start gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-700"
-              role="alert"
-            >
-              <AlertCircle size={16} className="mt-0.5 shrink-0" /> {cita.errorEnvio}
-            </div>
-          )}
 
           <NavegacionPasos
             paso={paso}

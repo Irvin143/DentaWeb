@@ -20,6 +20,9 @@ import {
 } from 'lucide-react';
 // TODO: ajusta la ruta a donde tengas tu api.js
 import { urgenciasApi } from '../../services/api.js';
+// TODO: ajusta las rutas a donde tengas ToastContainer y useToasts
+import { ToastContainer } from '../../components/Toast.jsx';
+import { useToasts } from '../../hooks/useToasts.js';
 
 const motivos = [
   { id: 'dolor', titulo: 'Dolor agudo o punzante', desc: 'Sensibilidad extrema', icono: Zap },
@@ -89,7 +92,7 @@ export default function UrgenciaView({ onVolver }) {
   const [form, setForm] = useState(FORM_INICIAL);
   const [erroresCampos, setErroresCampos] = useState({});
   const [cargando, setCargando] = useState(false);
-  const [errorEnvio, setErrorEnvio] = useState(null);
+  const toasts = useToasts();
   const [resultado, setResultado] = useState(null); // respuesta del servidor cuando ya se envió
   const formularioRef = useRef(null);
 
@@ -167,7 +170,6 @@ export default function UrgenciaView({ onVolver }) {
     const errores = validar();
     if (Object.keys(errores).length > 0) {
       setErroresCampos(errores);
-      setErrorEnvio(null);
       requestAnimationFrame(() => {
         const primero = Object.keys(errores)[0];
         formularioRef.current
@@ -178,7 +180,6 @@ export default function UrgenciaView({ onVolver }) {
     }
 
     setCargando(true);
-    setErrorEnvio(null);
     try {
       const urgencia = await urgenciasApi.crear({
         id_sede: Number(form.sede),
@@ -187,8 +188,9 @@ export default function UrgenciaView({ onVolver }) {
         hora_llegada: form.llegada === 'hora' ? form.hora : null,
       });
       setResultado(urgencia);
+      toasts.exito(`Urgencia agendada: te esperamos hoy a las ${hhmmA12(urgencia.hora)}.`);
     } catch (err) {
-      setErrorEnvio(err.message || 'No pudimos enviar tu alerta. Intenta de nuevo o llama a la clínica.');
+      toasts.error(err.message || 'No pudimos enviar tu alerta. Intenta de nuevo o llama a la clínica.');
     } finally {
       setCargando(false);
     }
@@ -212,6 +214,7 @@ export default function UrgenciaView({ onVolver }) {
     const mapa = urlMapa(sede?.direccion);
     return (
       <div className="min-h-full w-full bg-surface p-4 md:p-8 lg:px-10 lg:py-8">
+        <ToastContainer toasts={toasts.toasts} onCerrar={toasts.cerrar} />
         <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-6">
           <span className="flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600">
             <CheckCircle2 size={36} />
@@ -291,6 +294,7 @@ export default function UrgenciaView({ onVolver }) {
   return (
     // w-full + min-h-full: ocupa todo el espacio disponible del contenedor padre
     <div className="min-h-full w-full bg-surface p-4 md:p-8 lg:px-10 lg:py-8">
+      <ToastContainer toasts={toasts.toasts} onCerrar={toasts.cerrar} />
       {/* Header */}
       <header className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -528,11 +532,6 @@ export default function UrgenciaView({ onVolver }) {
 
           {/* Botón de envío */}
           <div>
-            {errorEnvio && (
-              <div className="mb-3 flex items-start gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">
-                <AlertCircle size={16} className="mt-0.5 shrink-0" /> {errorEnvio}
-              </div>
-            )}
             <button
               type="submit"
               disabled={cargando}

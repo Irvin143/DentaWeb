@@ -67,7 +67,7 @@ export const obtenerDiasDisponibles = async ({ idClinica, dias = 30 }) => {
    ============================================================ */
 
 // Estado con el que nace una cita agendada por el paciente
-const ESTADO_INICIAL = 'confirmada';
+const ESTADO_INICIAL = 'PENDIENTE';
 
 // Paciente ligado a la cuenta que inició sesión
 export const obtenerIdPacientePorUsuario = async (idUsuario) => {
@@ -83,7 +83,7 @@ export const obtenerIdPacientePorUsuario = async (idUsuario) => {
 // TODO: ajusta esta consulta a la estructura real de tipos_cita
 const resolverIdTipo = async (cliente, categoria) => {
     const { rows } = await cliente.query(
-        'SELECT idTipo FROM tipos_cita WHERE lower(nombre) = $1 LIMIT 1',
+        'SELECT idTipo FROM tipo_cita WHERE lower(nombre) = $1 LIMIT 1',
         [String(categoria).toLowerCase()]
     );
     if (!rows[0]) {

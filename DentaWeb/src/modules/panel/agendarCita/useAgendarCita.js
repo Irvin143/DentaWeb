@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 // TODO: ajusta la ruta a donde tengas tu api.js (la carpeta agendarCita está junto a AgendarCitaView.jsx)
 import { serviciosApi, clinicasApi, agendarCitasApi } from '../../../services/api.js';
+// TODO: ajusta la ruta a donde guardes useToasts.js
+import { useToasts } from '../../../hooks/useToasts.js';
 import {
   DIAS_A_CONSULTAR,
   TOTAL_PASOS,
@@ -298,7 +300,7 @@ export function useAgendarCita() {
   const [confirmada, setConfirmada] = useState(false);
   const [form, setForm] = useState(FORM_INICIAL);
   const [cargando, setCargando] = useState(false);
-  const [errorEnvio, setErrorEnvio] = useState(null);
+  const toasts = useToasts();
   // El odontólogo lo asigna el backend al confirmar. Formato esperado: { nombre }
   const [odontologoAsignado, setOdontologoAsignado] = useState(null);
 
@@ -345,10 +347,7 @@ export function useAgendarCita() {
     !sinDisponibilidad;
 
   /* ---------- navegación ---------- */
-  const irAPaso = (n) => {
-    setErrorEnvio(null);
-    setPaso(n);
-  };
+  const irAPaso = (n) => setPaso(n);
   const continuar = () => irAPaso(paso + 1);
   const volverPaso = () => irAPaso(paso - 1);
 
@@ -382,7 +381,6 @@ export function useAgendarCita() {
     if (paso !== TOTAL_PASOS || cargando) return;
 
     setCargando(true);
-    setErrorEnvio(null);
     try {
       // El backend vuelve a validar la disponibilidad y asigna al odontólogo
       const cita = await agendarCitasApi.crear({
@@ -394,15 +392,16 @@ export function useAgendarCita() {
       });
       setOdontologoAsignado(cita?.odontologo ?? null);
       setConfirmada(true);
+      toasts.exito(`¡Cita agendada! ${formatearFecha(form.fecha)}, ${formatearHora(form.hora)}.`);
     } catch (err) {
       if (err.status === 409) {
         // El horario se ocupó mientras el paciente confirmaba (o ya tiene una cita a esa hora)
-        setErrorEnvio(err.message || 'Ese horario ya no está disponible. Elige otro para continuar.');
+        toasts.error(err.message || 'Ese horario ya no está disponible. Elige otro para continuar.');
         setPaso(2);
         setForm((f) => ({ ...f, hora: '' }));
         horariosData.reintentar(); // vuelve a pedir los horarios libres
       } else {
-        setErrorEnvio(err.message || 'No pudimos agendar tu cita. Intenta de nuevo.');
+        toasts.error(err.message || 'No pudimos agendar tu cita. Intenta de nuevo.');
       }
     } finally {
       setCargando(false);
@@ -414,7 +413,8 @@ export function useAgendarCita() {
     confirmada,
     form,
     cargando,
-    errorEnvio,
+    toasts: toasts.toasts,
+    cerrarToast: toasts.cerrar,
     odontologoAsignado,
     catalogo,
     sedesData,
