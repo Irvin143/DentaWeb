@@ -42,6 +42,26 @@ export const listar = async (req, res) => {
     }
 };
 
+// GET /agendar/dias-disponibles?idsede=1&dias=30
+// Días con al menos un horario libre en la sede. Responde { dias: ['AAAA-MM-DD', ...] }
+export const listarDias = async (req, res) => {
+    const { idsede } = req.query;
+    const dias = req.query.dias === undefined ? 30 : Number(req.query.dias);
+
+    if (!idValido(idsede)) {
+        return res.status(400).json({ error: 'idsede debe ser un entero positivo' });
+    }
+    if (!Number.isInteger(dias) || dias < 1 || dias > 60) {
+        return res.status(400).json({ error: 'dias debe ser un entero entre 1 y 60' });
+    }
+
+    try {
+        res.json(await agendarService.obtenerDiasDisponibles({ idClinica: Number(idsede), dias }));
+    } catch (err) {
+        responderError(res, err);
+    }
+};
+
 // GET /agendar/odontologo-propuesto?idsede=1&fecha=2026-10-28&hora=09:30
 // Odontólogo que se asignaría hoy a ese horario. Responde { odontologo: {...} | null }
 export const proponerOdontologo = async (req, res) => {

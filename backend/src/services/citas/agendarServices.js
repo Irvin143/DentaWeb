@@ -50,12 +50,24 @@ export const obtenerHorariosDisponibles = async ({ idClinica, fecha }) => {
     return { fecha, horas, proximo_dia: proximoDia };
 };
 
+// Días (desde hoy y hasta `dias` días adelante) en los que la sede tiene horarios libres.
+// Devuelve { dias: ['AAAA-MM-DD', ...] }
+export const obtenerDiasDisponibles = async ({ idClinica, dias = 30 }) => {
+    // to_char evita que el driver convierta la fecha a un Date con zona horaria
+    const { rows } = await conexion.query(
+        `SELECT to_char(dia, 'YYYY-MM-DD') AS dia
+         FROM fn_dias_disponibles($1::int, $2::int)`,
+        [idClinica, dias]
+    );
+    return { dias: rows.map((r) => r.dia) };
+};
+
 /* ============================================================
    CREAR CITA
    ============================================================ */
 
 // Estado con el que nace una cita agendada por el paciente
-const ESTADO_INICIAL = 'PENDIENTE';
+const ESTADO_INICIAL = 'confirmada';
 
 // Paciente ligado a la cuenta que inició sesión
 export const obtenerIdPacientePorUsuario = async (idUsuario) => {
@@ -71,7 +83,7 @@ export const obtenerIdPacientePorUsuario = async (idUsuario) => {
 // TODO: ajusta esta consulta a la estructura real de tipos_cita
 const resolverIdTipo = async (cliente, categoria) => {
     const { rows } = await cliente.query(
-        'SELECT idTipo FROM tipo_cita WHERE lower(nombre) = $1 LIMIT 1',
+        'SELECT idTipo FROM tipos_cita WHERE lower(nombre) = $1 LIMIT 1',
         [String(categoria).toLowerCase()]
     );
     if (!rows[0]) {
