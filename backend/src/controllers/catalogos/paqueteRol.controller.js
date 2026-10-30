@@ -1,4 +1,4 @@
-import * as rolService from '../services/catalogos/rolServices.js';
+import * as paqueteRolService from '../../services/catalogos/paqueteRolServices.js';
 
 const FILTROS_VALIDOS = ['true', 'false', 'todos'];
 
@@ -27,7 +27,7 @@ export const listar = async (req, res) => {
         return res.status(400).json({ error: "activo debe ser 'true', 'false' o 'todos'" });
     }
     try {
-        res.json(await rolService.obtenerRoles({ filtroActivo }));
+        res.json(await paqueteRolService.obtenerPaquetes({ filtroActivo }));
     } catch (err) {
         responderError(res, err);
     }
@@ -37,9 +37,9 @@ export const obtenerPorId = async (req, res) => {
     const { id } = req.params;
     if (!idValido(id)) return res.status(400).json({ error: 'ID inválido' });
     try {
-        const rol = await rolService.obtenerRolPorId(Number(id));
-        if (!rol) return res.status(404).json({ error: 'Rol no encontrado' });
-        res.json(rol);
+        const paquete = await paqueteRolService.obtenerPaquetePorId(Number(id));
+        if (!paquete) return res.status(404).json({ error: 'Paquete no encontrado' });
+        res.json(paquete);
     } catch (err) {
         responderError(res, err);
     }
@@ -49,8 +49,8 @@ export const crear = async (req, res) => {
     const { datos, error } = validarBody(req.body);
     if (error) return res.status(400).json({ error });
     try {
-        const rol = await rolService.crearRol(datos);
-        res.status(201).json(rol);
+        const paquete = await paqueteRolService.crearPaquete(datos);
+        res.status(201).json(paquete);
     } catch (err) {
         responderError(res, err);
     }
@@ -62,9 +62,9 @@ export const actualizar = async (req, res) => {
     const { datos, error } = validarBody(req.body);
     if (error) return res.status(400).json({ error });
     try {
-        const rol = await rolService.actualizarRol(Number(id), datos);
-        if (!rol) return res.status(404).json({ error: 'Rol no encontrado o desactivado' });
-        res.json(rol);
+        const paquete = await paqueteRolService.actualizarPaquete(Number(id), datos);
+        if (!paquete) return res.status(404).json({ error: 'Paquete no encontrado o desactivado' });
+        res.json(paquete);
     } catch (err) {
         responderError(res, err);
     }
@@ -74,9 +74,9 @@ export const eliminar = async (req, res) => {
     const { id } = req.params;
     if (!idValido(id)) return res.status(400).json({ error: 'ID inválido' });
     try {
-        const ok = await rolService.eliminarRol(Number(id));
-        if (!ok) return res.status(404).json({ error: 'Rol no encontrado o ya desactivado' });
-        res.status(200).json({ mensaje: 'Rol eliminado correctamente.' });
+        const ok = await paqueteRolService.eliminarPaquete(Number(id));
+        if (!ok) return res.status(404).json({ error: 'Paquete no encontrado o ya desactivado' });
+        res.status(200).json({ mensaje: 'Paquete eliminado correctamente.' });
     } catch (err) {
         responderError(res, err);
     }
@@ -86,9 +86,9 @@ export const reactivar = async (req, res) => {
     const { id } = req.params;
     if (!idValido(id)) return res.status(400).json({ error: 'ID inválido' });
     try {
-        const rol = await rolService.reactivarRol(Number(id));
-        if (!rol) return res.status(404).json({ error: 'Rol no encontrado o ya activo' });
-        res.json({ mensaje: 'Rol reactivado correctamente.', rol });
+        const paquete = await paqueteRolService.reactivarPaquete(Number(id));
+        if (!paquete) return res.status(404).json({ error: 'Paquete no encontrado o ya activo' });
+        res.json({ mensaje: 'Paquete reactivado correctamente.', paquete });
     } catch (err) {
         responderError(res, err);
     }

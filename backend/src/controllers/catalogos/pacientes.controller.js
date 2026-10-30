@@ -1,4 +1,4 @@
-import * as pacientesService from '../services/catalogos/pacienteServices.js';
+import * as pacientesService from '../../services/catalogos/pacienteServices.js';
 
 export async function obtenerPacientes(req, res, next) {
     try {
@@ -87,9 +87,9 @@ export async function reactivar(req, res, next) {
     }
 }
 
-import * as loginServices from '../services/loginServices.js';
-import { errorContrasena, errorTelefono } from './login.controller.js';
-import { conflictoTelefono } from '../services/telefonoUnico.js';
+import * as loginServices from '../../services/loginServices.js';
+import { errorContrasena, errorTelefono } from '../login.controller.js';
+import { conflictoTelefono } from '../../services/telefonoUnico.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

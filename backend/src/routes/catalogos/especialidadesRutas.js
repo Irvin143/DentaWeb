@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import * as especialidadesController from '../controllers/especialidades.controller.js';
-import { exigirAcceso } from '../middleware/auth.js';
+import * as especialidadesController from '../../controllers/catalogos/especialidades.controller.js';
+import { exigirAcceso } from '../../middleware/auth.js';
 
 const router = Router();
 

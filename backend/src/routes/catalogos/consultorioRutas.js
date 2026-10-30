@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import * as consultorioController from '../controllers/consultorio.controller.js';
-import { exigirAcceso } from '../middleware/auth.js';
+import * as consultorioController from '../../controllers/catalogos/consultorio.controller.js';
+import { exigirAcceso } from '../../middleware/auth.js';
 
 const router = Router();
 

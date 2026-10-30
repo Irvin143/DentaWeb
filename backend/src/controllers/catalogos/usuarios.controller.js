@@ -1,5 +1,5 @@
-import * as usuarioService from '../services/catalogos/usuariosServices.js';
-import { errorContrasena } from './login.controller.js';
+import * as usuarioService from '../../services/catalogos/usuariosServices.js';
+import { errorContrasena } from '../login.controller.js';
 
 const FILTROS_VALIDOS = ['true', 'false', 'todos'];
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

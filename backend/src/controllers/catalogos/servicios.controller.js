@@ -1,4 +1,4 @@
-import * as servicioService from '../services/catalogos/serviciosServices.js';
+import * as servicioService from '../../services/catalogos/serviciosServices.js';
 
 const FILTROS_VALIDOS = ['true', 'false', 'todos'];
 const CATEGORIAS_VALIDAS = ['consulta', 'estudio'];

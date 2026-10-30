@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import * as rolController from '../controllers/rol.controller.js';
-import { exigirAcceso } from '../middleware/auth.js';
+import * as rolController from '../../controllers/catalogos/rol.controller.js';
+import { exigirAcceso } from '../../middleware/auth.js';
 
 const router = Router();
 

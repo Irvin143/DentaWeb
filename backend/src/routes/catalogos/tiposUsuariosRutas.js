@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import * as tipoUsuarioController from '../controllers/tiposUsuarios.controller.js';
-import { exigirAcceso } from '../middleware/auth.js';
+import * as tipoUsuarioController from '../../controllers/catalogos/tiposUsuarios.controller.js';
+import { exigirAcceso } from '../../middleware/auth.js';
 
 const router = Router();
 

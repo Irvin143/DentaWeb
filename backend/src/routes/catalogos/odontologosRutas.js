@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import * as odontologoController from '../controllers/odontologos.controller.js';
-import { exigirAcceso } from '../middleware/auth.js';
+import * as odontologoController from '../../controllers/catalogos/odontologos.controller.js';
+import { exigirAcceso } from '../../middleware/auth.js';
 
 const router = Router();
 

@@ -1,4 +1,4 @@
-import * as consultorioService from '../services/catalogos/consultorioServices.js';
+import * as consultorioService from '../../services/catalogos/consultorioServices.js';
 
 const FILTROS_VALIDOS = ['true', 'false', 'todos'];
 

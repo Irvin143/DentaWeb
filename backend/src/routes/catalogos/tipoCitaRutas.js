@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import * as tipoCitaController from '../controllers/tipoCita.controller.js';
-import { exigirAcceso } from '../middleware/auth.js';
+import * as tipoCitaController from '../../controllers/catalogos/tipoCita.controller.js';
+import { exigirAcceso } from '../../middleware/auth.js';
 
 const router = Router();
 
@@ -14,7 +14,3 @@ router.delete('/:id', tipoCitaController.eliminar);            // DELETE /api/ti
 router.patch('/:id/reactivar', tipoCitaController.reactivar);  // PATCH  /api/tipos-cita/5/reactivar
 
 export default router;
-
-// En tu app.js:
-// import tipoCitaRoutes from './routes/tipoCitaRoutes.js';
-// app.use('/api/tipos-cita', tipoCitaRoutes);

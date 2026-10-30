@@ -28,40 +28,40 @@ app.use(cors({
 import loginRutas from './routes/loginRutas.js';
 app.use("/api/login", loginRutas);
 
-import pacienteRutas from './routes/pacienteRutas.js';
+import pacienteRutas from './routes/catalogos/pacienteRutas.js';
 app.use("/api/pacientes", pacienteRutas);
 
-import especialidadesRoutes from './routes/especialidadesRutas.js';
+import especialidadesRoutes from './routes/catalogos/especialidadesRutas.js';
 app.use('/api/especialidades', especialidadesRoutes);
 
-import estudiosRoutes from './routes/estudiosRutas.js';
+import estudiosRoutes from './routes/catalogos/estudiosRutas.js';
 app.use('/api/estudios', estudiosRoutes);
 
-import clinicasRoutes from './routes/clinicasRutas.js';
+import clinicasRoutes from './routes/catalogos/clinicasRutas.js';
 app.use('/api/clinicas', clinicasRoutes);
 
-import serviciosRoutes from './routes/serviciosRutas.js';
+import serviciosRoutes from './routes/catalogos/serviciosRutas.js';
 app.use('/api/servicios', serviciosRoutes);
 
-import consultorioRoutes from './routes/consultorioRutas.js';
+import consultorioRoutes from './routes/catalogos/consultorioRutas.js';
 app.use('/api/consultorios', consultorioRoutes);
 
-import rolRoutes from './routes/rolRutas.js';
+import rolRoutes from './routes/catalogos/rolRutas.js';
 app.use('/api/roles', rolRoutes);
 
-import paqueteRolRoutes from './routes/paqueteRolRutas.js';
+import paqueteRolRoutes from './routes/catalogos/paqueteRolRutas.js';
 app.use('/api/paquetes-roles', paqueteRolRoutes);
 
-import odontologoRoutes from './routes/odontologosRutas.js';
+import odontologoRoutes from './routes/catalogos/odontologosRutas.js';
 app.use('/api/odontologos', odontologoRoutes);
 
-import tipoCitaRoutes from './routes/tipoCitaRutas.js';
+import tipoCitaRoutes from './routes/catalogos/tipoCitaRutas.js';
 app.use('/api/tipos-cita', tipoCitaRoutes);
 
-import tipoUsuarioRoutes from './routes/tiposUsuariosRutas.js';
+import tipoUsuarioRoutes from './routes/catalogos/tiposUsuariosRutas.js';
 app.use('/api/tipos-usuario', tipoUsuarioRoutes);
 
-import usuarioRoutes from './routes/usuariosRutas.js';
+import usuarioRoutes from './routes/catalogos/usuariosRutas.js';
 app.use('/api/usuarios', usuarioRoutes);
 
 import agendarRoutes from './routes/citas/agendarRutas.js';

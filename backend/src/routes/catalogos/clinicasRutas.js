@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import * as clinicaController from '../controllers/clinicas.controller.js';
-import { exigirAcceso, exigirSesion} from '../middleware/auth.js';
+import * as clinicaController from '../../controllers/catalogos/clinicas.controller.js';
+import { exigirAcceso, exigirSesion} from '../../middleware/auth.js';
 
 const router = Router();
 

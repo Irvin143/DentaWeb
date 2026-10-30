@@ -1,4 +1,4 @@
-import * as especialidadesService from '../services/catalogos/especialidades.js';
+import * as especialidadesService from '../../services/catalogos/especialidades.js';
 
 
 export async function obtenerEspecialidades(req, res, next) {
