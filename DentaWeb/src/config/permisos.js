@@ -5,6 +5,7 @@ export const PERMISOS_RUTAS = {
     '/panel-paciente':   ['paciente'],
     '/mis-citas':         ['paciente'],
     '/pacientes':        ['admin', 'clinica', 'odontologo'],
+    '/agenda':           ['admin', 'clinica', 'odontologo'],
     '/odontologos':      ['admin', 'clinica'],
     '/clinicas':         ['admin'],
     '/consultorios':     ['admin', 'clinica'],

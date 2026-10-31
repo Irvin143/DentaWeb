@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Building2, BriefcaseMedical, CalendarCheck, CalendarClock, ChevronLeft, ChevronRight, DoorOpen, GraduationCap, IdCard, KeyRound, LayoutGrid, LogOut, Menu, Package, Scan, Shield, Stethoscope, UserCog, Users, X } from 'lucide-react';
+import { Building2, BriefcaseMedical, Calendar, CalendarCheck, CalendarClock, ChevronLeft, ChevronRight, DoorOpen, GraduationCap, IdCard, KeyRound, LayoutGrid, LogOut, Menu, Package, Scan, Shield, Stethoscope, UserCog, Users, X } from 'lucide-react';
 import { borrarSesion, getAuth, puedeVer, primeraRutaPermitida } from '../config/permisos'; // ajusta la ruta a donde guardes permisos.js
 import ModalCambiarPassword from './ModalCambiarPassword';
 import { ToastContainer } from './Toast';
@@ -14,6 +14,7 @@ const navItems = [
   { path: '/panel-paciente', label: 'Mi panel', icon: CalendarCheck },
   { path: '/mis-citas', label: 'Mis citas', icon: CalendarCheck },
   { path: '/pacientes', label: 'Pacientes', icon: Users },
+  { path: '/agenda', label: 'Agenda', icon: Calendar },
   { path: '/odontologos', label: 'Odontólogos', icon: Stethoscope },
   { path: '/clinicas', label: 'Clínicas', icon: Building2 },
   { path: '/consultorios', label: 'Consultorios', icon: DoorOpen },
@@ -25,7 +26,6 @@ const navItems = [
   { path: '/roles', label: 'Roles', icon: Shield },
   { path: '/tipos-usuario', label: 'Tipos de usuario', icon: IdCard },
   { path: '/usuarios', label: 'Usuarios', icon: UserCog },
-  // { path: "/agenda", label: "Agenda", icon: Calendar },
 ];
 
 function presentarPalabra(texto) {

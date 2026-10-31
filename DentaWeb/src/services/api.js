@@ -394,8 +394,13 @@ export const urgenciasApi = {
 };
 
 export const citasApi = {
-  listar(options) {
-    return apiRequest("/api/citas", { method: "GET", ...options });
+  listar(options = {}) {
+    const { desde, hasta, estado, idclinica, idodontologo, query, ...rest } = options;
+    return apiRequest("/api/citas", {
+      method: "GET",
+      query: query ?? { desde, hasta, estado, idclinica, idodontologo },
+      ...rest,
+    });
   },
   cancelar(id) {
     return apiRequest(`/api/citas/${id}/cancelar`, { method: "PATCH" });

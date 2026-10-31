@@ -23,6 +23,7 @@ import TiposUsuarioPage from "../modules/catalogos/tiposUsuarios/TiposUsuariosPa
 import UsuariosPage from "../modules/catalogos/usuarios/UsuariosPage.jsx";
 import PanelPacientePage from "../modules/panel/PanelPacientePage.jsx";
 import MisCItas from "../modules/panel/MisCitas.jsx";
+import AgendaPage from "../modules/agenda/AgendaPage.jsx";
 
 function RedirigirInicio() {
   const destino = primeraRutaPermitida(getAuth()?.usuario);
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="/mis-citas" element={<MisCItas />} />
           <Route path="/clinicas" element={<ClinicasPage />} />
           <Route path="/pacientes" element={<PacientesPage />} />
+          <Route path="/agenda" element={<AgendaPage />} />
           <Route path="/odontologos" element={<OdontologosPage />} />
           <Route path="/especialidades" element={<EspecialidadesPage />} />
           <Route path="/consultorios" element={<ConsultoriosPage />} />
