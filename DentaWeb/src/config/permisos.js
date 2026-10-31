@@ -2,7 +2,7 @@
 // No importan mayúsculas, acentos ni espacios extra: "Odontólogo" = "odontologo".
 export const PERMISOS_RUTAS = {
     // '/panel':            ['admin'],
-    '/panel-paciente':   ['paciente'],
+    '/inicio':           ['paciente'],
     '/mis-citas':         ['paciente'],
     '/pacientes':        ['admin', 'clinica', 'odontologo'],
     '/agenda':           ['admin', 'clinica', 'odontologo'],

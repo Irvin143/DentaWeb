@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
   ArrowDown,
   ArrowUp,
   CalendarClock,
-  CalendarPlus,
   CalendarX,
+  Plus,
   X,
 } from 'lucide-react';
 
 import { citasApi } from '../../services/api.js';
+import AgendarCitaView from './AgendarCitaView';
 import CancelarCitaModal from './misCita/ModalCancelar.jsx';
 import ReagendarCitaModal from './misCita/ModalReagendar.jsx';
 import { ToastContainer } from '../../components/Toast.jsx';
@@ -100,6 +100,7 @@ export default function CitasTablaPage() {
 
   const [porCancelar, setPorCancelar] = useState(null);
   const [porReagendar, setPorReagendar] = useState(null);
+  const [vista, setVista] = useState('lista');
   const { toasts, mostrar, cerrar: cerrarToast } = useToasts();
 
   const cargar = useCallback(async (signal) => {
@@ -153,6 +154,17 @@ export default function CitasTablaPage() {
 
   const IconoOrden = descendente ? ArrowDown : ArrowUp;
 
+  if (vista === 'agendar') {
+    return (
+      <AgendarCitaView
+        onVolver={() => {
+          setVista('lista');
+          cargar();
+        }}
+      />
+    );
+  }
+
   return (
     <section className="flex flex-col gap-6 bg-surface p-4 md:p-8">
       <header className="flex flex-wrap items-start justify-between gap-4">
@@ -160,13 +172,14 @@ export default function CitasTablaPage() {
           <h1 className="text-2xl font-bold text-on-surface">Mis citas</h1>
           <p className="mt-1 text-sm text-on-surface-variant">Todas tus citas en un solo lugar.</p>
         </div>
-        <Link
-          to="/citas/nueva"
+        <button
+          type="button"
+          onClick={() => setVista('agendar')}
           className="flex cursor-pointer items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-teal-600/20 transition-colors hover:bg-teal-700"
         >
-          <CalendarPlus size={16} />
-          Nueva cita
-        </Link>
+          <Plus size={18} aria-hidden="true" />
+          Agendar cita
+        </button>
       </header>
 
       <article className="overflow-hidden rounded-2xl border border-outline-variant bg-on-primary">

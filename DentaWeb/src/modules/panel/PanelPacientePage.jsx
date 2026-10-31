@@ -61,38 +61,37 @@ export default function PanelPacientePage() {
   }
 
   return (
-    <section className="mx-auto flex max-w-7xl flex-col gap-6 bg-surface p-4 md:p-8">
-      <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <section className="flex min-w-0 flex-col gap-6 bg-surface p-4 md:p-8">
+      <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-on-surface">
             {primerNombre ? `${saludo}, ${primerNombre}` : saludo}
           </h1>
           <p className="mt-1 text-sm text-on-surface-variant">{fechaHoy()}</p>
         </div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <label className="relative block">
-            <span className="sr-only">Buscar citas o historial</span>
-            <Search
-              size={18}
-              aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-outline"
-            />
-            <input
-              type="search"
-              placeholder="Buscar citas o historial..."
-              className="h-10 w-full rounded-xl border border-outline-variant bg-on-primary pr-4 pl-9 text-sm text-on-surface placeholder:text-outline focus:ring-2 focus:ring-teal-500/20 focus:outline-none sm:w-64"
-            />
-          </label>
-          <button
-            type="button"
-            className={botonPrimario}
-            onClick={() => setVista('agendar')} // ACCIÓN BOTÓN SUPERIOR
-          >
-            <Plus size={18} aria-hidden="true" />
-            Agendar cita
-          </button>
-        </div>
+        <button
+          type="button"
+          className={botonPrimario}
+          onClick={() => setVista('agendar')}
+        >
+          <Plus size={18} aria-hidden="true" />
+          Agendar cita
+        </button>
       </header>
+
+      <label className="relative block max-w-md">
+        <span className="sr-only">Buscar citas o historial</span>
+        <Search
+          size={18}
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-outline"
+        />
+        <input
+          type="search"
+          placeholder="Buscar citas o historial..."
+          className="h-10 w-full rounded-xl border border-outline-variant bg-on-primary pr-4 pl-9 text-sm text-on-surface placeholder:text-outline focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
+        />
+      </label>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <article className="flex items-start gap-4 rounded-2xl border border-outline-variant bg-on-primary p-5">

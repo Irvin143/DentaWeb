@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Building2, BriefcaseMedical, Calendar, CalendarCheck, CalendarClock, ChevronLeft, ChevronRight, DoorOpen, GraduationCap, IdCard, KeyRound, LayoutGrid, LogOut, Menu, Package, Scan, Shield, Stethoscope, UserCog, Users, X } from 'lucide-react';
+import { Building2, BriefcaseMedical, Calendar, CalendarClock, ChevronLeft, ChevronRight, DoorOpen, GraduationCap, Home, IdCard, KeyRound, LayoutGrid, LogOut, Menu, Package, Scan, Shield, Stethoscope, UserCog, Users, X } from 'lucide-react';
 import { borrarSesion, getAuth, puedeVer, primeraRutaPermitida } from '../config/permisos'; // ajusta la ruta a donde guardes permisos.js
 import ModalCambiarPassword from './ModalCambiarPassword';
 import { ToastContainer } from './Toast';
@@ -11,8 +11,8 @@ const DURACION_SALIDA = 300;
 
 const navItems = [
   { path: '/panel', label: 'Panel principal', icon: LayoutGrid },
-  { path: '/panel-paciente', label: 'Mi panel', icon: CalendarCheck },
-  { path: '/mis-citas', label: 'Mis citas', icon: CalendarCheck },
+  { path: '/inicio', label: 'Inicio', icon: Home },
+  { path: '/mis-citas', label: 'Mis citas', icon: Calendar },
   { path: '/pacientes', label: 'Pacientes', icon: Users },
   { path: '/agenda', label: 'Agenda', icon: Calendar },
   { path: '/odontologos', label: 'Odontólogos', icon: Stethoscope },

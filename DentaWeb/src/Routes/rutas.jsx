@@ -46,7 +46,8 @@ export default function App() {
         {/* Protegidas: comparten MainLayout + Sidebar */}
         <Route element={<ProtectedLayout />}>
           <Route path="/panel" element={<RedirigirInicio />} />
-          <Route path="/panel-paciente" element={<PanelPacientePage />} />
+          <Route path="/inicio" element={<PanelPacientePage />} />
+          <Route path="/panel-paciente" element={<Navigate to="/inicio" replace />} />
           <Route path="/mis-citas" element={<MisCItas />} />
           <Route path="/clinicas" element={<ClinicasPage />} />
           <Route path="/pacientes" element={<PacientesPage />} />
