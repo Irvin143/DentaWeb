@@ -1,10 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { citasApi } from '../../services/api.js';
 import { BadgeEstado } from '../../utils/estadoCita.jsx';
 
 const LOCALE = 'es-MX';
 const DIAS_CABECERA = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
+
+const claseCampo =
+  'h-10 w-full rounded-xl border border-outline-variant bg-on-primary px-3 text-sm text-on-surface focus:ring-2 focus:ring-teal-500/20 focus:outline-none';
 
 const comoLista = (resp) =>
   Array.isArray(resp) ? resp : resp?.citas ?? resp?.data ?? [];
@@ -48,11 +51,36 @@ const minutosDe = (hhmm) => {
   return (Number.isFinite(h) ? h : 0) * 60 + (Number.isFinite(m) ? m : 0);
 };
 
+const normalizar = (texto) =>
+  String(texto ?? '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+
 const nombrePaciente = (paciente) =>
   [paciente?.nombre, paciente?.ape_pat, paciente?.ape_mat].filter(Boolean).join(' ').trim() ||
   'Paciente';
 
+const nombreOdontologo = (odontologo) =>
+  [odontologo?.nombre, odontologo?.ape_pat].filter(Boolean).join(' ').trim() || 'Odontólogo';
+
+const nombreClinica = (clinica) => String(clinica?.nombre ?? '').trim() || 'Clínica';
+
 const esUrgencia = (cita) => /urgenc/i.test(String(cita?.tipo ?? ''));
+
+const opcionesUnicas = (citas, getId, getLabel) => {
+  const mapa = new Map();
+  for (const cita of citas) {
+    const id = getId(cita);
+    if (id == null || id === '') continue;
+    const clave = String(id);
+    if (!mapa.has(clave)) mapa.set(clave, getLabel(cita));
+  }
+  return [...mapa.entries()]
+    .map(([id, nombre]) => ({ id, nombre }))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, LOCALE));
+};
 
 function TarjetaCita({ cita }) {
   const urgencia = esUrgencia(cita);
@@ -68,6 +96,10 @@ function TarjetaCita({ cita }) {
       <p className="mt-0.5 text-sm font-semibold wrap-break-word text-on-surface">
         {nombrePaciente(cita.paciente)}
       </p>
+      <p className="mt-0.5 text-xs wrap-break-word text-on-surface-variant">
+        {nombreOdontologo(cita.odontologo)}
+      </p>
+      <p className="text-xs wrap-break-word text-on-surface-variant">{nombreClinica(cita.clinica)}</p>
       {cita.estado ? (
         <div className="mt-2">
           <BadgeEstado estado={cita.estado} />
@@ -103,6 +135,9 @@ export default function AgendaPage() {
   const [citas, setCitas] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [errorCarga, setErrorCarga] = useState(null);
+  const [idClinica, setIdClinica] = useState('');
+  const [idOdontologo, setIdOdontologo] = useState('');
+  const [busquedaPaciente, setBusquedaPaciente] = useState('');
 
   const { desde, hasta } = useMemo(
     () => ({ desde: aYmd(lunes), hasta: aYmd(addDays(lunes, 6)) }),
@@ -130,9 +165,45 @@ export default function AgendaPage() {
     cargar();
   }, [cargar]);
 
+  const opcionesClinica = useMemo(
+    () => opcionesUnicas(citas, (c) => c?.clinica?.id_clinica, (c) => nombreClinica(c.clinica)),
+    [citas]
+  );
+  const opcionesOdontologo = useMemo(
+    () =>
+      opcionesUnicas(
+        citas,
+        (c) => c?.odontologo?.id_odontologo,
+        (c) => nombreOdontologo(c.odontologo)
+      ),
+    [citas]
+  );
+
+  const idClinicaEfectivo = opcionesClinica.some((op) => op.id === idClinica) ? idClinica : '';
+  const idOdontologoEfectivo = opcionesOdontologo.some((op) => op.id === idOdontologo)
+    ? idOdontologo
+    : '';
+
+  const citasFiltradas = useMemo(() => {
+    const q = normalizar(busquedaPaciente);
+    return citas.filter((cita) => {
+      if (idClinicaEfectivo && String(cita?.clinica?.id_clinica ?? '') !== idClinicaEfectivo) {
+        return false;
+      }
+      if (
+        idOdontologoEfectivo &&
+        String(cita?.odontologo?.id_odontologo ?? '') !== idOdontologoEfectivo
+      ) {
+        return false;
+      }
+      if (q && !normalizar(nombrePaciente(cita.paciente)).includes(q)) return false;
+      return true;
+    });
+  }, [citas, idClinicaEfectivo, idOdontologoEfectivo, busquedaPaciente]);
+
   const citasPorDia = useMemo(() => {
     const mapa = Object.fromEntries(dias.map((d) => [aYmd(d), []]));
-    for (const cita of citas) {
+    for (const cita of citasFiltradas) {
       const fecha = String(cita?.fecha ?? '').slice(0, 10);
       if (mapa[fecha]) mapa[fecha].push(cita);
     }
@@ -140,9 +211,10 @@ export default function AgendaPage() {
       lista.sort((a, b) => minutosDe(a.hora) - minutosDe(b.hora));
     }
     return mapa;
-  }, [citas, dias]);
+  }, [citasFiltradas, dias]);
 
   const hayCitas = citas.length > 0;
+  const hayFiltradas = citasFiltradas.length > 0;
 
   return (
     <section className="flex min-h-full flex-col gap-6 overflow-x-hidden bg-surface p-4 md:p-8">
@@ -186,6 +258,54 @@ export default function AgendaPage() {
         <p className="text-base font-bold capitalize text-on-surface">{etiquetaRango(lunes)}</p>
       </div>
 
+      <div className="flex flex-wrap gap-3">
+        <label className="min-w-[12rem] flex-1">
+          <span className="sr-only">Clínica</span>
+          <select
+            className={claseCampo}
+            value={idClinicaEfectivo}
+            onChange={(e) => setIdClinica(e.target.value)}
+          >
+            <option value="">Todas las clínicas</option>
+            {opcionesClinica.map((op) => (
+              <option key={op.id} value={op.id}>
+                {op.nombre}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="min-w-[12rem] flex-1">
+          <span className="sr-only">Odontólogo</span>
+          <select
+            className={claseCampo}
+            value={idOdontologoEfectivo}
+            onChange={(e) => setIdOdontologo(e.target.value)}
+          >
+            <option value="">Todos los odontólogos</option>
+            {opcionesOdontologo.map((op) => (
+              <option key={op.id} value={op.id}>
+                {op.nombre}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="relative block min-w-[12rem] flex-1">
+          <span className="sr-only">Buscar paciente</span>
+          <Search
+            size={18}
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-outline"
+          />
+          <input
+            type="search"
+            value={busquedaPaciente}
+            onChange={(e) => setBusquedaPaciente(e.target.value)}
+            placeholder="Buscar paciente..."
+            className="h-10 w-full rounded-xl border border-outline-variant bg-on-primary pr-4 pl-9 text-sm text-on-surface placeholder:text-outline focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
+          />
+        </label>
+      </div>
+
       <div className="rounded-2xl border border-outline-variant bg-on-primary shadow-sm">
         {cargando ? (
           <p className="px-5 py-12 text-center text-sm text-on-surface-variant">Cargando...</p>
@@ -194,6 +314,10 @@ export default function AgendaPage() {
         ) : !hayCitas ? (
           <p className="px-5 py-12 text-center text-sm text-on-surface-variant">
             No hay citas en esta semana.
+          </p>
+        ) : !hayFiltradas ? (
+          <p className="px-5 py-12 text-center text-sm text-on-surface-variant">
+            Ninguna cita coincide con los filtros.
           </p>
         ) : (
           <>
