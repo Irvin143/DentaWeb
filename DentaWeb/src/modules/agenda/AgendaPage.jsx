@@ -1,12 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { citasApi } from '../../services/api.js';
+import { BadgeEstado } from '../../utils/estadoCita.jsx';
 
 const LOCALE = 'es-MX';
 const DIAS_CABECERA = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
-const HORA_INICIO_DEFAULT = 8;
-const HORA_FIN_DEFAULT = 20;
-const PIXELS_HORA = 56;
 
 const comoLista = (resp) =>
   Array.isArray(resp) ? resp : resp?.citas ?? resp?.data ?? [];
@@ -56,11 +54,49 @@ const nombrePaciente = (paciente) =>
 
 const esUrgencia = (cita) => /urgenc/i.test(String(cita?.tipo ?? ''));
 
-const presentarEstado = (estado) => {
-  const texto = String(estado ?? '').trim();
-  if (!texto) return '';
-  return texto.charAt(0).toLocaleUpperCase(LOCALE) + texto.slice(1).toLocaleLowerCase(LOCALE);
-};
+function TarjetaCita({ cita }) {
+  const urgencia = esUrgencia(cita);
+  const hora = [cita.hora, cita.hora_fin].filter(Boolean).join(' – ');
+
+  return (
+    <article
+      className={`rounded-xl border border-outline-variant border-l-4 px-3 py-2.5 ${
+        urgencia ? 'border-l-error bg-error-container/40' : 'border-l-teal-600 bg-surface'
+      }`}
+    >
+      <p className="text-xs font-bold text-on-surface-variant">{hora}</p>
+      <p className="mt-0.5 text-sm font-semibold wrap-break-word text-on-surface">
+        {nombrePaciente(cita.paciente)}
+      </p>
+      {cita.estado ? (
+        <div className="mt-2">
+          <BadgeEstado estado={cita.estado} />
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function CabeceraDia({ dia, etiqueta, esHoy }) {
+  return (
+    <div className="flex items-center gap-2 lg:flex-col lg:gap-1">
+      <span
+        className={`text-[11px] font-bold tracking-wider uppercase ${
+          esHoy ? 'text-teal-700' : 'text-on-surface-variant'
+        }`}
+      >
+        {etiqueta}
+      </span>
+      <span
+        className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${
+          esHoy ? 'bg-teal-600 text-white' : 'text-on-surface'
+        }`}
+      >
+        {dia.getDate()}
+      </span>
+    </div>
+  );
+}
 
 export default function AgendaPage() {
   const [lunes, setLunes] = useState(() => lunesDe(new Date()));
@@ -106,29 +142,10 @@ export default function AgendaPage() {
     return mapa;
   }, [citas, dias]);
 
-  const { horaInicio, horaFin } = useMemo(() => {
-    let inicio = HORA_INICIO_DEFAULT * 60;
-    let fin = HORA_FIN_DEFAULT * 60;
-    for (const cita of citas) {
-      const a = minutosDe(cita.hora);
-      const b = minutosDe(cita.hora_fin || cita.hora) || a + 60;
-      inicio = Math.min(inicio, Math.floor(a / 60) * 60);
-      fin = Math.max(fin, Math.ceil(b / 60) * 60);
-    }
-    if (fin <= inicio) fin = inicio + 60;
-    return { horaInicio: inicio / 60, horaFin: fin / 60 };
-  }, [citas]);
-
-  const horas = useMemo(
-    () => Array.from({ length: horaFin - horaInicio }, (_, i) => horaInicio + i),
-    [horaInicio, horaFin]
-  );
-
-  const alturaGrilla = (horaFin - horaInicio) * PIXELS_HORA;
   const hayCitas = citas.length > 0;
 
   return (
-    <section className="flex min-h-full flex-col gap-6 bg-surface p-4 md:p-8">
+    <section className="flex min-h-full flex-col gap-6 overflow-x-hidden bg-surface p-4 md:p-8">
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-bold text-on-surface">Agenda</h1>
         <p className="text-sm text-on-surface-variant">
@@ -161,7 +178,7 @@ export default function AgendaPage() {
           <button
             type="button"
             onClick={() => setLunes(lunesDe(new Date()))}
-            className="rounded-xl bg-surface-container px-3.5 py-1.5 text-xs font-bold text-on-surface transition-colors hover:bg-surface-container-high"
+            className="rounded-xl bg-teal-50 px-3.5 py-1.5 text-xs font-bold text-teal-700 transition-colors hover:bg-teal-100"
           >
             Hoy
           </button>
@@ -169,131 +186,52 @@ export default function AgendaPage() {
         <p className="text-base font-bold capitalize text-on-surface">{etiquetaRango(lunes)}</p>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-outline-variant bg-on-primary shadow-sm">
-        <div className="grid grid-cols-7 border-b border-outline-variant">
-          {dias.map((dia, i) => {
-            const ymd = aYmd(dia);
-            const esHoy = ymd === hoyYmd;
-            return (
-              <div
-                key={ymd}
-                className={`flex flex-col items-center gap-1 px-1 py-3 ${
-                  esHoy ? 'bg-secondary-container/30' : ''
-                }`}
-              >
-                <span
-                  className={`text-[11px] font-bold tracking-wider uppercase ${
-                    esHoy ? 'text-primary' : 'text-on-surface-variant'
-                  }`}
-                >
-                  {DIAS_CABECERA[i]}
-                </span>
-                <span
-                  className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${
-                    esHoy ? 'bg-primary text-on-primary' : 'text-on-surface'
-                  }`}
-                >
-                  {dia.getDate()}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-
+      <div className="rounded-2xl border border-outline-variant bg-on-primary shadow-sm">
         {cargando ? (
           <p className="px-5 py-12 text-center text-sm text-on-surface-variant">Cargando...</p>
         ) : errorCarga ? (
           <p className="px-5 py-12 text-center text-sm text-error">{errorCarga}</p>
+        ) : !hayCitas ? (
+          <p className="px-5 py-12 text-center text-sm text-on-surface-variant">
+            No hay citas en esta semana.
+          </p>
         ) : (
-          <div className="relative overflow-x-auto">
-            {!hayCitas ? (
-              <p className="border-b border-outline-variant px-5 py-8 text-center text-sm text-on-surface-variant">
-                No hay citas en esta semana.
-              </p>
-            ) : null}
-            <div className="flex min-w-[52rem]">
-              <div
-                className="w-16 shrink-0 border-r border-outline-variant bg-surface"
-                style={{ height: alturaGrilla }}
-              >
-                {horas.map((hora) => (
+          <>
+            <div className="hidden grid-cols-7 border-b border-outline-variant lg:grid">
+              {dias.map((dia, i) => {
+                const ymd = aYmd(dia);
+                return (
                   <div
-                    key={hora}
-                    className="relative border-b border-outline-variant/60"
-                    style={{ height: PIXELS_HORA }}
+                    key={ymd}
+                    className={`px-2 py-3 ${ymd === hoyYmd ? 'bg-teal-50' : ''}`}
                   >
-                    <span className="absolute top-1 right-2 text-[10px] font-semibold text-on-surface-variant">
-                      {String(hora).padStart(2, '0')}:00
-                    </span>
+                    <CabeceraDia dia={dia} etiqueta={DIAS_CABECERA[i]} esHoy={ymd === hoyYmd} />
                   </div>
-                ))}
-              </div>
-              <div className="grid min-w-0 flex-1 grid-cols-7">
-                {dias.map((dia) => {
-                  const ymd = aYmd(dia);
-                  const esHoy = ymd === hoyYmd;
-                  const delDia = citasPorDia[ymd] ?? [];
-                  return (
-                    <div
-                      key={ymd}
-                      className={`relative border-r border-outline-variant last:border-r-0 ${
-                        esHoy ? 'bg-secondary-container/15' : 'bg-surface/40'
-                      }`}
-                      style={{ height: alturaGrilla }}
-                    >
-                      {horas.map((hora) => (
-                        <div
-                          key={hora}
-                          className="border-b border-outline-variant/60"
-                          style={{ height: PIXELS_HORA }}
-                        />
-                      ))}
-                      {delDia.map((cita) => {
-                        const inicio = minutosDe(cita.hora);
-                        const finRaw = minutosDe(cita.hora_fin || cita.hora);
-                        const fin = finRaw > inicio ? finRaw : inicio + 30;
-                        const top = ((inicio - horaInicio * 60) / 60) * PIXELS_HORA;
-                        const height = Math.max(((fin - inicio) / 60) * PIXELS_HORA, 28);
-                        const urgencia = esUrgencia(cita);
-                        return (
-                          <article
-                            key={cita.id_cita}
-                            className={`absolute inset-x-1 overflow-hidden rounded-lg border-l-2 px-1.5 py-1 ${
-                              urgencia
-                                ? 'border-error bg-error-container text-error'
-                                : 'border-primary bg-secondary-container/50 text-primary'
-                            }`}
-                            style={{ top, height }}
-                            title={[
-                              nombrePaciente(cita.paciente),
-                              cita.hora,
-                              cita.hora_fin ? `– ${cita.hora_fin}` : '',
-                              presentarEstado(cita.estado),
-                            ]
-                              .filter(Boolean)
-                              .join(' · ')}
-                          >
-                            <p className="truncate text-[11px] font-bold leading-tight">
-                              {cita.hora}
-                              {cita.hora_fin ? ` – ${cita.hora_fin}` : ''}
-                            </p>
-                            <p className="truncate text-[11px] font-semibold leading-tight text-on-surface">
-                              {nombrePaciente(cita.paciente)}
-                            </p>
-                            {cita.estado ? (
-                              <p className="truncate text-[10px] font-medium leading-tight text-on-surface-variant">
-                                {presentarEstado(cita.estado)}
-                              </p>
-                            ) : null}
-                          </article>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
+                );
+              })}
             </div>
-          </div>
+
+            <div className="flex flex-col divide-y divide-outline-variant lg:grid lg:grid-cols-7 lg:divide-x lg:divide-y-0">
+              {dias.map((dia, i) => {
+                const ymd = aYmd(dia);
+                const esHoy = ymd === hoyYmd;
+                const delDia = citasPorDia[ymd] ?? [];
+                return (
+                  <section
+                    key={ymd}
+                    className={`flex min-w-0 flex-col gap-2 p-3 ${esHoy ? 'bg-teal-50/60' : ''}`}
+                  >
+                    <div className="lg:hidden">
+                      <CabeceraDia dia={dia} etiqueta={DIAS_CABECERA[i]} esHoy={esHoy} />
+                    </div>
+                    {delDia.map((cita) => (
+                      <TarjetaCita key={cita.id_cita} cita={cita} />
+                    ))}
+                  </section>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
     </section>

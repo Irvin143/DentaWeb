@@ -15,15 +15,9 @@ import CancelarCitaModal from './misCita/ModalCancelar.jsx';
 import ReagendarCitaModal from './misCita/ModalReagendar.jsx';
 import { ToastContainer } from '../../components/Toast.jsx';
 import { fechaCorta, fechaLarga, hora, mayuscula } from './misCita/Utils.js';
+import { BadgeEstado, etiquetaEstado } from '../../utils/estadoCita.jsx';
 
 /* ---------- Constantes ---------- */
-const TONOS = {
-  Pendiente: 'bg-amber-100 text-amber-800',
-  Atendida: 'bg-green-100 text-green-800',
-  Cancelada: 'bg-error-container text-error',
-  'No asistió': 'bg-error-container text-error',
-};
-const TONO_DESCONOCIDO = 'bg-surface-container text-on-surface-variant';
 
 const FILTROS = [
   { id: 'todas', etiqueta: 'Todas' },
@@ -36,25 +30,10 @@ const ESTADOS_ACCIONABLES = ['Pendiente'];
 
 const puedeActuar = (c) => c.fecha >= new Date() && ESTADOS_ACCIONABLES.includes(c.estado);
 
-/* ---------- Adaptador: respuesta del backend -> formato de la pantalla ---------- */
-const ESTADOS = {
-  pendiente: 'Pendiente',
-  atendida: 'Atendida',
-  cancelada: 'Cancelada',
-  no_asistio: 'No asistió',
-};
-
 function adaptarCita(c) {
   // El backend manda fecha ('AAAA-MM-DD') y hora ('HH:mm') por separado
   const fecha = new Date(`${c.fecha}T${c.hora}`);
   if (Number.isNaN(fecha.getTime())) return null;
-
-  const clave = String(c.estado ?? '')
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[\s-]+/g, '_');
 
   return {
     id: c.id,
@@ -62,8 +41,7 @@ function adaptarCita(c) {
     fecha,
     motivo: c.motivo ?? 'Consulta',
     doctor: c.doctor ?? '—',
-    // Un estado desconocido se muestra tal cual, sin botones de acción
-    estado: ESTADOS[clave] ?? String(c.estado ?? 'Sin estado'),
+    estado: etiquetaEstado(c.estado) || 'Sin estado',
   };
 }
 
@@ -184,7 +162,7 @@ export default function CitasTablaPage() {
         </div>
         <Link
           to="/citas/nueva"
-          className="flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-on-primary transition-opacity hover:opacity-90"
+          className="flex cursor-pointer items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-teal-600/20 transition-colors hover:bg-teal-700"
         >
           <CalendarPlus size={16} />
           Nueva cita
@@ -205,8 +183,8 @@ export default function CitasTablaPage() {
                 disabled={cargando}
                 className={`flex cursor-pointer items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium transition-colors disabled:cursor-default disabled:opacity-60 ${
                   activo
-                    ? 'bg-primary text-on-primary'
-                    : 'border border-outline-variant text-on-surface-variant hover:bg-surface-container'
+                    ? 'bg-teal-50 text-teal-700'
+                    : 'bg-slate-50 text-slate-700 hover:text-slate-800'
                 }`}
               >
                 {f.etiqueta}
@@ -290,11 +268,7 @@ export default function CitasTablaPage() {
                     <td className="px-5 py-4 text-on-surface">{c.motivo}</td>
                     <td className="whitespace-nowrap px-5 py-4 text-on-surface-variant">{c.doctor}</td>
                     <td className="px-5 py-4">
-                      <span
-                        className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium ${TONOS[c.estado] ?? TONO_DESCONOCIDO}`}
-                      >
-                        {c.estado}
-                      </span>
+                      <BadgeEstado estado={c.estado} />
                     </td>
                     <td className="px-5 py-4">
                       {puedeActuar(c) ? (
