@@ -25,7 +25,7 @@ export default function ModalConfirmacion({
   return (
     <div className="fixed inset-0 z-50 flex animate-modal-overlay-in items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm motion-reduce:animate-none">
       <div className={`w-full max-w-md animate-modal-panel-in overflow-hidden rounded-2xl bg-white shadow-xl motion-reduce:animate-none dark:bg-on-primary ${esPeligro ? '' : 'p-6'}`}>
-        <h3 className={esPeligro ? 'bg-error px-6 py-4 text-lg font-bold text-white' : 'mb-2 text-lg font-bold text-slate-800 dark:text-on-surface'}>{titulo}</h3>
+        <h3 className={esPeligro ? 'bg-red-600 px-6 py-4 text-lg font-bold text-white' : 'mb-2 text-lg font-bold text-slate-800 dark:text-on-surface'}>{titulo}</h3>
         <div className={esPeligro ? 'px-6 pb-6 pt-4' : undefined}>
         {typeof mensaje === 'string' ? (
           <p className={`mb-6 text-sm ${esPeligro ? 'font-medium text-error' : 'text-slate-600 dark:text-on-surface-variant'}`}>{mensaje}</p>
@@ -68,7 +68,7 @@ export default function ModalConfirmacion({
               botonDeshabilitado 
                 ? 'cursor-not-allowed bg-slate-300 dark:bg-surface-container-high'
                 : esPeligro 
-                  ? 'cursor-pointer bg-red-500 hover:bg-red-600' 
+                  ? 'cursor-pointer bg-red-600 hover:bg-red-700' 
                   : 'cursor-pointer bg-teal-500 hover:bg-teal-600'
             }`}
           >

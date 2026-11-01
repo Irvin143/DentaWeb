@@ -112,9 +112,6 @@ function Marca() {
       </figure>
       <hgroup className="flex flex-col">
         <p className="text-lg font-bold leading-tight text-primary-container">ClinicWare</p>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-on-surface-variant">
-          Clínicas SaaS
-        </p>
       </hgroup>
     </Link>
   );
