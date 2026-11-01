@@ -18,6 +18,7 @@ const DentalWebLogin = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [cierreMensaje, setCierreMensaje] = useState(() => Date.now() < avisoCierreHasta);
+  const [avisosVisibles, setAvisosVisibles] = useState({});
   const cargando = isSubmitting || Boolean(successMessage);
 
   const navigate = useNavigate();
@@ -47,6 +48,33 @@ const DentalWebLogin = () => {
     const aviso = setTimeout(() => setCierreMensaje(false), restante);
     return () => clearTimeout(aviso);
   }, [cierreMensaje]);
+
+  useEffect(() => {
+    const ids = [
+      errorMessage && 'login-error',
+      successMessage && 'login-ok',
+      cierreMensaje && 'login-cierre',
+    ].filter(Boolean);
+
+    setAvisosVisibles((prev) => {
+      const next = {};
+      ids.forEach((id) => {
+        next[id] = prev[id] ?? false;
+      });
+      return next;
+    });
+    if (ids.length === 0) return undefined;
+    const entrada = window.setTimeout(() => {
+      setAvisosVisibles((prev) => {
+        const next = { ...prev };
+        ids.forEach((id) => {
+          next[id] = true;
+        });
+        return next;
+      });
+    }, 20);
+    return () => window.clearTimeout(entrada);
+  }, [errorMessage, successMessage, cierreMensaje]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -101,9 +129,9 @@ const DentalWebLogin = () => {
   }
 
   const avisosLogin = [
-    errorMessage && { id: 'login-error', tipo: 'error', mensaje: errorMessage, visible: true },
-    successMessage && { id: 'login-ok', tipo: 'exito', mensaje: successMessage, visible: true },
-    cierreMensaje && { id: 'login-cierre', tipo: 'exito', mensaje: 'Sesión cerrada correctamente.', visible: true },
+    errorMessage && { id: 'login-error', tipo: 'error', mensaje: errorMessage, visible: Boolean(avisosVisibles['login-error']) },
+    successMessage && { id: 'login-ok', tipo: 'exito', mensaje: successMessage, visible: Boolean(avisosVisibles['login-ok']) },
+    cierreMensaje && { id: 'login-cierre', tipo: 'exito', mensaje: 'Sesión cerrada correctamente.', visible: Boolean(avisosVisibles['login-cierre']) },
   ].filter(Boolean);
 
   const cerrarAviso = (id) => {

@@ -16,12 +16,13 @@ const ESTILOS = {
   },
 };
 
-// Tarjetas arriba a la derecha. Cada toast: { id, tipo: 'exito' | 'error', mensaje, visible }
+// Móvil: banner centrado que cae desde arriba. md+: tarjetas arriba a la derecha.
+// Cada toast: { id, tipo: 'exito' | 'error', mensaje, visible }
 // "visible" controla la animación: false = fuera de pantalla, true = en pantalla.
 export function ToastContainer({ toasts = [], onCerrar }) {
   return (
     <div
-      className="pointer-events-none fixed right-4 z-[100] flex flex-col gap-2"
+      className="pointer-events-none fixed inset-x-0 z-[100] mx-auto flex flex-col items-center gap-2 md:inset-x-auto md:right-4 md:mx-0 md:items-stretch"
       style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
       aria-live="polite"
     >
@@ -31,8 +32,10 @@ export function ToastContainer({ toasts = [], onCerrar }) {
           <div
             key={id}
             role={tipo === 'error' ? 'alert' : 'status'}
-            className={`pointer-events-auto relative flex w-80 max-w-[calc(100vw-2rem)] items-start gap-3 overflow-hidden rounded-xl border p-3 pl-4 shadow-lg transition-all duration-300 ease-out motion-reduce:transition-none ${caja} ${
-              visible ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0'
+            className={`pointer-events-auto relative flex w-[min(22rem,calc(100vw-2rem))] items-start gap-3 overflow-hidden rounded-2xl border p-3 pl-4 shadow-lg transition-all duration-300 ease-out motion-reduce:transition-none md:w-80 md:rounded-xl ${caja} ${
+              visible
+                ? 'translate-y-0 opacity-100 md:translate-x-0'
+                : '-translate-y-4 opacity-0 md:translate-y-0 md:translate-x-8'
             }`}
           >
             <span className={`absolute inset-y-0 left-0 w-1 ${barra}`} aria-hidden="true" />
