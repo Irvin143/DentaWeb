@@ -13,10 +13,10 @@ const VISTAS = [
 ];
 
 const claseCampo =
-  'h-10 w-full cursor-pointer appearance-none rounded-xl border border-outline-variant bg-on-primary pr-9 pl-3 text-sm text-on-surface focus:ring-2 focus:ring-teal-500/20 focus:outline-none';
+  'h-10 w-full cursor-pointer appearance-none rounded-xl border border-outline-variant bg-on-primary pr-9 pl-3 text-base leading-5 text-on-surface focus:ring-2 focus:ring-teal-500/20 focus:outline-none';
 
 const claseVista =
-  'h-10 w-auto min-w-[8rem] cursor-pointer appearance-none rounded-xl border border-outline-variant bg-on-primary pr-9 pl-3 text-sm text-on-surface focus:ring-2 focus:ring-teal-500/20 focus:outline-none';
+  'h-10 w-auto min-w-[8rem] cursor-pointer appearance-none rounded-xl border border-outline-variant bg-on-primary pr-9 pl-3 text-base leading-5 text-on-surface focus:ring-2 focus:ring-teal-500/20 focus:outline-none';
 
 const claseFlechaSelect =
   'pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-outline';
@@ -559,7 +559,7 @@ export default function AgendaPage() {
             value={busquedaPaciente}
             onChange={(e) => setBusquedaPaciente(e.target.value)}
             placeholder="Buscar paciente..."
-            className="h-10 w-full rounded-xl border border-outline-variant bg-on-primary pr-4 pl-9 text-sm text-on-surface placeholder:text-outline focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
+            className="h-10 w-full rounded-xl border border-outline-variant bg-on-primary pr-4 pl-9 text-base leading-5 text-on-surface placeholder:text-outline focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
           />
         </label>
       </div>

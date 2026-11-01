@@ -227,7 +227,7 @@ const Register = () => {
                 autoComplete="given-name"
                 maxLength={100}
                 required
-                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
             </div>
           </div>
@@ -248,7 +248,7 @@ const Register = () => {
               autoComplete="family-name"
               maxLength={100}
               required
-              className="h-12 w-full rounded-xl border border-transparent bg-login-input px-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+              className="h-12 w-full rounded-xl border border-transparent bg-login-input px-4 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
             />
           </div>
 
@@ -267,7 +267,7 @@ const Register = () => {
               onChange={(event) => setApeMat(nombrePersona(event.target.value))}
               placeholder="GARCÍA"
               autoComplete="additional-name"
-              className="h-12 w-full rounded-xl border border-transparent bg-login-input px-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+              className="h-12 w-full rounded-xl border border-transparent bg-login-input px-4 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
             />
           </div>
 
@@ -294,7 +294,7 @@ const Register = () => {
                 autoComplete="tel"
                 maxLength={10}
                 required
-                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
             </div>
           </div>
@@ -319,7 +319,7 @@ const Register = () => {
                 autoComplete="email"
                 maxLength={150}
                 required
-                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
             </div>
           </div>
@@ -346,7 +346,7 @@ const Register = () => {
                 maxLength={72}
                 required
                 aria-describedby="register-password-rules"
-                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-12 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-12 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
               <button
                 type="button"
@@ -404,7 +404,7 @@ const Register = () => {
                 minLength={8}
                 maxLength={72}
                 required
-                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-12 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-12 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
               <button
                 type="button"

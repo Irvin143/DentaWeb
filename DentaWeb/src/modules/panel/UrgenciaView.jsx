@@ -194,7 +194,7 @@ export default function UrgenciaView({ onVolver }) {
   };
 
   const claseCampo = (campo) =>
-    `w-full rounded-xl border bg-on-primary p-3 text-sm text-on-surface outline-none focus:ring-2 ${
+    `w-full rounded-xl border bg-on-primary p-3 text-base leading-5 text-on-surface outline-none focus:ring-2 ${
       erroresCampos[campo]
         ? 'border-error focus:border-error focus:ring-error/20'
         : 'border-outline-variant focus:border-teal-600 focus:ring-teal-500/20'

@@ -410,7 +410,7 @@ export default function CitasTablaPage() {
             value={busqueda}
             onChange={(e) => alBuscar(e.target.value)}
             placeholder="Buscar por motivo o odontólogo…"
-            className="w-full rounded-xl bg-surface py-2.5 pr-4 pl-10 text-sm text-on-surface placeholder:text-outline outline-none focus:ring-2 focus:ring-teal-500/20"
+            className="w-full rounded-xl bg-surface py-2.5 pr-4 pl-10 text-base leading-5 text-on-surface placeholder:text-outline outline-none focus:ring-2 focus:ring-teal-500/20"
           />
         </label>
 
@@ -419,7 +419,7 @@ export default function CitasTablaPage() {
           value={filtro}
           onChange={(e) => elegirFiltro(e.target.value)}
           disabled={cargando}
-          className="h-10 w-auto min-w-[10rem] shrink-0 cursor-pointer rounded-xl border border-outline-variant bg-surface px-3 text-sm text-on-surface focus:ring-2 focus:ring-teal-500/20 focus:outline-none disabled:cursor-default disabled:opacity-60"
+          className="h-10 w-auto min-w-[10rem] shrink-0 cursor-pointer rounded-xl border border-outline-variant bg-surface px-3 text-base leading-5 text-on-surface focus:ring-2 focus:ring-teal-500/20 focus:outline-none disabled:cursor-default disabled:opacity-60"
         >
           {FILTROS.map((f) => (
             <option key={f.id} value={f.id}>

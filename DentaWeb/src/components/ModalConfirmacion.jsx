@@ -55,7 +55,7 @@ export default function ModalConfirmacion({
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-sm outline-none transition-all focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-base leading-5 outline-none transition-all focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface"
               placeholder={palabraRequerida}
               autoComplete="off"
             />

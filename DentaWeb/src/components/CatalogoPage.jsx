@@ -423,7 +423,7 @@ export function CatalogoPage({
               value={busqueda}
               onChange={handleBusqueda}
               placeholder={placeholderBusqueda}
-              className="w-full rounded-xl bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/20 dark:bg-surface-container dark:text-on-surface dark:placeholder:text-on-surface-variant"
+              className="w-full rounded-xl bg-slate-50 py-2.5 pl-10 pr-4 text-base leading-5 outline-none transition-all focus:ring-2 focus:ring-teal-500/20 dark:bg-surface-container dark:text-on-surface dark:placeholder:text-on-surface-variant"
             />
           </label>
 
@@ -450,7 +450,7 @@ export function CatalogoPage({
               aria-label="Ordenar por"
               value={ordenandoPorRecientes ? ORDEN_RECIENTES : (columnaOrden ?? '')}
               onChange={(e) => elegirColumna(e.target.value)}
-              className="cursor-pointer rounded-xl bg-slate-50 dark:bg-surface-container px-3 py-2.5 text-sm text-slate-700 dark:text-on-surface outline-none transition-all focus:ring-2 focus:ring-teal-500/20"
+              className="cursor-pointer rounded-xl bg-slate-50 dark:bg-surface-container px-3 py-2.5 text-base leading-5 text-slate-700 dark:text-on-surface outline-none transition-all focus:ring-2 focus:ring-teal-500/20"
             >
               {cols.map((col) => (
                 <option key={col.key} value={col.key}>

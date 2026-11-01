@@ -195,7 +195,7 @@ const DentalWebLogin = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="ejemplo@correo.com"
-                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
             </div>
           </div>
@@ -217,7 +217,7 @@ const DentalWebLogin = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-12 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-12 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
               <button
                 type="button"

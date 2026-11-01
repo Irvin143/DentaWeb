@@ -277,7 +277,7 @@ function SeccionMotivo({ valor, onChange, esEstudio }) {
 
       {mostrar || valor ? (
         <textarea
-          className="mt-3 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface dark:placeholder:text-on-surface-variant"
+          className="mt-3 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3 text-base leading-5 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface dark:placeholder:text-on-surface-variant"
           rows="4"
           maxLength={MAX_MOTIVO}
           placeholder={

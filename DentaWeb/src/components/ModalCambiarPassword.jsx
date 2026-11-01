@@ -133,7 +133,7 @@ export default function ModalCambiarPassword({ isOpen, onClose, onExito }) {
                   required
                   value={passwordActual}
                   onChange={(e) => setPasswordActual(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 p-2.5 pl-10 pr-12! text-sm outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface"
+                  className="w-full rounded-xl border border-slate-200 p-2.5 pl-10 pr-12! text-base leading-5 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface"
                 />
                 <button
                   type="button"
@@ -157,7 +157,7 @@ export default function ModalCambiarPassword({ isOpen, onClose, onExito }) {
                   required
                   value={passwordNueva}
                   onChange={(e) => setPasswordNueva(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 p-2.5 pl-10 pr-12! text-sm outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface"
+                  className="w-full rounded-xl border border-slate-200 p-2.5 pl-10 pr-12! text-base leading-5 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface"
                 />
                 <button
                   type="button"
