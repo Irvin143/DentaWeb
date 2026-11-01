@@ -1,17 +1,36 @@
-import { useEffect, useRef, useState } from 'react';
-import { CalendarClock, Loader2, X } from 'lucide-react';
-// TODO: ajusta la ruta al archivo donde tienes apiRequest y las demás APIs
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { CalendarClock, Clock, Loader2, X } from 'lucide-react';
 import { agendarCitasApi, citasApi } from '../../../services/api.js';
-import { fechaLarga, hora, horaDesdeTexto, hoyISO } from './Utils.js';
+import { fechaLarga, hora, horaDesdeTexto, hoyISO, mesDeHoy, moverMes, parseYmd, primerDiaMes } from './Utils.js';
+import CalendarioMes from './CalendarioMes.jsx';
+
+const DIAS_A_CONSULTAR = 30;
+const etiquetaSeccion = 'text-sm font-semibold text-on-surface';
+const etiquetaTurno = 'mb-2 text-xs font-semibold uppercase tracking-wide text-on-surface-variant';
 
 /* Acepta ['09:00', ...] o [{ hora: '09:00:00' }, ...] y devuelve ['09:00', ...] sin repetidos */
 function normalizarHorarios(datos) {
-  const lista = Array.isArray(datos) ? datos : (datos?.horarios ?? datos?.data ?? []);
+  const lista = Array.isArray(datos)
+    ? datos
+    : (datos?.horas ?? datos?.horarios ?? datos?.data ?? []);
   const horas = lista
     .filter((h) => h?.disponible !== false)
     .map((h) => String(typeof h === 'string' ? h : (h?.hora ?? h?.hora_inicio ?? '')).slice(0, 5))
     .filter((h) => /^\d{2}:\d{2}$/.test(h));
   return [...new Set(horas)].sort();
+}
+
+function extraerProximoDia(datos) {
+  const valor = datos?.proximo_dia ?? datos?.proximoDia ?? null;
+  return /^\d{4}-\d{2}-\d{2}$/.test(valor ?? '') ? valor : null;
+}
+
+function extraerDias(datos) {
+  const lista = Array.isArray(datos) ? datos : (datos?.dias ?? []);
+  return lista
+    .map((d) => String(d).slice(0, 10))
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
+    .sort();
 }
 
 // Si el día elegido es hoy, se quitan las horas que ya pasaron
@@ -22,6 +41,47 @@ function soloFuturos(horas, dia) {
   return horas.filter((h) => h > actual);
 }
 
+function ChipHora({ horaValor, activo, disabled, onClick }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={activo}
+      onClick={onClick}
+      disabled={disabled}
+      className={`cursor-pointer rounded-xl border px-2 py-2 text-sm font-medium transition-colors disabled:cursor-default disabled:opacity-60 ${
+        activo
+          ? 'border-teal-600 bg-teal-600 text-white'
+          : 'border-outline-variant text-on-surface hover:bg-surface-container'
+      }`}
+    >
+      {horaDesdeTexto(horaValor)}
+    </button>
+  );
+}
+
+function Turno({ titulo, horas, horaElegida, disabled, onElegir }) {
+  return (
+    <div>
+      <p className={etiquetaTurno}>{titulo}</p>
+      {horas.length > 0 ? (
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+          {horas.map((h) => (
+            <ChipHora
+              key={h}
+              horaValor={h}
+              activo={horaElegida === h}
+              disabled={disabled}
+              onClick={() => onElegir(h)}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-on-surface-variant">Sin horarios en este turno.</p>
+      )}
+    </div>
+  );
+}
+
 /**
  * Props:
  *  - cita: { id, idSede, fecha: Date, motivo, doctor }
@@ -29,44 +89,116 @@ function soloFuturos(horas, dia) {
  *  - onCerrar(): el usuario cerró el modal sin cambiar nada
  */
 export default function ReagendarCitaModal({ cita, onReagendada, onCerrar }) {
+  const [mesVisible, setMesVisible] = useState(mesDeHoy);
+  const [diasLibres, setDiasLibres] = useState([]);
+  const [cargandoDias, setCargandoDias] = useState(true);
+  const [errorDias, setErrorDias] = useState('');
+  const [intentoDias, setIntentoDias] = useState(0);
+
   const [fecha, setFecha] = useState('');
   const [horarios, setHorarios] = useState([]);
+  const [proximoDia, setProximoDia] = useState(null);
   const [cargandoHorarios, setCargandoHorarios] = useState(false);
   const [errorHorarios, setErrorHorarios] = useState('');
   const [horaElegida, setHoraElegida] = useState('');
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
 
-  const inputFecha = useRef(null);
+  const botonHoy = useRef(null);
+  const primerClicable = useRef(null);
+  const yaEnfoco = useRef(false);
   const solicitud = useRef(0);
   const cerrar = useRef(onCerrar);
   const ocupado = useRef(guardando);
-  cerrar.current = onCerrar;
-  ocupado.current = guardando;
 
   useEffect(() => {
-    inputFecha.current?.focus();
+    cerrar.current = onCerrar;
+  }, [onCerrar]);
+
+  useEffect(() => {
+    ocupado.current = guardando;
+  }, [guardando]);
+
+  useEffect(() => {
+    const overflowPrevio = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    botonHoy.current?.focus();
+
     const alPresionar = (e) => {
-      if (e.key === 'Escape' && !ocupado.current) cerrar.current();
+      if (e.key === 'Escape' && !ocupado.current) {
+        e.preventDefault();
+        cerrar.current();
+      }
     };
     window.addEventListener('keydown', alPresionar);
     return () => {
       window.removeEventListener('keydown', alPresionar);
+      document.body.style.overflow = overflowPrevio;
       solicitud.current += 1; // ignora respuestas que lleguen después de cerrar
     };
   }, []);
 
+  useEffect(() => {
+    let cancelado = false;
+
+    agendarCitasApi
+      .dias(cita.idSede, DIAS_A_CONSULTAR)
+      .then((datos) => {
+        if (cancelado) return;
+        setDiasLibres(extraerDias(datos));
+        setErrorDias('');
+      })
+      .catch((e) => {
+        if (cancelado) return;
+        setDiasLibres([]);
+        setErrorDias(e.message || 'No se pudieron cargar los días disponibles.');
+      })
+      .finally(() => {
+        if (!cancelado) setCargandoDias(false);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [cita.idSede, intentoDias]);
+
+  useEffect(() => {
+    if (cargandoDias || yaEnfoco.current) return;
+    if (primerClicable.current) {
+      primerClicable.current.focus();
+    } else {
+      botonHoy.current?.focus();
+    }
+    yaEnfoco.current = true;
+  }, [cargandoDias, diasLibres]);
+
+  const disponibles = useMemo(() => new Set(diasLibres), [diasLibres]);
+
+  const { puedeAnterior, puedeSiguiente } = useMemo(() => {
+    const mesHoy = mesDeHoy();
+    if (diasLibres.length === 0) {
+      return { puedeAnterior: false, puedeSiguiente: false };
+    }
+    const ultimo = parseYmd(diasLibres[diasLibres.length - 1]);
+    const mesMax = ultimo ? primerDiaMes(ultimo) : mesHoy;
+    return {
+      puedeAnterior: mesVisible > mesHoy,
+      puedeSiguiente: mesVisible < mesMax,
+    };
+  }, [diasLibres, mesVisible]);
+
   async function cargarHorarios(dia) {
-    // Si el usuario cambia de día rápido, solo cuenta la última petición
     const id = ++solicitud.current;
     setCargandoHorarios(true);
     setErrorHorarios('');
     setHorarios([]);
     setHoraElegida('');
+    setProximoDia(null);
     try {
       const datos = await agendarCitasApi.horarios(cita.idSede, dia);
       if (id !== solicitud.current) return;
       setHorarios(soloFuturos(normalizarHorarios(datos), dia));
+      setProximoDia(extraerProximoDia(datos));
     } catch (e) {
       if (id !== solicitud.current) return;
       setErrorHorarios(e.message || 'No se pudieron cargar los horarios.');
@@ -79,13 +211,22 @@ export default function ReagendarCitaModal({ cita, onReagendada, onCerrar }) {
     setFecha(valor);
     setError('');
     if (valor) {
+      const date = parseYmd(valor);
+      if (date) setMesVisible(primerDiaMes(date));
       cargarHorarios(valor);
     } else {
       solicitud.current += 1;
       setHorarios([]);
       setHoraElegida('');
+      setProximoDia(null);
       setCargandoHorarios(false);
     }
+  }
+
+  function reintentarDias() {
+    setCargandoDias(true);
+    setErrorDias('');
+    setIntentoDias((n) => n + 1);
   }
 
   async function confirmar() {
@@ -96,13 +237,16 @@ export default function ReagendarCitaModal({ cita, onReagendada, onCerrar }) {
       onReagendada({ fecha, hora: horaElegida });
     } catch (e) {
       setError(e.message || 'No se pudo reagendar la cita.');
-      // El horario pudo ocuparse mientras decidías: se actualiza la lista
       if (e.status === 409) cargarHorarios(fecha);
       setGuardando(false);
     }
   }
 
   const nueva = fecha && horaElegida ? new Date(`${fecha}T${horaElegida}`) : null;
+  const manana = horarios.filter((h) => h < '12:00');
+  const tarde = horarios.filter((h) => h >= '12:00');
+  const proximoClicable = proximoDia && disponibles.has(proximoDia) ? proximoDia : null;
+  const proximoDate = proximoClicable ? parseYmd(proximoClicable) : null;
 
   return (
     <div
@@ -114,7 +258,7 @@ export default function ReagendarCitaModal({ cita, onReagendada, onCerrar }) {
         aria-modal="true"
         aria-labelledby="titulo-reagendar"
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-outline-variant bg-on-primary p-6"
+        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-outline-variant bg-on-primary p-6 shadow-xl"
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-container/10 text-primary">
@@ -138,30 +282,70 @@ export default function ReagendarCitaModal({ cita, onReagendada, onCerrar }) {
           {cita.motivo} con {cita.doctor}
         </p>
         <p className="mt-3 rounded-xl bg-surface px-3 py-2 text-sm text-on-surface-variant">
-          Cita actual: <span className="font-semibold text-on-surface">{fechaLarga(cita.fecha)}, {hora(cita.fecha)}</span>
+          Cita actual:{' '}
+          <span className="font-semibold text-on-surface">
+            {fechaLarga(cita.fecha)}, {hora(cita.fecha)}
+          </span>
         </p>
 
-        {/* Paso 1: fecha */}
-        <label htmlFor="nueva-fecha" className="mb-1.5 mt-5 block text-sm font-semibold text-on-surface">
-          Nueva fecha
-        </label>
-        <input
-          ref={inputFecha}
-          id="nueva-fecha"
-          type="date"
-          value={fecha}
-          min={hoyISO()}
-          onChange={(e) => elegirFecha(e.target.value)}
-          disabled={guardando}
-          className="w-full rounded-xl border border-outline-variant bg-surface px-3 py-2.5 text-sm text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
-        />
+        <div className="mt-5 grid gap-5 md:grid-cols-2">
+          <div className="rounded-2xl border border-outline-variant bg-on-primary p-3 sm:p-4">
+            <p className={`${etiquetaSeccion} mb-3`}>Nueva fecha</p>
+            <CalendarioMes
+              mesVisible={mesVisible}
+              fechaSeleccionada={fecha}
+              disponibles={disponibles}
+              onSeleccionar={elegirFecha}
+              onMesAnterior={() => setMesVisible((mes) => moverMes(mes, -1))}
+              onMesSiguiente={() => setMesVisible((mes) => moverMes(mes, 1))}
+              onHoy={() => setMesVisible(mesDeHoy())}
+              puedeAnterior={puedeAnterior}
+              puedeSiguiente={puedeSiguiente}
+              disabled={guardando}
+              botonHoyRef={botonHoy}
+              primerClicableRef={primerClicable}
+            />
+            {cargandoDias ? (
+              <p className="mt-3 flex items-center gap-2 text-sm text-on-surface-variant">
+                <Loader2 size={15} className="animate-spin" aria-hidden="true" />
+                Buscando días disponibles…
+              </p>
+            ) : errorDias ? (
+              <div role="alert" className="mt-3 flex flex-col items-start gap-2">
+                <p className="text-sm text-error">{errorDias}</p>
+                <button
+                  type="button"
+                  onClick={reintentarDias}
+                  className="cursor-pointer rounded-lg border border-outline-variant px-3 py-1.5 text-xs font-medium text-on-surface transition-colors hover:bg-surface-container"
+                >
+                  Reintentar
+                </button>
+              </div>
+            ) : diasLibres.length === 0 ? (
+              <div className="mt-3 flex flex-col items-start gap-2">
+                <p className="rounded-xl bg-surface px-3 py-3 text-sm text-on-surface-variant">
+                  No hay días con horarios libres en los próximos 30 días.
+                </p>
+                <button
+                  type="button"
+                  onClick={reintentarDias}
+                  className="cursor-pointer rounded-lg border border-outline-variant px-3 py-1.5 text-xs font-medium text-on-surface transition-colors hover:bg-surface-container"
+                >
+                  Reintentar
+                </button>
+              </div>
+            ) : null}
+          </div>
 
-        {/* Paso 2: horarios */}
-        {fecha && (
-          <div className="mt-5" aria-live="polite">
-            <p className="mb-2 text-sm font-semibold text-on-surface">Horarios disponibles</p>
+          <div className="rounded-2xl border border-outline-variant bg-on-primary p-3 sm:p-4" aria-live="polite">
+            <p className={`${etiquetaSeccion} mb-3 flex items-center gap-2`}>
+              <Clock size={16} aria-hidden="true" />
+              Horarios disponibles
+            </p>
 
-            {cargandoHorarios ? (
+            {!fecha ? (
+              <p className="text-sm text-on-surface-variant">Elige un día para ver los horarios.</p>
+            ) : cargandoHorarios ? (
               <p className="flex items-center gap-2 text-sm text-on-surface-variant">
                 <Loader2 size={15} className="animate-spin" aria-hidden="true" />
                 Buscando horarios…
@@ -178,38 +362,42 @@ export default function ReagendarCitaModal({ cita, onReagendada, onCerrar }) {
                 </button>
               </div>
             ) : horarios.length === 0 ? (
-              <p className="rounded-xl bg-surface px-3 py-3 text-sm text-on-surface-variant">
-                No hay horarios disponibles ese día. Prueba con otra fecha.
-              </p>
+              <div className="rounded-xl bg-surface px-3 py-3 text-sm text-on-surface-variant">
+                <p>No hay horarios disponibles ese día. Prueba con otra fecha.</p>
+                {proximoDate ? (
+                  <button
+                    type="button"
+                    onClick={() => elegirFecha(proximoClicable)}
+                    disabled={guardando}
+                    className="mt-2 cursor-pointer text-sm font-semibold text-teal-700 hover:text-teal-800 disabled:cursor-default disabled:opacity-60"
+                  >
+                    Ver próximo día disponible: {fechaLarga(proximoDate)} →
+                  </button>
+                ) : null}
+              </div>
             ) : (
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                {horarios.map((h) => {
-                  const activo = horaElegida === h;
-                  return (
-                    <button
-                      key={h}
-                      type="button"
-                      aria-pressed={activo}
-                      onClick={() => setHoraElegida(h)}
-                      disabled={guardando}
-                      className={`cursor-pointer rounded-xl border px-2 py-2 text-sm font-medium transition-colors disabled:cursor-default disabled:opacity-60 ${
-                        activo
-                          ? 'border-primary bg-primary text-on-primary'
-                          : 'border-outline-variant text-on-surface hover:bg-surface-container'
-                      }`}
-                    >
-                      {horaDesdeTexto(h)}
-                    </button>
-                  );
-                })}
+              <div className="flex flex-col gap-4">
+                <Turno
+                  titulo="Mañana"
+                  horas={manana}
+                  horaElegida={horaElegida}
+                  disabled={guardando}
+                  onElegir={setHoraElegida}
+                />
+                <Turno
+                  titulo="Tarde"
+                  horas={tarde}
+                  horaElegida={horaElegida}
+                  disabled={guardando}
+                  onElegir={setHoraElegida}
+                />
               </div>
             )}
           </div>
-        )}
+        </div>
 
-        {/* Resumen del cambio */}
         {nueva && (
-          <p className="mt-5 rounded-xl bg-primary-container/10 px-3 py-2 text-sm text-on-surface">
+          <p className="mt-5 rounded-xl bg-teal-50 px-3 py-2 text-sm text-teal-800">
             Tu cita pasará al{' '}
             <span className="font-semibold">
               {fechaLarga(nueva)}, {hora(nueva)}
@@ -237,7 +425,7 @@ export default function ReagendarCitaModal({ cita, onReagendada, onCerrar }) {
             type="button"
             onClick={confirmar}
             disabled={!nueva || guardando}
-            className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-on-primary transition-opacity hover:opacity-90 disabled:cursor-default disabled:opacity-50"
+            className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-teal-700 disabled:cursor-default disabled:opacity-50"
           >
             {guardando && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
             {guardando ? 'Guardando…' : 'Confirmar cambio'}

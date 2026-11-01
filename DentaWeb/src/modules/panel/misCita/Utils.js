@@ -1,5 +1,28 @@
 export const mayuscula = (t) => t.charAt(0).toUpperCase() + t.slice(1);
 
+export const primerDiaMes = (date) => new Date(date.getFullYear(), date.getMonth(), 1);
+
+export const mesDeHoy = () => primerDiaMes(new Date());
+
+export const moverMes = (date, delta) =>
+  new Date(date.getFullYear(), date.getMonth() + delta, 1);
+
+export const parseYmd = (ymd) => {
+  const [y, m, d] = String(ymd ?? '')
+    .slice(0, 10)
+    .split('-')
+    .map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
+};
+
+export const aYmd = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
 // 05 nov 2026
 export const fechaCorta = (f) =>
   f.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/\./g, '');
