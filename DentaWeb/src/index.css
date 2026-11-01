@@ -182,13 +182,23 @@ html.dark {
 
 @layer base {
   html {
+    --app-vvh: 100svh;
+    min-height: 100svh;
+    height: auto;
+    background-color: var(--color-surface);
     font-family: ui-sans-serif, system-ui, sans-serif;
   }
 
   body {
     margin: 0;
+    min-height: 100svh;
+    height: auto;
     background-color: var(--color-surface);
     color: var(--color-on-surface);
+  }
+
+  #root {
+    min-height: 100svh;
   }
 
   button,

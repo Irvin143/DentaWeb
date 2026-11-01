@@ -208,7 +208,7 @@ export function Sidebar() {
   return (
     <>
       {/* Barra superior (solo mobile) */}
-      <header className="sticky top-0 z-30 flex items-center border-b border-slate-100 bg-white px-4 py-3 shadow-sm md:hidden dark:border-outline-variant dark:bg-on-primary">
+      <header className="sticky top-0 z-30 flex items-center border-b border-slate-100 bg-white px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] shadow-sm md:hidden dark:border-outline-variant dark:bg-on-primary">
         <button
           type="button"
           onClick={() => setAbierto(true)}
@@ -253,7 +253,7 @@ export function Sidebar() {
       {/* Sidebar: panel deslizante en mobile, fijo en escritorio */}
       <aside
         id="menu-lateral"
-        className={`fixed inset-y-0 left-0 z-50 w-64 min-h-0 overflow-hidden bg-white transition-[translate,transform,visibility,width,box-shadow] duration-300 ease-in-out md:static md:z-auto md:h-full md:shrink-0 md:translate-x-0 dark:bg-on-primary ${
+        className={`fixed top-[env(safe-area-inset-top,0px)] bottom-[env(safe-area-inset-bottom,0px)] left-0 z-50 w-64 min-h-0 overflow-hidden bg-white transition-[translate,transform,visibility,width,box-shadow] duration-300 ease-in-out md:static md:top-auto md:bottom-auto md:z-auto md:h-full md:shrink-0 md:translate-x-0 dark:bg-on-primary ${
           colapsada
             ? 'md:invisible md:w-0 md:border-r-0 md:shadow-none'
             : 'md:visible md:w-64 border-r border-slate-100 shadow-sm dark:border-outline-variant'

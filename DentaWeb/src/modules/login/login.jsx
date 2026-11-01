@@ -140,7 +140,7 @@ const DentalWebLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-login-background px-4 py-8">
+    <div className="relative flex min-h-[var(--app-vvh,100svh)] flex-col items-center justify-center bg-login-background px-4 pt-[max(2rem,env(safe-area-inset-top,0px))] pb-[max(2rem,env(safe-area-inset-bottom,0px))]">
       <ToastContainer toasts={avisosLogin} onCerrar={cerrarAviso} />
       <FondoAuth />
 

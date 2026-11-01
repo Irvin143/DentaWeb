@@ -32,7 +32,7 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-login-background px-4 py-8">
+    <div className="relative flex min-h-[var(--app-vvh,100svh)] flex-col items-center justify-center bg-login-background px-4 pt-[max(2rem,env(safe-area-inset-top,0px))] pb-[max(2rem,env(safe-area-inset-bottom,0px))]">
       <FondoAuth />
 
       <div className="relative z-10 w-full max-w-120 animate-auth-card-in rounded-3xl bg-on-primary p-8 shadow-login-card motion-reduce:animate-none sm:p-10">
