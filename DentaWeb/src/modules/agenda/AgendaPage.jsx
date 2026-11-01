@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { citasApi } from '../../services/api.js';
 import { BadgeEstado } from '../../utils/estadoCita.jsx';
 import ModalDetalleCita from './ModalDetalleCita.jsx';
@@ -13,10 +13,13 @@ const VISTAS = [
 ];
 
 const claseCampo =
-  'h-10 w-full rounded-xl border border-outline-variant bg-on-primary px-3 text-sm text-on-surface focus:ring-2 focus:ring-teal-500/20 focus:outline-none';
+  'h-10 w-full cursor-pointer appearance-none rounded-xl border border-outline-variant bg-on-primary pr-9 pl-3 text-sm text-on-surface focus:ring-2 focus:ring-teal-500/20 focus:outline-none';
 
 const claseVista =
-  'h-10 w-auto min-w-[8rem] rounded-xl border border-outline-variant bg-on-primary px-3 text-sm text-on-surface focus:ring-2 focus:ring-teal-500/20 focus:outline-none';
+  'h-10 w-auto min-w-[8rem] cursor-pointer appearance-none rounded-xl border border-outline-variant bg-on-primary pr-9 pl-3 text-sm text-on-surface focus:ring-2 focus:ring-teal-500/20 focus:outline-none';
+
+const claseFlechaSelect =
+  'pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-outline';
 
 const comoLista = (resp) =>
   Array.isArray(resp) ? resp : resp?.citas ?? resp?.data ?? [];
@@ -491,7 +494,7 @@ export default function AgendaPage() {
           >
             Hoy
           </button>
-          <label>
+          <label className="relative">
             <span className="sr-only">Vista del calendario</span>
             <select
               aria-label="Vista del calendario"
@@ -505,13 +508,14 @@ export default function AgendaPage() {
                 </option>
               ))}
             </select>
+            <ChevronDown size={16} aria-hidden="true" className={claseFlechaSelect} />
           </label>
         </div>
         <p className="text-base font-bold text-on-surface">{etiquetaPeriodo(vista, ancla)}</p>
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <label className="min-w-[12rem] flex-1">
+        <label className="relative min-w-[12rem] flex-1">
           <span className="sr-only">Clínica</span>
           <select
             className={claseCampo}
@@ -525,8 +529,9 @@ export default function AgendaPage() {
               </option>
             ))}
           </select>
+          <ChevronDown size={16} aria-hidden="true" className={claseFlechaSelect} />
         </label>
-        <label className="min-w-[12rem] flex-1">
+        <label className="relative min-w-[12rem] flex-1">
           <span className="sr-only">Odontólogo</span>
           <select
             className={claseCampo}
@@ -540,6 +545,7 @@ export default function AgendaPage() {
               </option>
             ))}
           </select>
+          <ChevronDown size={16} aria-hidden="true" className={claseFlechaSelect} />
         </label>
         <label className="relative block min-w-[12rem] flex-1">
           <span className="sr-only">Buscar paciente</span>
