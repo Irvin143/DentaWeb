@@ -408,5 +408,8 @@ export const citasApi = {
   reagendar(id, payload) {
     return apiRequest(`/api/citas/${id}/reagendar`, { method: "PATCH", body: payload });
   },
+  cambiarEstado(id, estado) {
+    return apiRequest(`/api/citas/${id}/estado`, { method: "PATCH", body: { estado } });
+  },
 };
 

@@ -1,11 +1,16 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
-import { BadgeEstado } from '../../utils/estadoCita.jsx';
+import { ChevronDown, X } from 'lucide-react';
+import { BadgeEstado, OPCIONES_ESTADO_CITA, estadoParaApi } from '../../utils/estadoCita.jsx';
+import { citasApi } from '../../services/api.js';
 
 const LOCALE = 'es-MX';
+const ZONA = 'America/Mazatlan';
 
 const etiquetaClase = 'text-xs font-semibold uppercase tracking-wide text-on-surface-variant';
+
+const claseSelect =
+  'h-10 w-full cursor-pointer appearance-none rounded-xl border border-outline-variant bg-on-primary pr-9 pl-3 text-base leading-5 text-on-surface focus:ring-2 focus:ring-teal-500/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50';
 
 const horaCorta = (valor) => String(valor ?? '').slice(0, 5);
 
@@ -47,6 +52,27 @@ const textoOpcional = (valor) => {
 
 const esUrgencia = (cita) => /urgenc/i.test(String(cita?.tipo ?? ''));
 
+function ahoraEnZona() {
+  const partes = new Intl.DateTimeFormat('en-CA', {
+    timeZone: ZONA,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date());
+  const valor = (tipo) => partes.find((p) => p.type === tipo)?.value ?? '';
+  return `${valor('year')}-${valor('month')}-${valor('day')}T${valor('hour')}:${valor('minute')}`;
+}
+
+function citaYaOcurrio(cita) {
+  const fecha = String(cita?.fecha ?? '').slice(0, 10);
+  const hora = horaCorta(cita?.hora);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || !/^\d{2}:\d{2}$/.test(hora)) return false;
+  return `${fecha}T${hora}` <= ahoraEnZona();
+}
+
 function Campo({ etiqueta, children }) {
   if (!children) return null;
   return (
@@ -57,10 +83,24 @@ function Campo({ etiqueta, children }) {
   );
 }
 
-export default function ModalDetalleCita({ cita, onCerrar }) {
+export default function ModalDetalleCita({ cita, onCerrar, onGuardado }) {
   const cerrarRef = useRef(onCerrar);
   const botonCerrar = useRef(null);
   cerrarRef.current = onCerrar;
+
+  const yaOcurrio = citaYaOcurrio(cita);
+  const estadoActual = estadoParaApi(cita?.estado);
+  const noAsistioFutura = estadoActual === 'NO_ASISTIO' && !yaOcurrio;
+  const valorInicial = noAsistioFutura ? '' : (estadoActual ?? '');
+
+  const [estadoElegido, setEstadoElegido] = useState(valorInicial);
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    setEstadoElegido(valorInicial);
+    setError(null);
+  }, [cita?.id_cita, valorInicial]);
 
   useEffect(() => {
     botonCerrar.current?.focus();
@@ -79,6 +119,41 @@ export default function ModalDetalleCita({ cita, onCerrar }) {
       document.body.style.overflow = overflowPrevio;
     };
   }, []);
+
+  const opciones = useMemo(
+    () =>
+      OPCIONES_ESTADO_CITA.map((opcion) => {
+        const esNoAsistio = opcion.valor === 'NO_ASISTIO';
+        const deshabilitada = esNoAsistio && !yaOcurrio;
+        return {
+          ...opcion,
+          deshabilitada,
+          titulo: deshabilitada ? 'Solo cuando ya pasó la hora de la cita' : undefined,
+        };
+      }),
+    [yaOcurrio]
+  );
+
+  const puedeGuardar =
+    Boolean(estadoElegido) &&
+    estadoElegido !== estadoActual &&
+    !(estadoElegido === 'NO_ASISTIO' && !yaOcurrio);
+
+  const guardar = async () => {
+    if (!puedeGuardar || guardando) return;
+    const id = cita?.id_cita;
+    if (id == null) return;
+    try {
+      setGuardando(true);
+      setError(null);
+      const actualizada = await citasApi.cambiarEstado(id, estadoElegido);
+      onGuardado?.(actualizada);
+    } catch (err) {
+      setError(err.message || 'No se pudo guardar el estado.');
+    } finally {
+      setGuardando(false);
+    }
+  };
 
   const urgencia = esUrgencia(cita);
   const horario = [horaCorta(cita.hora), horaCorta(cita.hora_fin)].filter(Boolean).join(' – ');
@@ -146,13 +221,65 @@ export default function ModalDetalleCita({ cita, onCerrar }) {
           ) : null}
         </dl>
 
-        <div className="mt-6 flex justify-end">
+        <div className="mt-5">
+          <label htmlFor="estado-cita" className={etiquetaClase}>
+            Estado
+          </label>
+          <div className="relative mt-1">
+            <select
+              id="estado-cita"
+              value={estadoElegido}
+              onChange={(e) => {
+                setEstadoElegido(e.target.value);
+                setError(null);
+              }}
+              className={claseSelect}
+            >
+              {!estadoElegido ? (
+                <option value="" disabled>
+                  Cambiar estado
+                </option>
+              ) : null}
+              {opciones.map((opcion) => (
+                <option
+                  key={opcion.valor}
+                  value={opcion.valor}
+                  disabled={opcion.deshabilitada}
+                  title={opcion.titulo}
+                >
+                  {opcion.etiqueta}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              size={16}
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-outline"
+            />
+          </div>
+          {!yaOcurrio ? (
+            <p className="mt-1 text-xs text-on-surface-variant">
+              «No asistió» solo cuando ya pasó la hora de la cita.
+            </p>
+          ) : null}
+          {error ? <p className="mt-2 text-sm text-error">{error}</p> : null}
+        </div>
+
+        <div className="mt-6 flex justify-end gap-2">
           <button
             type="button"
             onClick={onCerrar}
             className="cursor-pointer rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container"
           >
             Cerrar
+          </button>
+          <button
+            type="button"
+            onClick={guardar}
+            disabled={!puedeGuardar || guardando}
+            className="cursor-pointer rounded-xl bg-primary px-4 py-2 text-sm font-medium text-on-primary transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {guardando ? 'Guardando…' : 'Guardar'}
           </button>
         </div>
       </div>

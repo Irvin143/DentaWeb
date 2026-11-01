@@ -8,6 +8,19 @@ const ESTADOS = {
   no_asistio: 'No asistió',
 };
 
+export const ESTADOS_API = {
+  pendiente: 'PENDIENTE',
+  confirmada: 'CONFIRMADA',
+  atendida: 'ATENDIDA',
+  cancelada: 'CANCELADA',
+  no_asistio: 'NO_ASISTIO',
+};
+
+export const OPCIONES_ESTADO_CITA = Object.entries(ESTADOS).map(([clave, etiqueta]) => ({
+  valor: ESTADOS_API[clave],
+  etiqueta,
+}));
+
 const TONOS = {
   Pendiente: 'bg-surface-container text-on-surface-variant',
   Confirmada: 'bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-400',
@@ -31,6 +44,10 @@ export function etiquetaEstado(valor) {
   if (ESTADOS[clave]) return ESTADOS[clave];
   const texto = String(valor ?? '').trim();
   return texto || '';
+}
+
+export function estadoParaApi(valor) {
+  return ESTADOS_API[claveEstado(valor)] ?? null;
 }
 
 export function claseEstado(valor) {

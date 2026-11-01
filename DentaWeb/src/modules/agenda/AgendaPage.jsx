@@ -603,7 +603,23 @@ export default function AgendaPage() {
       </div>
 
       {citaAbierta ? (
-        <ModalDetalleCita cita={citaAbierta} onCerrar={() => setCitaAbierta(null)} />
+        <ModalDetalleCita
+          cita={citaAbierta}
+          onCerrar={() => setCitaAbierta(null)}
+          onGuardado={(actualizada) => {
+            const id = Number(actualizada?.id ?? citaAbierta.id_cita);
+            const estado = actualizada?.estado;
+            setCitas((actuales) =>
+              actuales.map((c) =>
+                Number(c.id_cita) === id ? { ...c, estado: estado ?? c.estado } : c
+              )
+            );
+            setCitaAbierta((abierta) =>
+              abierta ? { ...abierta, estado: estado ?? abierta.estado } : null
+            );
+            cargar();
+          }}
+        />
       ) : null}
     </section>
   );
