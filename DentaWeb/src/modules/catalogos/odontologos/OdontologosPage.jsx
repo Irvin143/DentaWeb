@@ -8,7 +8,7 @@ import { odontologosApi, clinicasApi, pacientesApi } from '../../../services/api
 
 // Mobile: compacto. Desktop (md:): más amplio y cómodo
 const inputClass =
-  'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500 md:rounded-xl md:px-4 md:py-3 md:text-base';
+  'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500 md:rounded-xl md:px-4 md:py-3 md:text-base dark:border-outline-variant dark:bg-surface-container dark:text-on-surface dark:placeholder:text-on-surface-variant';
 
 /* ============================================================
    VALIDACIONES
@@ -203,7 +203,7 @@ const mapearOdontologo = (o) => ({
 });
 
 const Etiqueta = ({ children, requerido }) => (
-  <label className="mb-1 block text-xs font-medium text-slate-700 md:mb-1.5 md:text-sm">
+  <label className="mb-1 block text-xs font-medium text-slate-700 md:mb-1.5 md:text-sm dark:text-on-surface">
     {children}
     {requerido && <span className="ml-0.5 text-red-500">*</span>}
   </label>
@@ -211,7 +211,7 @@ const Etiqueta = ({ children, requerido }) => (
 
 const Seccion = ({ titulo, children }) => (
   <section className="flex flex-col gap-3 md:gap-5">
-    <h3 className="hidden border-b border-slate-100 pb-2 text-sm font-semibold text-slate-800 md:block">
+    <h3 className="hidden border-b border-slate-100 pb-2 text-sm font-semibold text-slate-800 md:block dark:border-outline-variant dark:text-on-surface">
       {titulo}
     </h3>
     {children}
@@ -490,7 +490,7 @@ export default function OdontologosPage() {
               onBlur={handleBlur('nombre')}
             />
             {erroresCampos.nombre && (
-              <p className="mt-1 text-xs text-red-600">
+              <p className="mt-1 text-xs text-red-600 dark:text-error">
                 {erroresCampos.nombre}
               </p>
             )}
@@ -508,7 +508,7 @@ export default function OdontologosPage() {
               inputMode="numeric"
             />
             {erroresCampos.telefono && (
-              <p className="mt-1 text-xs text-red-600">
+              <p className="mt-1 text-xs text-red-600 dark:text-error">
                 {erroresCampos.telefono}
               </p>
             )}
@@ -525,7 +525,7 @@ export default function OdontologosPage() {
               onBlur={handleBlur('ape_pat')}
             />
             {erroresCampos.ape_pat && (
-              <p className="mt-1 text-xs text-red-600">
+              <p className="mt-1 text-xs text-red-600 dark:text-error">
                 {erroresCampos.ape_pat}
               </p>
             )}
@@ -542,7 +542,7 @@ export default function OdontologosPage() {
               onBlur={handleBlur('ape_mat')}
             />
             {erroresCampos.ape_mat && (
-              <p className="mt-1 text-xs text-red-600">
+              <p className="mt-1 text-xs text-red-600 dark:text-error">
                 {erroresCampos.ape_mat}
               </p>
             )}
@@ -566,7 +566,7 @@ export default function OdontologosPage() {
               inputMode="numeric"
             />
             {erroresCampos.cedula && (
-              <p className="mt-1 text-xs text-red-600">
+              <p className="mt-1 text-xs text-red-600 dark:text-error">
                 {erroresCampos.cedula}
               </p>
             )}
@@ -576,7 +576,7 @@ export default function OdontologosPage() {
             <Etiqueta requerido={creando}>
               Clínicas donde trabaja
               {form.ids_clinicas.length > 0 && (
-                <span className="ml-2 font-normal text-slate-500">
+                <span className="ml-2 font-normal text-slate-500 dark:text-on-surface-variant">
                   ({form.ids_clinicas.length}{' '}
                   {form.ids_clinicas.length === 1 ? 'seleccionada' : 'seleccionadas'})
                 </span>
@@ -584,12 +584,12 @@ export default function OdontologosPage() {
               :
             </Etiqueta>
             <div
-              className={`max-h-48 overflow-y-auto rounded-lg border bg-white p-1 md:rounded-xl md:p-2 ${
-                erroresCampos.ids_clinicas ? 'border-red-400' : 'border-slate-200'
+              className={`max-h-48 overflow-y-auto rounded-lg border bg-white p-1 md:rounded-xl md:p-2 dark:bg-surface-container ${
+                erroresCampos.ids_clinicas ? 'border-red-400' : 'border-slate-200 dark:border-outline-variant'
               }`}
             >
               {opcionesClinica.length === 0 ? (
-                <p className="px-2 py-2 text-sm text-slate-500">
+                <p className="px-2 py-2 text-sm text-slate-500 dark:text-on-surface-variant">
                   No hay clínicas disponibles.
                 </p>
               ) : (
@@ -600,7 +600,7 @@ export default function OdontologosPage() {
                     <label
                       key={c.id_clinica}
                       className={`flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors md:gap-3 md:py-2 md:text-base ${
-                        marcada ? 'bg-teal-50 text-teal-800' : 'text-slate-700 hover:bg-slate-50'
+                        marcada ? 'bg-teal-50 text-teal-800 dark:bg-teal-950 dark:text-teal-400' : 'text-slate-700 hover:bg-slate-50 dark:text-on-surface dark:hover:bg-surface-container-high'
                       }`}
                     >
                       <input
@@ -611,7 +611,7 @@ export default function OdontologosPage() {
                       />
                       <span className="flex-1">{c.nombre}</span>
                       {!c.activo && (
-                        <span className="text-xs text-slate-400">Inactiva</span>
+                        <span className="text-xs text-slate-400 dark:text-outline">Inactiva</span>
                       )}
                     </label>
                   );
@@ -619,7 +619,7 @@ export default function OdontologosPage() {
               )}
             </div>
             {erroresCampos.ids_clinicas && (
-              <p className="mt-1 text-xs text-red-600">
+              <p className="mt-1 text-xs text-red-600 dark:text-error">
                 {erroresCampos.ids_clinicas}
               </p>
             )}
@@ -629,11 +629,11 @@ export default function OdontologosPage() {
 
       {/* Datos de acceso */}
       {creando && (
-        <fieldset className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 pb-3 pt-1 md:gap-5 md:rounded-xl md:px-5 md:pb-5 md:pt-2">
-          <legend className="inline-flex items-center gap-1 px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm">
+        <fieldset className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 pb-3 pt-1 md:gap-5 md:rounded-xl md:px-5 md:pb-5 md:pt-2 dark:border-outline-variant dark:bg-surface-container">
+          <legend className="inline-flex items-center gap-1 px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm dark:text-teal-400">
             <KeyRound size={14} aria-hidden="true" /> Datos de acceso
           </legend>
-          <p className="hidden text-sm text-slate-500 md:block">
+          <p className="hidden text-sm text-slate-500 md:block dark:text-on-surface-variant">
             Con estos datos el odontólogo iniciará sesión en el sistema.
           </p>
 
@@ -650,7 +650,7 @@ export default function OdontologosPage() {
               onBlur={handleBlur('correo')}
             />
             {erroresCampos.correo && (
-              <p className="mt-1 text-xs text-red-600">
+              <p className="mt-1 text-xs text-red-600 dark:text-error">
                 {erroresCampos.correo}
               </p>
             )}
@@ -674,7 +674,7 @@ export default function OdontologosPage() {
                   type="button"
                   onClick={() => setVerContrasena((valor) => !valor)}
                   aria-label={verContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400 dark:text-outline dark:hover:text-on-surface"
                 >
                   {verContrasena ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -699,13 +699,13 @@ export default function OdontologosPage() {
                   type="button"
                   onClick={() => setVerConfirmar((valor) => !valor)}
                   aria-label={verConfirmar ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400 dark:text-outline dark:hover:text-on-surface"
                 >
                   {verConfirmar ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
               {erroresCampos.confirmarContrasena && (
-                <p className="mt-1 text-xs text-red-600">
+                <p className="mt-1 text-xs text-red-600 dark:text-error">
                   {erroresCampos.confirmarContrasena}
                 </p>
               )}

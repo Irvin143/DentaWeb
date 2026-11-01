@@ -5,7 +5,7 @@ import { AvisoGeneral, scrollAlPrimerCampo } from '../../../components/avisosFor
 import { especialidadesApi } from '../../../services/api.js';
 
 const inputClass =
-  'w-full rounded-xl border border-slate-200 p-3 outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500';
+  'w-full rounded-xl border border-slate-200 p-3 outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface dark:placeholder:text-on-surface-variant';
 
 /* ============================================================
    VALIDACIONES
@@ -229,7 +229,7 @@ export default function EspecialidadesPage() {
     <AvisoGeneral mensaje={error} />
     <div ref={formularioRef} className="flex flex-col gap-4">
       <div data-campo="nombre">
-        <label className="mb-1 block text-sm font-medium text-slate-700">
+        <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-on-surface">
           Nombre:
         </label>
         <input
@@ -242,7 +242,7 @@ export default function EspecialidadesPage() {
           onBlur={handleBlur('nombre')}
         />
         {erroresCampos.nombre && (
-          <p className="mt-1 text-xs text-red-600">{erroresCampos.nombre}</p>
+          <p className="mt-1 text-xs text-red-600 dark:text-error">{erroresCampos.nombre}</p>
         )}
       </div>
     </div>

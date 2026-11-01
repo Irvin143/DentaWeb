@@ -76,7 +76,7 @@ export default function SelectorServicio({ catalogo, servicioActivo, idServicio,
         </p>
       )}
       {error && (
-        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-error-container dark:text-error">
           <p className="flex items-center gap-2 font-semibold">
             <AlertCircle size={16} /> No pudimos cargar los servicios
           </p>
@@ -151,7 +151,7 @@ export default function SelectorServicio({ catalogo, servicioActivo, idServicio,
                 onChange={(e) => setBusqueda(e.target.value)}
                 placeholder="Buscar servicio..."
                 aria-label="Buscar servicio"
-                className="w-full rounded-xl border border-slate-200 dark:border-outline-variant bg-slate-50 dark:bg-surface-container py-2 pl-9 pr-3 text-sm outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface dark:placeholder:text-on-surface-variant"
               />
             </div>
           )}

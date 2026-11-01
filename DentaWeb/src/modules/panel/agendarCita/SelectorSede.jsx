@@ -42,7 +42,7 @@ export default function SelectorSede({ sedesData, idServicio, idSede, onSeleccio
         </p>
       )}
       {error && (
-        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-error-container dark:text-error">
           <p className="flex items-center gap-2 font-semibold">
             <AlertCircle size={16} /> No pudimos cargar las sedes
           </p>

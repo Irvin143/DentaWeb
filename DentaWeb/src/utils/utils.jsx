@@ -16,7 +16,7 @@ export function CampoContrasena({ className, ...props }) {
         onClick={() => setMostrar((v) => !v)}
         aria-label={mostrar ? 'Ocultar contraseña' : 'Mostrar contraseña'}
         title={mostrar ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-        className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400 transition-colors hover:text-slate-600"
+        className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400 transition-colors hover:text-slate-600 dark:hover:text-on-surface"
       >
         {mostrar ? <EyeOff size={18} /> : <Eye size={18} />}
       </button>

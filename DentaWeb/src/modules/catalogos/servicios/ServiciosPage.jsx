@@ -5,7 +5,7 @@ import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../../componen
 import { serviciosApi, clinicasApi } from '../../../services/api.js';
 
 const inputClass =
-  'w-full rounded-xl border border-slate-200 bg-white p-3 outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500';
+  'w-full rounded-xl border border-slate-200 bg-white p-3 outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface dark:placeholder:text-on-surface-variant';
 
 // Categorías que acepta el backend
 const CATEGORIAS = [
@@ -221,7 +221,7 @@ export default function ServiciosPage() {
       <AvisoGeneral mensaje={error} />
       <div ref={formularioRef} className="flex flex-col gap-4">
         <div data-campo="categoria">
-          <label className="mb-1 block text-sm font-medium text-slate-700">
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-on-surface">
             Tipo de servicio:<span className="ml-0.5 text-red-500">*</span>
           </label>
           <div className="grid grid-cols-2 gap-2" role="group" aria-label="Tipo de servicio">
@@ -235,8 +235,8 @@ export default function ServiciosPage() {
                   onClick={() => seleccionarCategoria(valor)}
                   className={`cursor-pointer rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${
                     activa
-                      ? 'border-teal-600 bg-teal-50 text-teal-700'
-                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                      ? 'border-teal-600 bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-400'
+                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface-variant dark:hover:bg-surface-container-high'
                   }`}
                 >
                   {etiqueta}
@@ -249,7 +249,7 @@ export default function ServiciosPage() {
 
         <div data-campo="idsClinicas">
           <div className="mb-1 flex items-center justify-between">
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-slate-700 dark:text-on-surface">
               Clínicas:<span className="ml-0.5 text-red-500">*</span>
             </label>
             {opcionesClinica.length > 1 && (
@@ -262,16 +262,16 @@ export default function ServiciosPage() {
               </button>
             )}
           </div>
-          <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2">
+          <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 dark:border-outline-variant dark:bg-surface-container">
             {opcionesClinica.length === 0 ? (
-              <p className="p-2 text-sm text-slate-500">No hay clínicas disponibles.</p>
+              <p className="p-2 text-sm text-slate-500 dark:text-on-surface-variant">No hay clínicas disponibles.</p>
             ) : (
               opcionesClinica.map((c) => {
                 const marcada = form.idsClinicas.includes(Number(c.id_clinica));
                 return (
                   <label
                     key={c.id_clinica}
-                    className="flex cursor-pointer items-center gap-3 rounded-lg p-2 hover:bg-slate-50"
+                    className="flex cursor-pointer items-center gap-3 rounded-lg p-2 hover:bg-slate-50 dark:hover:bg-surface-container-high"
                   >
                     <input
                       type="checkbox"
@@ -279,13 +279,13 @@ export default function ServiciosPage() {
                       checked={marcada}
                       onChange={() => toggleClinica(c.id_clinica)}
                     />
-                    <span className="text-sm text-slate-700">{c.nombre}</span>
+                    <span className="text-sm text-slate-700 dark:text-on-surface">{c.nombre}</span>
                   </label>
                 );
               })
             )}
           </div>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-500 dark:text-on-surface-variant">
             {form.idsClinicas.length === 0
               ? 'Ninguna clínica seleccionada'
               : `${form.idsClinicas.length} seleccionada${form.idsClinicas.length === 1 ? '' : 's'}`}
@@ -294,7 +294,7 @@ export default function ServiciosPage() {
         </div>
 
         <div data-campo="nombre">
-          <label className="mb-1 block text-sm font-medium text-slate-700">
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-on-surface">
             Nombre:<span className="ml-0.5 text-red-500">*</span>
           </label>
           <input
@@ -309,7 +309,7 @@ export default function ServiciosPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Descripción:</label>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-on-surface">Descripción:</label>
           <textarea
             rows={4}
             placeholder="Describe en qué consiste el servicio (opcional)"

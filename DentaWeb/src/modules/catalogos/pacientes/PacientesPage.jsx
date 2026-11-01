@@ -10,7 +10,7 @@ import { CampoContrasena } from '../../../utils/utils.jsx'; // ajusta la ruta
 
 // Mobile: compacto. Desktop (md:): más amplio y cómodo
 const inputClass =
-  'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500 md:rounded-xl md:px-4 md:py-3 md:text-base';
+  'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500 md:rounded-xl md:px-4 md:py-3 md:text-base dark:border-outline-variant dark:bg-surface-container dark:text-on-surface dark:placeholder:text-on-surface-variant';
 
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const LIMPIAR_NOMBRE = /[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s'.-]/g;
@@ -62,7 +62,7 @@ const nombreOdontologo = (o) =>
   o.nombre_completo ?? [o.nombre, o.ape_pat, o.ape_mat].filter(Boolean).join(' ');
 
 const Etiqueta = ({ children, requerido }) => (
-  <label className="mb-1 block text-xs font-medium text-slate-700 md:mb-1.5 md:text-sm">
+  <label className="mb-1 block text-xs font-medium text-slate-700 md:mb-1.5 md:text-sm dark:text-on-surface">
     {children}
     {requerido && <span className="ml-0.5 text-red-500">*</span>}
   </label>
@@ -71,7 +71,7 @@ const Etiqueta = ({ children, requerido }) => (
 // Sección con título: el título solo se ve en desktop, en mobile queda compacto
 const Seccion = ({ titulo, children }) => (
   <section className="flex flex-col gap-3 md:gap-5">
-    <h3 className="hidden border-b border-slate-100 pb-2 text-sm font-semibold text-slate-800 md:block">
+    <h3 className="hidden border-b border-slate-100 pb-2 text-sm font-semibold text-slate-800 md:block dark:border-outline-variant dark:text-on-surface">
       {titulo}
     </h3>
     {children}
@@ -342,11 +342,11 @@ console.log('mapearPaciente:', pacientes);
 
       {/* Datos de acceso: solo al crear, genera el usuario del paciente */}
       {creando && (
-        <fieldset className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 pb-3 pt-1 md:gap-5 md:rounded-xl md:px-5 md:pb-5 md:pt-2">
-          <legend className="inline-flex items-center gap-1 px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm">
+        <fieldset className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 pb-3 pt-1 md:gap-5 md:rounded-xl md:px-5 md:pb-5 md:pt-2 dark:border-outline-variant dark:bg-surface-container">
+          <legend className="inline-flex items-center gap-1 px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm dark:text-teal-400">
             <KeyRound size={14} aria-hidden="true" /> Datos de acceso
           </legend>
-          <p className="hidden text-sm text-slate-500 md:block">
+          <p className="hidden text-sm text-slate-500 md:block dark:text-on-surface-variant">
             Con estos datos el paciente iniciará sesión en el sistema.
           </p>
 

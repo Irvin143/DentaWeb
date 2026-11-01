@@ -66,7 +66,7 @@ function SeccionFecha({ fecha, diasData, onSeleccionar }) {
       )}
 
       {error && (
-        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-error-container dark:text-error">
           <p className="flex items-center gap-2 font-semibold">
             <AlertCircle size={16} /> No pudimos cargar los días disponibles
           </p>
@@ -114,7 +114,7 @@ function SeccionFecha({ fecha, diasData, onSeleccionar }) {
                   className={`flex w-14 shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl py-2 transition-colors ${
                     activo
                       ? 'bg-teal-600 text-white shadow-md'
-                      : 'border border-slate-200 dark:border-outline-variant bg-slate-50 dark:bg-surface-container text-slate-600 dark:text-on-surface-variant hover:bg-slate-100 dark:hover:bg-surface-container'
+                      : 'border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface-variant dark:hover:bg-surface-container-high'
                   }`}
                 >
                   <span className="text-[11px] leading-tight">{dia.diaSemana}</span>
@@ -201,7 +201,7 @@ function SeccionHorario({ fecha, hora, horariosData, onSeleccionar, onProximoDia
       )}
 
       {fecha && error && (
-        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-error-container dark:text-error">
           <p className="flex items-center gap-2 font-semibold">
             <AlertCircle size={16} /> No pudimos cargar los horarios
           </p>
@@ -277,7 +277,7 @@ function SeccionMotivo({ valor, onChange, esEstudio }) {
 
       {mostrar || valor ? (
         <textarea
-          className="mt-3 w-full resize-none rounded-xl border border-slate-200 dark:border-outline-variant bg-slate-50 dark:bg-surface-container p-3 text-sm outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+          className="mt-3 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface dark:placeholder:text-on-surface-variant"
           rows="4"
           maxLength={MAX_MOTIVO}
           placeholder={

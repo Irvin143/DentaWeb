@@ -43,7 +43,7 @@ export function ModalGenerico({
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5">{children}</div>
+        <div className="px-6 py-5 dark:text-on-surface">{children}</div>
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4 dark:border-outline-variant">

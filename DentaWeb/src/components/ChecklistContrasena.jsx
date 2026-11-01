@@ -52,12 +52,12 @@ export function ChecklistContrasena({ contrasena }) {
         return (
           <li
             key={regla.id}
-            className={`flex items-center gap-2 text-xs ${cumplida ? 'text-teal-600' : 'text-slate-400'}`}
+            className={`flex items-center gap-2 text-xs ${cumplida ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-outline'}`}
           >
             {cumplida ? (
-              <Check className="shrink-0 text-teal-600" size={14} strokeWidth={2.5} />
+              <Check className="shrink-0 text-teal-600 dark:text-teal-400" size={14} strokeWidth={2.5} />
             ) : (
-              <Circle className="shrink-0 text-slate-300" size={14} />
+              <Circle className="shrink-0 text-slate-300 dark:text-outline" size={14} />
             )}
             {regla.label}
           </li>
