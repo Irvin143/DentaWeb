@@ -1,4 +1,4 @@
-import * as urgenciasService from '../../services/citas/urgenciasServices .js';
+import * as urgenciasService from '../../services/citas/urgenciasServices.js';
 import * as agendarService from '../../services/citas/agendarServices.js';
 
 const responderError = (res, err) => {

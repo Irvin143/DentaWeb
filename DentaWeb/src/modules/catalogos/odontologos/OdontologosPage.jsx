@@ -4,7 +4,7 @@ import { CatalogoPage } from '../../../components/CatalogoPage.jsx';
 import { ChecklistContrasena, errorContrasena } from '../../../components/ChecklistContrasena.jsx';
 import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../../components/avisosFormulario.jsx';
 import { avisoTelefonoOcupado } from '../../../utils/telefonoCompartido.js';
-import { odontologosApi, clinicasApi, pacientesApi } from '../../../services/api.js';
+import { odontologosApi, clinicasApi } from '../../../services/api.js';
 
 // Mobile: compacto. Desktop (md:): más amplio y cómodo
 const inputClass =
@@ -96,7 +96,6 @@ const validarFormulario = (
   creando,
   odontologos = [],
   editandoId = null,
-  pacientes = []
 ) => {
   const errores = {};
 
@@ -121,7 +120,6 @@ const validarFormulario = (
   if (errTel) errores.telefono = errTel;
   else {
     const ocupado = avisoTelefonoOcupado(form.telefono.replace(/\D/g, ''), {
-      pacientes,
       odontologos,
       idOdontologo: editandoId,
     });
@@ -225,7 +223,6 @@ const Seccion = ({ titulo, children }) => (
 export default function OdontologosPage() {
   const [odontologos, setOdontologos] = useState([]);
   const [clinicas, setClinicas] = useState([]);
-  const [pacientes, setPacientes] = useState([]);
   const formularioRef = useRef(null);
   const [cargando, setCargando] = useState(true);
   const [form, setForm] = useState(FORM_INICIAL);
@@ -244,7 +241,6 @@ export default function OdontologosPage() {
       setCargando(true);
       setErrorCarga(null);
       const data = await odontologosApi.listar();
-      console.log('Odontólogos cargados:', data);
       setOdontologos(comoLista(data, 'odontologos'));
     } catch (err) {
       console.error('Error al listar odontólogos:', err);
@@ -256,20 +252,11 @@ export default function OdontologosPage() {
   }, []);
 
   const cargarCatalogos = useCallback(async () => {
-    const [resClinicas, resPacientes] = await Promise.allSettled([
-      clinicasApi.listar(),
-      pacientesApi.listar(),
-    ]);
-
-    if (resClinicas.status === 'fulfilled') {
-      setClinicas(comoLista(resClinicas.value, 'clinicas'));
-    } else {
-      console.error('Error al cargar clínicas:', resClinicas.reason);
-    }
-    if (resPacientes.status === 'fulfilled') {
-      setPacientes(comoLista(resPacientes.value, 'pacientes'));
-    } else {
-      console.error('Error al cargar pacientes:', resPacientes.reason);
+    try {
+      const data = await clinicasApi.listar();
+      setClinicas(comoLista(data, 'clinicas'));
+    } catch (err) {
+      console.error('Error al cargar clínicas:', err);
     }
   }, []);
 
@@ -377,7 +364,6 @@ export default function OdontologosPage() {
       creando,
       odontologos,
       editandoId,
-      pacientes
     );
 
     if (Object.keys(errores).length > 0) {

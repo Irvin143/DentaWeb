@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 
 export function ModalGenerico({
@@ -12,6 +12,24 @@ export function ModalGenerico({
   guardando = false,
   children,
 }) {
+  const cerrarRef = useRef(onClose);
+  const ocupadoRef = useRef(guardando);
+  cerrarRef.current = onClose;
+  ocupadoRef.current = guardando;
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const alPresionar = (e) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (ocupadoRef.current) return;
+      cerrarRef.current();
+    };
+    window.addEventListener('keydown', alPresionar);
+    return () => window.removeEventListener('keydown', alPresionar);
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (

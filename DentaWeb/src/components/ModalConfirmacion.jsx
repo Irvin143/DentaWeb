@@ -17,6 +17,18 @@ export default function ModalConfirmacion({
     if (!isOpen) setInput('');
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const alPresionar = (e) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      e.stopPropagation();
+      onClose();
+    };
+    window.addEventListener('keydown', alPresionar);
+    return () => window.removeEventListener('keydown', alPresionar);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const requierePalabra = palabraRequerida.length > 0;

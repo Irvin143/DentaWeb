@@ -3,7 +3,6 @@ import ControlTema from '../components/ControlTema.jsx';
 import { Sidebar } from '../components/Sidebar';
 
 export function MainLayout({ children, paqueteRoles }) {
-  console.log('MainLayout renderizado con paqueteRoles:', paqueteRoles);
   return (
     <div className="flex h-dvh flex-col bg-surface md:flex-row">
       <Sidebar />

@@ -38,7 +38,6 @@ export default function PaquetesPage() {
       setCargando(true);
       setErrorCarga(null);
       const data = await paquetesApi.listar();
-      console.log('Paquetes cargados:', data);
       setPaquetes(data?.paquetes ?? (Array.isArray(data) ? data : []));
     } catch (err) {
       setErrorCarga(err.message || 'No se pudieron cargar los paquetes.');

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Eye, EyeOff, Lock, Check, Circle } from 'lucide-react';
 import { authApi } from '../services/api';
 
@@ -54,8 +54,8 @@ export default function ModalCambiarPassword({ isOpen, onClose, onExito }) {
   const [showPasswordNueva, setShowPasswordNueva] = useState(false);
   const [error, setError] = useState(null);
   const [cargando, setCargando] = useState(false);
-
-  if (!isOpen) return null;
+  const ocupadoRef = useRef(cargando);
+  ocupadoRef.current = cargando;
 
   const resetearYcerrar = () => {
     setPasswordActual('');
@@ -65,6 +65,23 @@ export default function ModalCambiarPassword({ isOpen, onClose, onExito }) {
     setError(null);
     onClose();
   };
+  const cerrarRef = useRef(resetearYcerrar);
+  cerrarRef.current = resetearYcerrar;
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const alPresionar = (e) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (ocupadoRef.current) return;
+      cerrarRef.current();
+    };
+    window.addEventListener('keydown', alPresionar);
+    return () => window.removeEventListener('keydown', alPresionar);
+  }, [isOpen]);
+
+  if (!isOpen) return null;
 
   const handleGuardar = async (e) => {
     e.preventDefault();

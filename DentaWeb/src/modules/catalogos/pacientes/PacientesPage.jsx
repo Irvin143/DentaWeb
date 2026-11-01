@@ -100,8 +100,6 @@ export default function PacientesPage() {
       setErrorCarga(null);
       const data = await pacientesApi.listar();
       setPacientes(comoLista(data, 'pacientes'));
-      
-console.log('mapearPaciente:', pacientes);
     } catch (err) {
       console.error('Error al listar pacientes:', err);
       setPacientes([]);
