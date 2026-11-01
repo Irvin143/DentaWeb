@@ -9,7 +9,7 @@ export function MainLayout({ children, paqueteRoles }) {
       <main className="min-w-0 flex-1 overflow-y-auto">
         {children}
       </main>
-      <div className="fixed right-6 bottom-6 z-20">
+      <div className="fixed right-6 bottom-6 z-20 hidden md:block">
         <ControlTema />
       </div>
     </div>

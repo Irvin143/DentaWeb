@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Building2, BriefcaseMedical, Calendar, CalendarClock, ChevronLeft, ChevronRight, DoorOpen, GraduationCap, Home, IdCard, KeyRound, LayoutGrid, LogOut, Menu, Package, Scan, Shield, Stethoscope, UserCog, Users, X } from 'lucide-react';
 import { borrarSesion, getAuth, puedeVer, primeraRutaPermitida } from '../config/permisos'; // ajusta la ruta a donde guardes permisos.js
+import ControlTema from './ControlTema.jsx';
 import ModalCambiarPassword from './ModalCambiarPassword';
 import { ToastContainer } from './Toast';
 
@@ -221,6 +222,9 @@ export function Sidebar() {
 
         <div className="absolute left-1/2 -translate-x-1/2">
           <Marca />
+        </div>
+        <div className="ml-auto shrink-0">
+          <ControlTema />
         </div>
       </header>
 

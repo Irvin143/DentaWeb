@@ -175,6 +175,9 @@ const Register = () => {
       <FondoAuth />
 
       <div className="relative z-10 w-full max-w-120 animate-auth-card-in rounded-3xl bg-on-primary p-8 shadow-login-card motion-reduce:animate-none sm:p-10">
+        <div className="absolute right-4 top-4 z-10 md:hidden">
+          <ControlTema />
+        </div>
         <div className="mb-8 flex flex-col items-center">
           <div className="mb-2 flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-container/10">
@@ -525,7 +528,7 @@ const Register = () => {
           DentalWeb Medical Systems © 2026. Todos los derechos reservados.
         </p>
       </div>
-      <div className="fixed right-4 bottom-4 z-20 sm:right-6 sm:bottom-6">
+      <div className="fixed right-6 bottom-6 z-20 hidden md:block">
         <ControlTema />
       </div>
     </div>
