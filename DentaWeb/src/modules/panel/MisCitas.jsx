@@ -7,14 +7,16 @@ import {
   CalendarX,
   ChevronLeft,
   ChevronRight,
+  Clock,
   Plus,
   Search,
+  User,
   X,
 } from 'lucide-react';
 
 import { citasApi } from '../../services/api.js';
 import AgendarCitaView from './AgendarCitaView';
-import CancelarCitaModal from './misCita/ModalCancelar.jsx';
+import ModalConfirmacion from '../../components/ModalConfirmacion.jsx';
 import ReagendarCitaModal from './misCita/ModalReagendar.jsx';
 import { ToastContainer } from '../../components/Toast.jsx';
 import { fechaCorta, fechaLarga, hora, mayuscula } from './misCita/Utils.js';
@@ -101,6 +103,32 @@ function useToasts() {
   );
 
   return { toasts, mostrar, cerrar };
+}
+
+function ResumenCitaCancelar({ cita }) {
+  return (
+    <>
+      <p className="text-sm font-medium text-error">Vas a cancelar esta cita.</p>
+      <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <p className="text-base font-semibold text-slate-800">{cita.motivo}</p>
+        <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-600">
+          <User size={16} className="shrink-0 text-slate-400" aria-hidden="true" />
+          {cita.doctor}
+        </p>
+        <p className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-600">
+          <CalendarClock size={16} className="shrink-0 text-slate-400" aria-hidden="true" />
+          {fechaLarga(cita.fecha)}
+        </p>
+        <p className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-600">
+          <Clock size={16} className="shrink-0 text-slate-400" aria-hidden="true" />
+          {hora(cita.fecha)}
+        </p>
+      </div>
+      <p className="mt-3 text-sm text-slate-500">
+        Si cambias de opinión, tendrás que agendar una nueva cita.
+      </p>
+    </>
+  );
 }
 
 function AccionesCita({ cita, onReagendar, onCancelar }) {
@@ -317,10 +345,16 @@ export default function CitasTablaPage() {
     cargar();
   }
 
-  function alCancelar(cita) {
-    setCitas((actuales) => actuales.map((c) => (c.id === cita.id ? { ...c, estado: 'Cancelada' } : c)));
-    setPorCancelar(null);
-    mostrar('exito', 'Tu cita fue cancelada.');
+  async function confirmarCancelacion() {
+    const cita = porCancelar;
+    if (!cita) return;
+    try {
+      await citasApi.cancelar(cita.id);
+      setCitas((actuales) => actuales.map((c) => (c.id === cita.id ? { ...c, estado: 'Cancelada' } : c)));
+      mostrar('exito', 'Tu cita fue cancelada.');
+    } catch (e) {
+      mostrar('error', e.message || 'No se pudo cancelar la cita.');
+    }
   }
 
   function alReagendar({ fecha, hora: horaNueva }) {
@@ -508,9 +542,16 @@ export default function CitasTablaPage() {
         )}
       </figure>
 
-      {porCancelar && (
-        <CancelarCitaModal cita={porCancelar} onCancelada={alCancelar} onCerrar={() => setPorCancelar(null)} />
-      )}
+      <ModalConfirmacion
+        isOpen={Boolean(porCancelar)}
+        onClose={() => setPorCancelar(null)}
+        onConfirm={confirmarCancelacion}
+        titulo="Cancelar cita"
+        mensaje={porCancelar ? <ResumenCitaCancelar cita={porCancelar} /> : null}
+        textoConfirmar="Cancelar cita"
+        esPeligro
+        palabraRequerida="CANCELAR"
+      />
       {porReagendar && (
         <ReagendarCitaModal cita={porReagendar} onReagendada={alReagendar} onCerrar={() => setPorReagendar(null)} />
       )}
