@@ -203,7 +203,7 @@ const DentalWebLogin = () => {
           </div>
 
           {/* Remember & Forgot */}
-          <div className="flex flex-nowrap items-center justify-between gap-2">
+          <div className="flex flex-col items-center gap-2">
             <label className="flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap">
               <input
                 type="checkbox"
@@ -237,10 +237,10 @@ const DentalWebLogin = () => {
             </label>
             <Link
               to="/recuperar-contrasena"
-              className="shrink-0 whitespace-nowrap text-xs font-medium text-login-active transition-colors hover:text-primary-container sm:text-sm"
+              className="text-xs font-medium text-login-active transition-colors hover:text-primary-container sm:text-sm"
             >
               ¿Olvidaste tu contraseña?
-            </Link>{" "}
+            </Link>
           </div>
 
           {/* Submit Button */}
