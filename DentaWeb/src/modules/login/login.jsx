@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { authApi } from "../../services/api.js";
+import FondoAuth from "../../components/FondoAuth.jsx";
 import { ToastContainer } from "../../components/Toast.jsx";
 import { borrarSesion, getAuth, guardarSesion, primeraRutaPermitida } from "../../config/permisos.js";
 
@@ -112,11 +113,10 @@ const DentalWebLogin = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-login-background px-4 py-8">
       <ToastContainer toasts={avisosLogin} onCerrar={cerrarAviso} />
-      {/* Background decorative gradient */}
-      <div className="fixed inset-0 pointer-events-none bg-login-backdrop" />
+      <FondoAuth />
 
       {/* Main Card */}
-      <div className="relative w-full max-w-120 rounded-3xl bg-on-primary p-8 shadow-login-card sm:p-10">
+      <div className="relative z-10 w-full max-w-120 animate-auth-card-in rounded-3xl bg-on-primary p-8 shadow-login-card motion-reduce:animate-none sm:p-10">
         {/* Logo & Brand */}
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-3 mb-2">
@@ -277,7 +277,7 @@ const DentalWebLogin = () => {
       </div>
 
       {/* Footer */}
-      <div className="relative mt-8 flex w-full max-w-120 flex-col items-center gap-3">
+      <div className="relative z-10 mt-8 flex w-full max-w-120 flex-col items-center gap-3">
         <nav
           aria-label="Navegación legal"
           className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-medium text-login-muted"

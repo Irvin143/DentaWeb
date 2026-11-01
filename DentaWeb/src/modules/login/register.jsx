@@ -12,6 +12,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import FondoAuth from "../../components/FondoAuth.jsx";
 import { authApi } from "../../services/api.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -170,9 +171,9 @@ const Register = () => {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-login-background px-4 py-8">
-      <div className="pointer-events-none fixed inset-0 bg-login-backdrop" />
+      <FondoAuth />
 
-      <div className="relative w-full max-w-120 rounded-3xl bg-on-primary p-8 shadow-login-card sm:p-10">
+      <div className="relative z-10 w-full max-w-120 animate-auth-card-in rounded-3xl bg-on-primary p-8 shadow-login-card motion-reduce:animate-none sm:p-10">
         <div className="mb-8 flex flex-col items-center">
           <div className="mb-2 flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-container/10">
@@ -489,7 +490,7 @@ const Register = () => {
         </div>
       </div>
 
-      <div className="relative mt-8 flex w-full max-w-120 flex-col items-center gap-3">
+      <div className="relative z-10 mt-8 flex w-full max-w-120 flex-col items-center gap-3">
         <nav
           aria-label="Navegación legal"
           className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-medium text-login-muted"
