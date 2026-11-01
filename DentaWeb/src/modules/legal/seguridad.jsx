@@ -10,7 +10,7 @@ const Security = () => (
 			<article className="space-y-6 text-sm leading-7 text-login-heading">
 				<p>Última actualización: 4 de octubre de 2026.</p>
 				<section><h2 className="mb-2 text-lg font-bold text-primary-container">1. Contraseñas</h2><p>La contraseña es personal. No se comparte y no se envía por correo. Cada persona puede cambiar la suya desde su cuenta, con la contraseña actual.</p></section>
-				<section><h2 className="mb-2 text-lg font-bold text-primary-container">2. Sesión</h2><p>La sesión de ClinicWare vence. Al terminar, hay que volver a iniciar sesión. Si no se marcó "Mantener sesión iniciada", también se cierra al cerrar el navegador.</p></section>
+				<section><h2 className="mb-2 text-lg font-bold text-primary-container">2. Sesión</h2><p>La sesión de ClinicWare vence. Al terminar, hay que volver a iniciar sesión. Si se marcó "Mantener sesión iniciada", el token dura 7 días; si no, 1 hora. Sin esa marca, la sesión también se cierra al cerrar el navegador.</p></section>
 				<section><h2 className="mb-2 text-lg font-bold text-primary-container">3. Conexión</h2><p>El sitio publicado de ClinicWare se usa por HTTPS.</p></section>
 				<section><h2 className="mb-2 text-lg font-bold text-primary-container">4. Reportar un problema</h2><p>Un problema de seguridad se reporta a soporte@clinicware.tech. El primer mensaje no incluye la contraseña.</p></section>
 			</article>

@@ -96,6 +96,7 @@ const DentalWebLogin = () => {
       const payload = {
         correo: normalizedEmail,
         contrasena: password,
+        mantener: rememberMe,
       };
       const response = await authApi.login(payload);
 
