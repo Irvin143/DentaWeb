@@ -5,6 +5,7 @@ import {
   Mail,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import ControlTema from "../../components/ControlTema.jsx";
 import FondoAuth from "../../components/FondoAuth.jsx";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -101,7 +102,7 @@ const ForgotPassword = () => {
 
               <button
                 type="submit"
-                className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover"
+                className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-white shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover"
               >
                 Continuar
                 <ArrowRight size={18} />
@@ -119,7 +120,7 @@ const ForgotPassword = () => {
             <button
               type="button"
               onClick={() => navigate("/")}
-              className="mt-6 inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active px-6 text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover"
+              className="mt-6 inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active px-6 text-sm font-semibold text-white shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover"
             >
               Volver
               <ArrowRight size={18} />
@@ -174,6 +175,9 @@ const ForgotPassword = () => {
         <p className="text-center text-[11px] text-login-icon">
           DentalWeb Medical Systems © 2026. Todos los derechos reservados.
         </p>
+      </div>
+      <div className="fixed right-4 bottom-4 z-20 sm:right-6 sm:bottom-6">
+        <ControlTema />
       </div>
     </div>
   );

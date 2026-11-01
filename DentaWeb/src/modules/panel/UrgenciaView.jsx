@@ -38,7 +38,7 @@ const botonPrimario =
 
 const claseSeleccion = (activo) =>
   activo
-    ? 'border-teal-600 bg-teal-50'
+    ? 'border-teal-600 bg-teal-50 dark:bg-teal-950'
     : 'border-outline-variant bg-on-primary hover:bg-surface-container';
 
 /* ============================================================
@@ -210,7 +210,7 @@ export default function UrgenciaView({ onVolver }) {
       <div className="min-h-full w-full bg-surface p-4 md:p-8 lg:px-10 lg:py-8">
         <ToastContainer toasts={toasts.toasts} onCerrar={toasts.cerrar} />
         <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-6">
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 text-teal-600">
+          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 dark:bg-teal-950 text-teal-600 dark:text-teal-400">
             <CheckCircle2 size={36} />
           </span>
           <div className="text-center">
@@ -223,7 +223,7 @@ export default function UrgenciaView({ onVolver }) {
           <div className="w-full rounded-2xl border border-outline-variant bg-on-primary p-5">
             <div className="divide-y divide-outline-variant">
               <div className="flex items-start gap-3 pb-3">
-                <Building2 size={18} className="mt-0.5 shrink-0 text-teal-600" />
+                <Building2 size={18} className="mt-0.5 shrink-0 text-teal-600 dark:text-teal-400" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold tracking-wider text-outline uppercase">Sede</p>
                   <p className="break-words text-sm font-bold text-on-surface">{sede?.nombre}</p>
@@ -235,7 +235,7 @@ export default function UrgenciaView({ onVolver }) {
                       href={mapa}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700"
+                      className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
                     >
                       <MapPin size={14} /> Ver en mapa
                     </a>
@@ -243,14 +243,14 @@ export default function UrgenciaView({ onVolver }) {
                 </div>
               </div>
               <div className="flex items-start gap-3 py-3">
-                <Clock size={18} className="mt-0.5 shrink-0 text-teal-600" />
+                <Clock size={18} className="mt-0.5 shrink-0 text-teal-600 dark:text-teal-400" />
                 <div>
                   <p className="text-xs font-semibold tracking-wider text-outline uppercase">Hora</p>
                   <p className="text-sm font-bold text-on-surface">Hoy a las {hhmmA12(resultado.hora)}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 pt-3">
-                <User size={18} className="mt-0.5 shrink-0 text-teal-600" />
+                <User size={18} className="mt-0.5 shrink-0 text-teal-600 dark:text-teal-400" />
                 <div>
                   <p className="text-xs font-semibold tracking-wider text-outline uppercase">Odontólogo</p>
                   <p className="break-words text-sm font-bold text-on-surface">
@@ -340,7 +340,7 @@ export default function UrgenciaView({ onVolver }) {
                     onClick={() => cambiar('motivo', m.id)}
                     className={`relative cursor-pointer rounded-xl border p-4 text-left transition-colors ${claseSeleccion(activo)}`}
                   >
-                    <Icono size={24} className={`mb-2 ${activo ? 'text-teal-600' : 'text-outline'}`} />
+                    <Icono size={24} className={`mb-2 ${activo ? 'text-teal-600 dark:text-teal-400' : 'text-outline'}`} />
                     <p className="text-sm font-bold text-on-surface">{m.titulo}</p>
                     <p className="text-xs text-on-surface-variant">{m.desc}</p>
                     <div
@@ -435,14 +435,14 @@ export default function UrgenciaView({ onVolver }) {
                       onClick={() => cambiar('sede', sede.id)}
                       className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 p-3 text-left"
                     >
-                      <Building2 size={20} className={`shrink-0 ${activa ? 'text-teal-600' : 'text-outline'}`} />
+                      <Building2 size={20} className={`shrink-0 ${activa ? 'text-teal-600 dark:text-teal-400' : 'text-outline'}`} />
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm font-bold text-on-surface">{sede.nombre}</span>
                         {sede.direccion && (
                           <span className="block truncate text-xs text-on-surface-variant">{sede.direccion}</span>
                         )}
                       </span>
-                      {activa && <CheckCircle2 size={18} className="shrink-0 text-teal-600" />}
+                      {activa && <CheckCircle2 size={18} className="shrink-0 text-teal-600 dark:text-teal-400" />}
                     </button>
                     {mapa && (
                       <a
@@ -450,7 +450,7 @@ export default function UrgenciaView({ onVolver }) {
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={`Ver ${sede.nombre} en Google Maps`}
-                        className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700"
+                        className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
                       >
                         <MapPin size={14} /> Mapa
                       </a>
@@ -474,7 +474,7 @@ export default function UrgenciaView({ onVolver }) {
                 className={`flex cursor-pointer items-center justify-between rounded-xl border p-4 ${claseSeleccion(form.llegada === 'inmediato')}`}
               >
                 <div className="flex items-center gap-3">
-                  <Zap size={20} className={form.llegada === 'inmediato' ? 'text-teal-600' : 'text-outline'} />
+                  <Zap size={20} className={form.llegada === 'inmediato' ? 'text-teal-600 dark:text-teal-400' : 'text-outline'} />
                   <div>
                     <p className="font-bold text-on-surface">
                       En 30-45 min{' '}
@@ -503,7 +503,7 @@ export default function UrgenciaView({ onVolver }) {
                 } ${claseSeleccion(form.llegada === 'hora')}`}
               >
                 <div className="flex items-center gap-3">
-                  <Clock size={20} className={form.llegada === 'hora' ? 'text-teal-600' : 'text-outline'} />
+                  <Clock size={20} className={form.llegada === 'hora' ? 'text-teal-600 dark:text-teal-400' : 'text-outline'} />
                   <div>
                     <p className="font-bold text-on-surface">Llegaré más tarde hoy</p>
                     <p className="text-xs text-on-surface-variant">
@@ -548,7 +548,7 @@ export default function UrgenciaView({ onVolver }) {
               {cargando ? 'Agendando…' : 'Agendar urgencia'}
             </button>
             <p className="mt-4 text-center text-xs font-medium text-on-surface-variant">
-              <ShieldAlert size={14} className="inline text-teal-600" /> Tu urgencia se agenda en el primer espacio
+              <ShieldAlert size={14} className="inline text-teal-600 dark:text-teal-400" /> Tu urgencia se agenda en el primer espacio
               disponible de hoy con un odontólogo de la sede.
             </p>
           </div>

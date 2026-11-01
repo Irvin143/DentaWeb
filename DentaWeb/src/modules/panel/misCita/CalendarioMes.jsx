@@ -105,7 +105,7 @@ export default function CalendarioMes({
           type="button"
           onClick={onHoy}
           disabled={disabled}
-          className="rounded-xl bg-teal-50 px-3.5 py-1.5 text-xs font-bold text-teal-700 transition-colors hover:bg-teal-100 disabled:cursor-default disabled:opacity-60"
+          className="rounded-xl bg-teal-50 dark:bg-teal-950 px-3.5 py-1.5 text-xs font-bold text-teal-700 dark:text-teal-400 transition-colors hover:bg-teal-100 dark:hover:bg-teal-900 disabled:cursor-default disabled:opacity-60"
         >
           Hoy
         </button>
@@ -149,7 +149,7 @@ export default function CalendarioMes({
                       : clicable
                         ? esHoy
                           ? 'bg-teal-600 text-white hover:bg-teal-700'
-                          : 'text-on-surface hover:bg-teal-50'
+                          : 'text-on-surface hover:bg-teal-50 dark:hover:bg-teal-950'
                         : esHoy && enMes
                           ? 'bg-teal-600/40 text-white'
                           : enMes

@@ -16,19 +16,19 @@ export function ModalGenerico({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-      <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl">
+      <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl dark:bg-on-primary">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-outline-variant">
           <div className="flex items-center gap-3">
             {React.isValidElement(iconoCabecera) &&
               React.cloneElement(iconoCabecera, {
                 size: 18,
                 'aria-hidden': true,
-                className: 'text-teal-600',
+                className: 'text-teal-600 dark:text-teal-400',
               })}
-            <h2 className="text-lg font-bold text-slate-800">{titulo}</h2>
+            <h2 className="text-lg font-bold text-slate-800 dark:text-on-surface">{titulo}</h2>
             {badgeCabecera && (
-              <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700">
+              <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700 dark:bg-teal-950 dark:text-teal-400">
                 {badgeCabecera}
               </span>
             )}
@@ -36,7 +36,7 @@ export function ModalGenerico({
           <button
             onClick={onClose}
             aria-label="Cerrar"
-            className="cursor-pointer rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            className="cursor-pointer rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-surface-container dark:hover:text-on-surface"
           >
             <X size={20} aria-hidden="true" />
           </button>
@@ -46,11 +46,11 @@ export function ModalGenerico({
         <div className="px-6 py-5">{children}</div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4">
+        <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4 dark:border-outline-variant">
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 cursor-pointer transition-colors"
+              className="cursor-pointer rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 dark:border-outline-variant dark:text-on-surface-variant dark:hover:bg-surface-container"
             >
               Cancelar
             </button>

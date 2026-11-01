@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { authApi } from "../../services/api.js";
+import ControlTema from "../../components/ControlTema.jsx";
 import FondoAuth from "../../components/FondoAuth.jsx";
 import { ToastContainer } from "../../components/Toast.jsx";
 import { borrarSesion, getAuth, guardarSesion, primeraRutaPermitida } from "../../config/permisos.js";
@@ -216,7 +217,7 @@ const DentalWebLogin = () => {
               >
                 {rememberMe && (
                   <svg
-                    className="text-on-primary"
+                    className="text-white"
                     width="12"
                     height="12"
                     viewBox="0 0 24 24"
@@ -246,7 +247,7 @@ const DentalWebLogin = () => {
           <button
             type="submit"
             disabled={isSubmitting || Boolean(successMessage)}
-            className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+            className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-white shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
           >
             {isSubmitting ? "Iniciando sesión..." : "Iniciar sesión"}
             {!isSubmitting && <ArrowRight size={18} />}
@@ -265,7 +266,7 @@ const DentalWebLogin = () => {
         </p>
             <div
               aria-hidden={!cargando}
-              className={`absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-3xl bg-white/70 backdrop-blur-sm transition-opacity duration-300 ${
+              className={`absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-3xl bg-on-primary/80 backdrop-blur-sm transition-opacity duration-300 ${
                 cargando ? "opacity-100" : "pointer-events-none opacity-0"
               }`}
             >
@@ -310,6 +311,9 @@ const DentalWebLogin = () => {
         <p className="text-center text-[11px] text-login-icon">
           DentalWeb Medical Systems © 2026. Todos los derechos reservados.
         </p>
+      </div>
+      <div className="fixed right-4 bottom-4 z-20 sm:right-6 sm:bottom-6">
+        <ControlTema />
       </div>
     </div>
   );

@@ -369,7 +369,7 @@ export default function ReagendarCitaModal({ cita, onReagendada, onCerrar }) {
                     type="button"
                     onClick={() => elegirFecha(proximoClicable)}
                     disabled={guardando}
-                    className="mt-2 cursor-pointer text-sm font-semibold text-teal-700 hover:text-teal-800 disabled:cursor-default disabled:opacity-60"
+                    className="mt-2 cursor-pointer text-sm font-semibold text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:text-teal-400 disabled:cursor-default disabled:opacity-60"
                   >
                     Ver próximo día disponible: {fechaLarga(proximoDate)} →
                   </button>
@@ -397,7 +397,7 @@ export default function ReagendarCitaModal({ cita, onReagendada, onCerrar }) {
         </div>
 
         {nueva && (
-          <p className="mt-5 rounded-xl bg-teal-50 px-3 py-2 text-sm text-teal-800">
+          <p className="mt-5 rounded-xl bg-teal-50 dark:bg-teal-950 px-3 py-2 text-sm text-teal-800 dark:text-teal-400">
             Tu cita pasará al{' '}
             <span className="font-semibold">
               {fechaLarga(nueva)}, {hora(nueva)}

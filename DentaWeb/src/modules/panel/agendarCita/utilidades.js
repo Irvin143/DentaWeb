@@ -32,7 +32,7 @@ export const UMBRAL_BUSCADOR = 6;
 export const MAX_MOTIVO = 500;
 
 // Contenedor blanco con borde que comparten todas las secciones
-export const CLASE_TARJETA = 'rounded-2xl border border-slate-200 bg-white p-5 lg:p-6';
+export const CLASE_TARJETA = 'rounded-2xl border border-slate-200 bg-white p-5 lg:p-6 dark:border-outline-variant dark:bg-on-primary';
 
 /* ============================================================
    TEXTO Y FECHAS

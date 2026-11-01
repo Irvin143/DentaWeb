@@ -12,6 +12,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import ControlTema from "../../components/ControlTema.jsx";
 import FondoAuth from "../../components/FondoAuth.jsx";
 import { authApi } from "../../services/api.js";
 
@@ -434,7 +435,7 @@ const Register = () => {
               className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all duration-200 ${acceptTerms ? "border-login-active bg-login-active" : "border-login-border bg-transparent"}`}
             >
               {acceptTerms && (
-                <Check className="text-on-primary" size={13} strokeWidth={3} />
+                <Check className="text-white" size={13} strokeWidth={3} />
               )}
             </span>
             <span>
@@ -471,7 +472,7 @@ const Register = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+            className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-white shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
           >
             {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
             {!isSubmitting && <ArrowRight size={18} />}
@@ -523,6 +524,9 @@ const Register = () => {
         <p className="text-center text-[11px] text-login-icon">
           DentalWeb Medical Systems © 2026. Todos los derechos reservados.
         </p>
+      </div>
+      <div className="fixed right-4 bottom-4 z-20 sm:right-6 sm:bottom-6">
+        <ControlTema />
       </div>
     </div>
   );

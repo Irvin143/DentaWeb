@@ -109,22 +109,22 @@ function ResumenCitaCancelar({ cita }) {
   return (
     <>
       <p className="text-sm font-medium text-error">Vas a cancelar esta cita.</p>
-      <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-        <p className="text-base font-semibold text-slate-800">{cita.motivo}</p>
-        <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-600">
-          <User size={16} className="shrink-0 text-slate-400" aria-hidden="true" />
+      <div className="mt-3 rounded-xl border border-slate-200 dark:border-outline-variant bg-slate-50 dark:bg-surface-container p-4">
+        <p className="text-base font-semibold text-slate-800 dark:text-on-surface">{cita.motivo}</p>
+        <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-600 dark:text-on-surface-variant">
+          <User size={16} className="shrink-0 text-slate-400 dark:text-outline" aria-hidden="true" />
           {cita.doctor}
         </p>
-        <p className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-600">
-          <CalendarClock size={16} className="shrink-0 text-slate-400" aria-hidden="true" />
+        <p className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-600 dark:text-on-surface-variant">
+          <CalendarClock size={16} className="shrink-0 text-slate-400 dark:text-outline" aria-hidden="true" />
           {fechaLarga(cita.fecha)}
         </p>
-        <p className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-600">
-          <Clock size={16} className="shrink-0 text-slate-400" aria-hidden="true" />
+        <p className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-600 dark:text-on-surface-variant">
+          <Clock size={16} className="shrink-0 text-slate-400 dark:text-outline" aria-hidden="true" />
           {hora(cita.fecha)}
         </p>
       </div>
-      <p className="mt-3 text-sm text-slate-500">
+      <p className="mt-3 text-sm text-slate-500 dark:text-on-surface-variant">
         Si cambias de opinión, tendrás que agendar una nueva cita.
       </p>
     </>
@@ -148,7 +148,7 @@ function AccionesCita({ cita, onReagendar, onCancelar }) {
         aria-label={`Reagendar cita de ${cita.motivo} del ${fechaCorta(cita.fecha)}`}
         className={`${claseBotonAccion} text-on-surface hover:bg-surface-container`}
       >
-        <CalendarClock size={14} className="text-teal-700" aria-hidden="true" />
+        <CalendarClock size={14} className="text-teal-700 dark:text-teal-400" aria-hidden="true" />
         Reagendar
       </button>
       <button

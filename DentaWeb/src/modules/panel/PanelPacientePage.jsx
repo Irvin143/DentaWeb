@@ -238,7 +238,7 @@ export default function PanelPacientePage() {
                   <span className="text-xl leading-none font-bold text-on-surface">{proxima.fecha.getDate()}</span>
                 </div>
                 <div className="flex min-w-0 items-center gap-3.5">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-teal-50 text-teal-600">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-outline-variant bg-teal-50 dark:bg-teal-950 text-teal-600 dark:text-teal-400">
                     <User size={20} aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
@@ -281,7 +281,7 @@ export default function PanelPacientePage() {
             ) : (
               <>
                 <article className="flex items-start gap-4 rounded-2xl border border-outline-variant bg-on-primary p-5">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 dark:bg-teal-950 text-teal-600 dark:text-teal-400">
                     <CalendarClock size={22} aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
@@ -298,7 +298,7 @@ export default function PanelPacientePage() {
                 </article>
 
                 <article className="flex items-start gap-4 rounded-2xl border border-outline-variant bg-on-primary p-5">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 dark:bg-teal-950 text-teal-600 dark:text-teal-400">
                     <Calendar size={22} aria-hidden="true" />
                   </span>
                   <div className="min-w-0">

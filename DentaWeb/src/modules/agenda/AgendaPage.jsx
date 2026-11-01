@@ -212,7 +212,7 @@ function CabeceraDia({ dia, etiqueta, esHoy }) {
     <div className="flex items-center gap-2 lg:flex-col lg:gap-1">
       <span
         className={`text-[11px] font-bold tracking-wider uppercase ${
-          esHoy ? 'text-teal-700' : 'text-on-surface-variant'
+          esHoy ? 'text-teal-700 dark:text-teal-400' : 'text-on-surface-variant'
         }`}
       >
         {etiqueta}
@@ -254,7 +254,7 @@ function VistaMes({ celdas, mesVisible, hoyYmd, citasPorDia, onAbrir }) {
             <section
               key={ymd}
               className={`flex min-h-[7.5rem] max-h-44 min-w-0 flex-col gap-1 overflow-y-auto border-r border-b border-outline-variant p-1.5 ${
-                !pertenece ? 'bg-surface/70' : esHoy ? 'bg-teal-50/60' : ''
+                !pertenece ? 'bg-surface/70' : esHoy ? 'bg-teal-50 dark:bg-teal-950/60' : ''
               }`}
             >
               <span
@@ -285,7 +285,7 @@ function VistaMes({ celdas, mesVisible, hoyYmd, citasPorDia, onAbrir }) {
           return (
             <section
               key={ymd}
-              className={`flex min-w-0 flex-col gap-2 p-3 ${esHoy ? 'bg-teal-50/60' : ''}`}
+              className={`flex min-w-0 flex-col gap-2 p-3 ${esHoy ? 'bg-teal-50 dark:bg-teal-950/60' : ''}`}
             >
               <CabeceraDia dia={dia} etiqueta={DIAS_CABECERA[indice]} esHoy={esHoy} />
               {delDia.map((cita) => (
@@ -306,7 +306,7 @@ function VistaSemana({ dias, hoyYmd, citasPorDia, onAbrir }) {
         {dias.map((dia, i) => {
           const ymd = aYmd(dia);
           return (
-            <div key={ymd} className={`px-2 py-3 ${ymd === hoyYmd ? 'bg-teal-50' : ''}`}>
+            <div key={ymd} className={`px-2 py-3 ${ymd === hoyYmd ? 'bg-teal-50 dark:bg-teal-950' : ''}`}>
               <CabeceraDia dia={dia} etiqueta={DIAS_CABECERA[i]} esHoy={ymd === hoyYmd} />
             </div>
           );
@@ -321,7 +321,7 @@ function VistaSemana({ dias, hoyYmd, citasPorDia, onAbrir }) {
           return (
             <section
               key={ymd}
-              className={`flex min-w-0 flex-col gap-2 p-3 ${esHoy ? 'bg-teal-50/60' : ''}`}
+              className={`flex min-w-0 flex-col gap-2 p-3 ${esHoy ? 'bg-teal-50 dark:bg-teal-950/60' : ''}`}
             >
               <div className="lg:hidden">
                 <CabeceraDia dia={dia} etiqueta={DIAS_CABECERA[i]} esHoy={esHoy} />
@@ -343,7 +343,7 @@ function VistaDia({ dia, hoyYmd, citasDelDia, onAbrir }) {
   const indice = (dia.getDay() + 6) % 7;
 
   return (
-    <section className={`flex min-w-0 flex-col gap-3 p-4 md:p-6 ${esHoy ? 'bg-teal-50/60' : ''}`}>
+    <section className={`flex min-w-0 flex-col gap-3 p-4 md:p-6 ${esHoy ? 'bg-teal-50 dark:bg-teal-950/60' : ''}`}>
       <CabeceraDia dia={dia} etiqueta={DIAS_CABECERA[indice]} esHoy={esHoy} />
       {citasDelDia.length === 0 ? (
         <p className="py-8 text-center text-sm text-on-surface-variant">No hay citas en este día.</p>
@@ -487,7 +487,7 @@ export default function AgendaPage() {
           <button
             type="button"
             onClick={() => setAncla(inicioDia(new Date()))}
-            className="rounded-xl bg-teal-50 px-3.5 py-1.5 text-xs font-bold text-teal-700 transition-colors hover:bg-teal-100"
+            className="rounded-xl bg-teal-50 dark:bg-teal-950 px-3.5 py-1.5 text-xs font-bold text-teal-700 dark:text-teal-400 transition-colors hover:bg-teal-100 dark:hover:bg-teal-900"
           >
             Hoy
           </button>

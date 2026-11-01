@@ -13,7 +13,7 @@ export function EnlaceMapa({ sede, className = '' }) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`Ver ${sede.nombre} en Google Maps`}
-      className={`inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700 ${className}`}
+      className={`inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 ${className}`}
     >
       <MapPin size={14} /> Ver en mapa
     </a>
@@ -27,17 +27,17 @@ export default function SelectorSede({ sedesData, idServicio, idSede, onSeleccio
   return (
     <section className={CLASE_TARJETA}>
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500">
+        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-on-surface-variant">
           <Building2 size={18} /> Sede de atención
         </h2>
-        <span className="text-xs text-slate-400">Según el servicio</span>
+        <span className="text-xs text-slate-400 dark:text-outline">Según el servicio</span>
       </div>
 
       {!idServicio && (
-        <p className="py-2 text-sm text-slate-500">Elige un servicio para ver las sedes disponibles.</p>
+        <p className="py-2 text-sm text-slate-500 dark:text-on-surface-variant">Elige un servicio para ver las sedes disponibles.</p>
       )}
       {cargando && (
-        <p className="flex items-center gap-2 py-2 text-sm text-slate-500">
+        <p className="flex items-center gap-2 py-2 text-sm text-slate-500 dark:text-on-surface-variant">
           <Loader2 size={16} className="animate-spin" /> Buscando sedes...
         </p>
       )}
@@ -56,7 +56,7 @@ export default function SelectorSede({ sedesData, idServicio, idSede, onSeleccio
         </div>
       )}
       {idServicio && !cargando && !error && sedes.length === 0 && (
-        <p className="py-2 text-sm text-slate-500">Por ahora ninguna sede ofrece este servicio.</p>
+        <p className="py-2 text-sm text-slate-500 dark:text-on-surface-variant">Por ahora ninguna sede ofrece este servicio.</p>
       )}
 
       <div className="grid max-h-60 grid-cols-1 gap-2 overflow-y-auto pr-1 xl:grid-cols-2">
@@ -67,7 +67,7 @@ export default function SelectorSede({ sedesData, idServicio, idSede, onSeleccio
             <div
               key={sede.id}
               className={`flex items-center gap-2 rounded-xl border pr-3 transition-colors ${
-                activa ? 'border-teal-600 bg-teal-50' : 'border-slate-200 hover:bg-slate-50'
+                activa ? 'border-teal-600 bg-teal-50 dark:bg-teal-950' : 'border-slate-200 dark:border-outline-variant hover:bg-slate-50 dark:hover:bg-surface-container'
               }`}
             >
               <button
@@ -77,12 +77,12 @@ export default function SelectorSede({ sedesData, idServicio, idSede, onSeleccio
                 className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 p-3 text-left"
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-bold text-slate-800">{sede.nombre}</span>
+                  <span className="block text-sm font-bold text-slate-800 dark:text-on-surface">{sede.nombre}</span>
                   {sede.direccion && (
-                    <span className="block truncate text-xs text-slate-500">{sede.direccion}</span>
+                    <span className="block truncate text-xs text-slate-500 dark:text-on-surface-variant">{sede.direccion}</span>
                   )}
                 </span>
-                {activa && <CheckCircle2 size={18} className="shrink-0 text-teal-600" />}
+                {activa && <CheckCircle2 size={18} className="shrink-0 text-teal-600 dark:text-teal-400" />}
               </button>
               <EnlaceMapa sede={sede} />
             </div>

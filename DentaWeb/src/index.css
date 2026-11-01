@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-surface: #f8faf9;
   --color-surface-dim: #d8dada;
@@ -128,6 +130,54 @@
   .animate-modal-panel-in {
     animation: none;
   }
+}
+
+/* Páginas nuevas: usa tokens (bg-surface, text-on-surface, border-outline-variant,
+   bg-on-primary como card). html.dark los redefine; no hace falta dark: extra. */
+html.dark {
+  color-scheme: dark;
+
+  --color-surface: #0e1415;
+  --color-surface-dim: #0a1011;
+  --color-surface-container: #1a2223;
+  --color-surface-container-high: #20292b;
+  --color-surface-container-highest: #263032;
+
+  --color-on-surface: #e2e5e4;
+  --color-on-surface-variant: #b3bdbf;
+
+  --color-primary: #5ec8d6;
+  --color-on-primary: #152022;
+  --color-primary-container: #2a8a9a;
+  --color-on-primary-container: #c5f4ff;
+
+  --color-secondary: #5dccc6;
+  --color-on-secondary: #003735;
+  --color-secondary-container: #00504d;
+
+  --color-tertiary: #ffb4ab;
+  --color-on-tertiary: #690005;
+  --color-tertiary-container: #93000a;
+
+  --color-error: #ffb4ab;
+  --color-error-container: #93000a;
+
+  --color-outline: #8b9598;
+  --color-outline-variant: #3d494c;
+
+  --color-login-background: #0e1415;
+  --color-login-muted: #b3bdbf;
+  --color-login-heading: #e2e5e4;
+  --color-login-input: #1a2223;
+  --color-login-active: #2a9d8f;
+  --color-login-active-hover: #34b3a3;
+  --color-login-icon: #8b9598;
+  --color-login-border: #3d494c;
+  --color-login-divider: #263032;
+  --color-login-social-hover: #1a2223;
+  --color-login-social-border: #3d494c;
+
+  --background-image-login-backdrop: radial-gradient(ellipse at 50% 0%, rgb(94 200 214 / 14%) 0%, transparent 60%), radial-gradient(ellipse at 80% 100%, rgb(42 157 143 / 10%) 0%, transparent 50%);
 }
 
 @layer base {
