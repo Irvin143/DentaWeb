@@ -334,7 +334,7 @@ export default function PanelPacientePage() {
           <button
             type="button"
             onClick={() => setVista('urgencia')}
-            className="flex cursor-pointer items-center justify-between rounded-2xl border border-outline-variant bg-on-primary p-5 text-left transition-colors hover:border-error"
+            className="flex cursor-pointer items-center justify-between rounded-2xl border border-outline-variant bg-on-primary p-5 text-left transition-colors hover:border-error hover:bg-surface-container"
           >
             <span className="flex items-center gap-3.5">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-error-container text-error">

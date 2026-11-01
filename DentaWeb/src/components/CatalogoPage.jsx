@@ -572,7 +572,7 @@ export function CatalogoPage({
                             className={`sticky right-0 z-10 py-3 pl-2 pr-5 align-top whitespace-nowrap ${
                               estaInactiva(fila)
                                 ? 'bg-slate-50'
-                                : 'bg-white group-hover:bg-slate-50'
+                                : 'bg-white transition-colors group-hover:bg-slate-50/50'
                             }`}
                           >
                             <div className="flex w-full items-center justify-end gap-2">

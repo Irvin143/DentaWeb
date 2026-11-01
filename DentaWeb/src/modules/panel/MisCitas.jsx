@@ -494,7 +494,7 @@ export default function CitasTablaPage() {
                     <td className="px-5 py-3">
                       <BadgeEstado estado={c.estado} />
                     </td>
-                    <td className="sticky right-0 z-10 bg-on-primary py-3 pr-5 pl-2 whitespace-nowrap group-hover:bg-surface-container">
+                    <td className="sticky right-0 z-10 bg-on-primary py-3 pr-5 pl-2 whitespace-nowrap transition-colors group-hover:bg-surface-container">
                       <AccionesCita
                         cita={c}
                         onReagendar={setPorReagendar}
