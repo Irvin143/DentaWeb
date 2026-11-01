@@ -9,8 +9,8 @@ const ESTADOS = {
 };
 
 const TONOS = {
-  Pendiente: 'bg-surface-container text-on-surface-variant',
-  Confirmada: 'bg-teal-50 text-teal-700',
+  Pendiente: 'bg-yellow-50 text-yellow-700',
+  Confirmada: 'bg-yellow-50 text-yellow-700',
   Atendida: 'bg-teal-50 text-teal-700',
   Cancelada: 'bg-error-container text-error',
   'No asistió': 'bg-error-container text-error',
