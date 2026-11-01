@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import { listarSedes, crear } from '../../controllers/citas/urgencias.controller.js';
-// import { verificarToken } from '../middlewares/...';  // el mismo que usan tus otras rutas
+import { exigirSesion } from '../../middleware/auth.js';
 
 const router = Router();
 
-router.get('/sedes', /* verificarToken, */ listarSedes);
-router.post('/', /* verificarToken, */ crear);
+router.get('/sedes', exigirSesion, listarSedes);
+router.post('/', exigirSesion, crear);
 
 export default router;
