@@ -5,6 +5,8 @@ import {
   Mail,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import ControlTema from "../../components/ControlTema.jsx";
+import FondoAuth from "../../components/FondoAuth.jsx";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -30,10 +32,13 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-login-background px-4 py-8">
-      <div className="pointer-events-none fixed inset-0 bg-login-backdrop" />
+    <div className="relative flex min-h-[var(--app-vvh,100svh)] flex-col items-center justify-center bg-login-background px-4 pt-[max(2rem,env(safe-area-inset-top,0px))] pb-[max(2rem,env(safe-area-inset-bottom,0px))]">
+      <FondoAuth />
 
-      <div className="relative w-full max-w-120 rounded-3xl bg-on-primary p-8 shadow-login-card sm:p-10">
+      <div className="relative z-10 w-full max-w-120 animate-auth-card-in rounded-3xl bg-on-primary p-8 shadow-login-card motion-reduce:animate-none sm:p-10">
+        <div className="absolute right-4 top-4 z-10 md:hidden">
+          <ControlTema />
+        </div>
         <div className="mb-8 flex flex-col items-center">
           <div className="mb-2 flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-container/10">
@@ -87,7 +92,7 @@ const ForgotPassword = () => {
                     placeholder="ejemplo@correo.com"
                     autoComplete="email"
                     required
-                    className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+                    className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
                   />
                 </div>
               </div>
@@ -100,7 +105,7 @@ const ForgotPassword = () => {
 
               <button
                 type="submit"
-                className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover"
+                className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-white shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover"
               >
                 Continuar
                 <ArrowRight size={18} />
@@ -118,7 +123,7 @@ const ForgotPassword = () => {
             <button
               type="button"
               onClick={() => navigate("/")}
-              className="mt-6 inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active px-6 text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover"
+              className="mt-6 inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active px-6 text-sm font-semibold text-white shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover"
             >
               Volver
               <ArrowRight size={18} />
@@ -140,7 +145,7 @@ const ForgotPassword = () => {
         )}
       </div>
 
-      <div className="relative mt-8 flex w-full max-w-120 flex-col items-center gap-3">
+      <div className="relative z-10 mt-8 flex w-full max-w-120 flex-col items-center gap-3">
         <nav
           aria-label="Navegación legal"
           className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-medium text-login-muted"
@@ -173,6 +178,9 @@ const ForgotPassword = () => {
         <p className="text-center text-[11px] text-login-icon">
           DentalWeb Medical Systems © 2026. Todos los derechos reservados.
         </p>
+      </div>
+      <div className="fixed right-6 bottom-6 z-20 hidden md:block">
+        <ControlTema />
       </div>
     </div>
   );

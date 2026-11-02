@@ -15,7 +15,7 @@ import {
 
 // Mobile: compacto. Desktop (md:): más amplio y cómodo
 const inputClass =
-  'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 md:rounded-xl md:px-4 md:py-3 md:text-base';
+  'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-base leading-5 outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 md:rounded-xl md:px-4 md:py-3 md:text-base dark:border-outline-variant dark:bg-surface-container dark:text-on-surface dark:placeholder:text-on-surface-variant dark:disabled:bg-surface-container-high dark:disabled:text-on-surface-variant';
 
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -83,7 +83,7 @@ const mapearUsuario = (u) => ({
 });
 
 const Etiqueta = ({ children, requerido }) => (
-  <label className="mb-1 block text-xs font-medium text-slate-700 md:mb-1.5 md:text-sm">
+  <label className="mb-1 block text-xs font-medium text-slate-700 md:mb-1.5 md:text-sm dark:text-on-surface">
     {children}
     {requerido && <span className="ml-0.5 text-red-500">*</span>}
   </label>
@@ -92,7 +92,7 @@ const Etiqueta = ({ children, requerido }) => (
 // Sección con título: el título solo se ve en desktop, en mobile queda compacto
 const Seccion = ({ titulo, children }) => (
   <section className="flex flex-col gap-3 md:gap-5">
-    <h3 className="hidden border-b border-slate-100 pb-2 text-sm font-semibold text-slate-800 md:block">
+    <h3 className="hidden border-b border-slate-100 pb-2 text-sm font-semibold text-slate-800 md:block dark:border-outline-variant dark:text-on-surface">
       {titulo}
     </h3>
     {children}
@@ -379,7 +379,7 @@ export default function UsuariosPage() {
               ))}
             </select>
             {!creando && (
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-500 dark:text-on-surface-variant">
                 El tipo no se puede cambiar, porque está ligado a su registro.
               </p>
             )}
@@ -557,8 +557,8 @@ export default function UsuariosPage() {
 
       {/* Datos de acceso: aparece al elegir un tipo */}
       {form.idtipousuario && (
-        <fieldset className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 pb-3 pt-1 md:gap-5 md:rounded-xl md:px-5 md:pb-5 md:pt-2">
-          <legend className="inline-flex items-center gap-1 px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm">
+        <fieldset className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 pb-3 pt-1 md:gap-5 md:rounded-xl md:px-5 md:pb-5 md:pt-2 dark:border-outline-variant dark:bg-surface-container">
+          <legend className="inline-flex items-center gap-1 px-1 text-xs font-semibold text-teal-700 md:px-2 md:text-sm dark:text-teal-400">
             <KeyRound size={14} aria-hidden="true" /> Datos de acceso
           </legend>
 
@@ -577,7 +577,7 @@ export default function UsuariosPage() {
           </div>
 
           {!creando && (
-            <p className="text-xs text-slate-500 md:text-sm">
+            <p className="text-xs text-slate-500 md:text-sm dark:text-on-surface-variant">
               Deja las contraseñas vacías si no quieres cambiarla.
             </p>
           )}
@@ -601,7 +601,7 @@ export default function UsuariosPage() {
                   type="button"
                   onClick={() => setVerContrasena((valor) => !valor)}
                   aria-label={verContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400 dark:text-outline dark:hover:text-on-surface"
                 >
                   {verContrasena ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -624,7 +624,7 @@ export default function UsuariosPage() {
                   type="button"
                   onClick={() => setVerConfirmar((valor) => !valor)}
                   aria-label={verConfirmar ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400 dark:text-outline dark:hover:text-on-surface"
                 >
                   {verConfirmar ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>

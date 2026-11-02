@@ -1,12 +1,19 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      try {
+        if (localStorage.getItem('clinicware-tema') === 'oscuro') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    </script>
 <link rel="icon" href="/favicon/favicon.ico" />
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png" />
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png" />
 <link rel="apple-touch-icon" href="/favicon/apple-touch-icon.png" />
-<link rel="manifest" href="/favicon/site.webmanifest" />    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="manifest" href="/favicon/site.webmanifest" />    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>ClinicWare</title>
     <meta name="description" content="Plataforma odontológica para clínicas, odontólogos y pacientes." />
     <meta name="theme-color" content="#126F82" />

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { authApi } from "../../services/api.js";
+import ControlTema from "../../components/ControlTema.jsx";
+import FondoAuth from "../../components/FondoAuth.jsx";
 import { ToastContainer } from "../../components/Toast.jsx";
 import { borrarSesion, getAuth, guardarSesion, primeraRutaPermitida } from "../../config/permisos.js";
 
@@ -16,6 +18,7 @@ const DentalWebLogin = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [cierreMensaje, setCierreMensaje] = useState(() => Date.now() < avisoCierreHasta);
+  const [avisosVisibles, setAvisosVisibles] = useState({});
   const cargando = isSubmitting || Boolean(successMessage);
 
   const navigate = useNavigate();
@@ -46,6 +49,33 @@ const DentalWebLogin = () => {
     return () => clearTimeout(aviso);
   }, [cierreMensaje]);
 
+  useEffect(() => {
+    const ids = [
+      errorMessage && 'login-error',
+      successMessage && 'login-ok',
+      cierreMensaje && 'login-cierre',
+    ].filter(Boolean);
+
+    setAvisosVisibles((prev) => {
+      const next = {};
+      ids.forEach((id) => {
+        next[id] = prev[id] ?? false;
+      });
+      return next;
+    });
+    if (ids.length === 0) return undefined;
+    const entrada = window.setTimeout(() => {
+      setAvisosVisibles((prev) => {
+        const next = { ...prev };
+        ids.forEach((id) => {
+          next[id] = true;
+        });
+        return next;
+      });
+    }, 20);
+    return () => window.clearTimeout(entrada);
+  }, [errorMessage, successMessage, cierreMensaje]);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (isSubmitting) return;
@@ -66,6 +96,7 @@ const DentalWebLogin = () => {
       const payload = {
         correo: normalizedEmail,
         contrasena: password,
+        mantener: rememberMe,
       };
       const response = await authApi.login(payload);
 
@@ -99,9 +130,9 @@ const DentalWebLogin = () => {
   }
 
   const avisosLogin = [
-    errorMessage && { id: 'login-error', tipo: 'error', mensaje: errorMessage, visible: true },
-    successMessage && { id: 'login-ok', tipo: 'exito', mensaje: successMessage, visible: true },
-    cierreMensaje && { id: 'login-cierre', tipo: 'exito', mensaje: 'Sesión cerrada correctamente.', visible: true },
+    errorMessage && { id: 'login-error', tipo: 'error', mensaje: errorMessage, visible: Boolean(avisosVisibles['login-error']) },
+    successMessage && { id: 'login-ok', tipo: 'exito', mensaje: successMessage, visible: Boolean(avisosVisibles['login-ok']) },
+    cierreMensaje && { id: 'login-cierre', tipo: 'exito', mensaje: 'Sesión cerrada correctamente.', visible: Boolean(avisosVisibles['login-cierre']) },
   ].filter(Boolean);
 
   const cerrarAviso = (id) => {
@@ -110,13 +141,15 @@ const DentalWebLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-login-background px-4 py-8">
+    <div className="relative flex min-h-[var(--app-vvh,100svh)] flex-col items-center justify-center bg-login-background px-4 pt-[max(2rem,env(safe-area-inset-top,0px))] pb-[max(2rem,env(safe-area-inset-bottom,0px))]">
       <ToastContainer toasts={avisosLogin} onCerrar={cerrarAviso} />
-      {/* Background decorative gradient */}
-      <div className="fixed inset-0 pointer-events-none bg-login-backdrop" />
+      <FondoAuth />
 
       {/* Main Card */}
-      <div className="relative w-full max-w-120 rounded-3xl bg-on-primary p-8 shadow-login-card sm:p-10">
+      <div className="relative z-10 w-full max-w-120 animate-auth-card-in rounded-3xl bg-on-primary p-8 shadow-login-card motion-reduce:animate-none sm:p-10">
+        <div className="absolute right-4 top-4 z-10 md:hidden">
+          <ControlTema />
+        </div>
         {/* Logo & Brand */}
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-3 mb-2">
@@ -163,7 +196,7 @@ const DentalWebLogin = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="ejemplo@correo.com"
-                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
             </div>
           </div>
@@ -185,7 +218,7 @@ const DentalWebLogin = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-12 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-12 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
               <button
                 type="button"
@@ -202,7 +235,7 @@ const DentalWebLogin = () => {
           </div>
 
           {/* Remember & Forgot */}
-          <div className="flex flex-nowrap items-center justify-between gap-2">
+          <div className="flex flex-col items-center gap-2">
             <label className="flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap">
               <input
                 type="checkbox"
@@ -216,7 +249,7 @@ const DentalWebLogin = () => {
               >
                 {rememberMe && (
                   <svg
-                    className="text-on-primary"
+                    className="text-white"
                     width="12"
                     height="12"
                     viewBox="0 0 24 24"
@@ -236,17 +269,17 @@ const DentalWebLogin = () => {
             </label>
             <Link
               to="/recuperar-contrasena"
-              className="shrink-0 whitespace-nowrap text-xs font-medium text-login-active transition-colors hover:text-primary-container sm:text-sm"
+              className="text-xs font-medium text-login-active transition-colors hover:text-primary-container sm:text-sm"
             >
               ¿Olvidaste tu contraseña?
-            </Link>{" "}
+            </Link>
           </div>
 
           {/* Submit Button */}
           <button
             type="submit"
             disabled={isSubmitting || Boolean(successMessage)}
-            className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+            className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-white shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
           >
             {isSubmitting ? "Iniciando sesión..." : "Iniciar sesión"}
             {!isSubmitting && <ArrowRight size={18} />}
@@ -265,7 +298,7 @@ const DentalWebLogin = () => {
         </p>
             <div
               aria-hidden={!cargando}
-              className={`absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-3xl bg-white/70 backdrop-blur-sm transition-opacity duration-300 ${
+              className={`absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-3xl bg-on-primary/80 backdrop-blur-sm transition-opacity duration-300 ${
                 cargando ? "opacity-100" : "pointer-events-none opacity-0"
               }`}
             >
@@ -277,7 +310,7 @@ const DentalWebLogin = () => {
       </div>
 
       {/* Footer */}
-      <div className="relative mt-8 flex w-full max-w-120 flex-col items-center gap-3">
+      <div className="relative z-10 mt-8 flex w-full max-w-120 flex-col items-center gap-3">
         <nav
           aria-label="Navegación legal"
           className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-medium text-login-muted"
@@ -310,6 +343,9 @@ const DentalWebLogin = () => {
         <p className="text-center text-[11px] text-login-icon">
           DentalWeb Medical Systems © 2026. Todos los derechos reservados.
         </p>
+      </div>
+      <div className="fixed right-6 bottom-6 z-20 hidden md:block">
+        <ControlTema />
       </div>
     </div>
   );

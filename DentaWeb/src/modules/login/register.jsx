@@ -12,6 +12,8 @@ import {
   UserRound,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import ControlTema from "../../components/ControlTema.jsx";
+import FondoAuth from "../../components/FondoAuth.jsx";
 import { authApi } from "../../services/api.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -169,10 +171,13 @@ const Register = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-login-background px-4 py-8">
-      <div className="pointer-events-none fixed inset-0 bg-login-backdrop" />
+    <div className="relative flex min-h-[var(--app-vvh,100svh)] flex-col items-center justify-center bg-login-background px-4 pt-[max(2rem,env(safe-area-inset-top,0px))] pb-[max(2rem,env(safe-area-inset-bottom,0px))]">
+      <FondoAuth />
 
-      <div className="relative w-full max-w-120 rounded-3xl bg-on-primary p-8 shadow-login-card sm:p-10">
+      <div className="relative z-10 w-full max-w-120 animate-auth-card-in rounded-3xl bg-on-primary p-8 shadow-login-card motion-reduce:animate-none sm:p-10">
+        <div className="absolute right-4 top-4 z-10 md:hidden">
+          <ControlTema />
+        </div>
         <div className="mb-8 flex flex-col items-center">
           <div className="mb-2 flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-container/10">
@@ -222,7 +227,7 @@ const Register = () => {
                 autoComplete="given-name"
                 maxLength={100}
                 required
-                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
             </div>
           </div>
@@ -243,7 +248,7 @@ const Register = () => {
               autoComplete="family-name"
               maxLength={100}
               required
-              className="h-12 w-full rounded-xl border border-transparent bg-login-input px-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+              className="h-12 w-full rounded-xl border border-transparent bg-login-input px-4 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
             />
           </div>
 
@@ -262,7 +267,7 @@ const Register = () => {
               onChange={(event) => setApeMat(nombrePersona(event.target.value))}
               placeholder="GARCÍA"
               autoComplete="additional-name"
-              className="h-12 w-full rounded-xl border border-transparent bg-login-input px-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+              className="h-12 w-full rounded-xl border border-transparent bg-login-input px-4 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
             />
           </div>
 
@@ -289,7 +294,7 @@ const Register = () => {
                 autoComplete="tel"
                 maxLength={10}
                 required
-                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
             </div>
           </div>
@@ -314,7 +319,7 @@ const Register = () => {
                 autoComplete="email"
                 maxLength={150}
                 required
-                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-4 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
             </div>
           </div>
@@ -341,7 +346,7 @@ const Register = () => {
                 maxLength={72}
                 required
                 aria-describedby="register-password-rules"
-                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-12 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-12 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
               <button
                 type="button"
@@ -399,7 +404,7 @@ const Register = () => {
                 minLength={8}
                 maxLength={72}
                 required
-                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-12 text-sm text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
+                className="h-12 w-full rounded-xl border border-transparent bg-login-input pl-12 pr-12 text-base leading-5 text-login-heading outline-none transition-all duration-200 focus:border-2 focus:border-login-active focus:bg-on-primary focus:shadow-login-input-focus"
               />
               <button
                 type="button"
@@ -433,7 +438,7 @@ const Register = () => {
               className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all duration-200 ${acceptTerms ? "border-login-active bg-login-active" : "border-login-border bg-transparent"}`}
             >
               {acceptTerms && (
-                <Check className="text-on-primary" size={13} strokeWidth={3} />
+                <Check className="text-white" size={13} strokeWidth={3} />
               )}
             </span>
             <span>
@@ -470,7 +475,7 @@ const Register = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-on-primary shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+            className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-login-active text-sm font-semibold text-white shadow-login-button transition-all duration-200 hover:-translate-y-px hover:bg-login-active-hover hover:shadow-login-button-hover disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
           >
             {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
             {!isSubmitting && <ArrowRight size={18} />}
@@ -489,7 +494,7 @@ const Register = () => {
         </div>
       </div>
 
-      <div className="relative mt-8 flex w-full max-w-120 flex-col items-center gap-3">
+      <div className="relative z-10 mt-8 flex w-full max-w-120 flex-col items-center gap-3">
         <nav
           aria-label="Navegación legal"
           className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-medium text-login-muted"
@@ -522,6 +527,9 @@ const Register = () => {
         <p className="text-center text-[11px] text-login-icon">
           DentalWeb Medical Systems © 2026. Todos los derechos reservados.
         </p>
+      </div>
+      <div className="fixed right-6 bottom-6 z-20 hidden md:block">
+        <ControlTema />
       </div>
     </div>
   );

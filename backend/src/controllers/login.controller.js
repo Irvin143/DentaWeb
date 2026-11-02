@@ -77,7 +77,7 @@ export async function registro(req, res, next) {
 
 export async function login(req, res, next) {
     try {
-        const { correo, contrasena } = req.body ?? {};
+        const { correo, contrasena, mantener } = req.body ?? {};
 
         // 1. Validación básica
         if (typeof correo !== 'string' || typeof contrasena !== 'string' || !correo.trim() || !contrasena.trim()) {
@@ -88,6 +88,7 @@ export async function login(req, res, next) {
         const data = await authService.login({
         correo: correo.trim(),
         contrasena,
+        mantener: mantener === true,
         });
 
         // 3. Responder con { token, usuario }

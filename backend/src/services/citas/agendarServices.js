@@ -72,10 +72,10 @@ const ESTADO_INICIAL = 'PENDIENTE';
 // Paciente ligado a la cuenta que inició sesión
 export const obtenerIdPacientePorUsuario = async (idUsuario) => {
     const { rows } = await conexion.query(
-        'SELECT idPaciente FROM pacientes WHERE idUsuario = $1::int LIMIT 1',
+        'SELECT idPaciente AS id_paciente FROM pacientes WHERE idUsuario = $1::int LIMIT 1',
         [idUsuario]
     );
-    return rows[0]?.idpaciente ?? null;
+    return rows[0]?.id_paciente ?? null;
 };
 
 // Tipo de cita cuando la vista no manda uno: el que se llame igual que la categoría

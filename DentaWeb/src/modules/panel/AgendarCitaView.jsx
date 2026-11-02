@@ -29,16 +29,16 @@ function Progreso({ paso }) {
         const hecho = n < paso;
         const actual = n === paso;
         const claseTexto = actual
-          ? 'text-slate-800'
+          ? 'text-slate-800 dark:text-on-surface'
           : hecho
-            ? 'hidden text-slate-500 sm:inline'
-            : 'hidden text-slate-400 sm:inline';
+            ? 'hidden text-slate-500 dark:text-on-surface-variant sm:inline'
+            : 'hidden text-slate-400 dark:text-outline sm:inline';
         return (
           <React.Fragment key={n}>
             <li className="flex items-center gap-2" aria-current={actual ? 'step' : undefined}>
               <span
                 className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-                  hecho || actual ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-500'
+                  hecho || actual ? 'bg-teal-600 text-white' : 'bg-slate-200 dark:bg-surface-container-high text-slate-500 dark:text-on-surface-variant'
                 }`}
               >
                 {hecho ? <CheckCircle2 size={14} /> : n}
@@ -46,7 +46,7 @@ function Progreso({ paso }) {
               <span className={`text-sm font-semibold ${claseTexto}`}>{etiqueta}</span>
             </li>
             {i < PASOS.length - 1 && (
-              <span className={`h-px flex-1 ${hecho ? 'bg-teal-600' : 'bg-slate-200'}`} />
+              <span className={`h-px flex-1 ${hecho ? 'bg-teal-600' : 'bg-slate-200 dark:bg-surface-container-high'}`} />
             )}
           </React.Fragment>
         );
@@ -65,12 +65,12 @@ function PasoConfirmar({ propuesta, odontologoAsignado, onElegirOtroHorario }) {
   return (
     <>
       <section className={CLASE_TARJETA}>
-        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500">
+        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-on-surface-variant">
           <User size={18} /> Tu odontólogo
         </h2>
 
         {propuesta.cargando && (
-          <p className="flex items-center gap-2 py-2 text-sm text-slate-500">
+          <p className="flex items-center gap-2 py-2 text-sm text-slate-500 dark:text-on-surface-variant">
             <Loader2 size={16} className="animate-spin" /> Buscando a tu odontólogo...
           </p>
         )}
@@ -93,14 +93,14 @@ function PasoConfirmar({ propuesta, odontologoAsignado, onElegirOtroHorario }) {
 
         {/* No se pudo consultar: se puede confirmar igual, el servidor asigna al odontólogo */}
         {propuesta.error && (
-          <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
+          <div className="rounded-xl bg-slate-50 dark:bg-surface-container p-3 text-sm text-slate-600 dark:text-on-surface-variant">
             <p>
               No pudimos mostrar a tu odontólogo ahora. Si confirmas, te asignaremos uno disponible.
             </p>
             <button
               type="button"
               onClick={propuesta.reintentar}
-              className="mt-1 cursor-pointer text-xs font-semibold text-teal-600 underline"
+              className="mt-1 cursor-pointer text-xs font-semibold text-teal-600 dark:text-teal-400 underline"
             >
               Reintentar
             </button>
@@ -110,20 +110,20 @@ function PasoConfirmar({ propuesta, odontologoAsignado, onElegirOtroHorario }) {
         {odontologo && (
           <>
             <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-slate-500">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-200 dark:bg-surface-container-high text-slate-500 dark:text-on-surface-variant">
                 <User size={30} />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="break-words font-bold text-slate-800">{odontologo.nombre}</p>
+                <p className="break-words font-bold text-slate-800 dark:text-on-surface">{odontologo.nombre}</p>
                 {odontologo.cedula && (
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-slate-600 dark:text-on-surface-variant">
                     Cédula profesional: {odontologo.cedula}
                   </p>
                 )}
               </div>
             </div>
             {!odontologoAsignado && (
-              <p className="mt-3 text-xs text-slate-500">
+              <p className="mt-3 text-xs text-slate-500 dark:text-on-surface-variant">
                 Si el horario se ocupa antes de que confirmes, te asignaremos a otro odontólogo
                 disponible.
               </p>
@@ -133,17 +133,17 @@ function PasoConfirmar({ propuesta, odontologoAsignado, onElegirOtroHorario }) {
       </section>
 
       <section className={CLASE_TARJETA}>
-        <div className="flex gap-3 rounded-xl bg-teal-50 p-4">
-          <Bell className="shrink-0 text-teal-600" size={20} />
+        <div className="flex gap-3 rounded-xl bg-teal-50 dark:bg-teal-950 p-4">
+          <Bell className="shrink-0 text-teal-600 dark:text-teal-400" size={20} />
           <div>
-            <p className="text-sm font-bold text-teal-800">RECORDATORIO AUTOMÁTICO</p>
-            <p className="text-xs text-teal-700">
+            <p className="text-sm font-bold text-teal-800 dark:text-teal-400">RECORDATORIO AUTOMÁTICO</p>
+            <p className="text-xs text-teal-700 dark:text-teal-400">
               Recibirás confirmación y aviso por WhatsApp y correo 24 horas antes.
             </p>
           </div>
         </div>
-        <p className="mt-4 text-xs font-medium text-slate-500">
-          <CheckCircle2 size={14} className="inline text-teal-600" /> Cancelación o reprogramación gratuita hasta 4 horas antes
+        <p className="mt-4 text-xs font-medium text-slate-500 dark:text-on-surface-variant">
+          <CheckCircle2 size={14} className="inline text-teal-600 dark:text-teal-400" /> Cancelación o reprogramación gratuita hasta 4 horas antes
         </p>
       </section>
     </>
@@ -167,7 +167,7 @@ function NavegacionPasos({
           type="button"
           onClick={onAtras}
           disabled={cargando}
-          className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-outline-variant bg-white dark:bg-on-primary px-5 py-3 text-sm font-semibold text-slate-700 dark:text-on-surface transition-colors hover:bg-slate-50 dark:hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-60"
         >
           <ArrowLeft size={16} /> Atrás
         </button>
@@ -266,16 +266,16 @@ export default function AgendarCitaView({ onVolver }) {
             type="button"
             onClick={onVolver}
             aria-label="Volver al panel"
-            className="cursor-pointer rounded-full p-2 transition-colors hover:bg-slate-100"
+            className="cursor-pointer rounded-full p-2 transition-colors hover:bg-slate-100 dark:hover:bg-surface-container"
           >
-            <ArrowLeft size={24} className="text-slate-700" />
+            <ArrowLeft size={24} className="text-slate-700 dark:text-on-surface" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">Agendar Cita</h1>
-            <p className="text-sm text-slate-500">{SUBTITULOS[paso]}</p>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-on-surface">Agendar Cita</h1>
+            <p className="text-sm text-slate-500 dark:text-on-surface-variant">{SUBTITULOS[paso]}</p>
           </div>
         </div>
-        <span className="flex items-center gap-1 rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700">
+        <span className="flex items-center gap-1 rounded-full bg-teal-50 dark:bg-teal-950 px-3 py-1 text-xs font-semibold text-teal-700 dark:text-teal-400">
           <CheckCircle2 size={14} /> Paso {paso} de {TOTAL_PASOS}
         </span>
       </header>
@@ -353,7 +353,7 @@ export default function AgendarCitaView({ onVolver }) {
       {/* Barra de acciones: siempre a la vista, aunque el contenido crezca.
           En móvil queda pegada al borde inferior de la pantalla; en PC se alinea con la
           columna del contenido y no se mueve. */}
-      <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-slate-200 bg-surface px-4 py-3 md:-mx-8 md:px-8 lg:static lg:mx-0 lg:grid lg:shrink-0 lg:grid-cols-12 lg:gap-6 lg:border-0 lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-4">
+      <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-slate-200 dark:border-outline-variant bg-surface px-4 py-3 md:-mx-8 md:px-8 lg:static lg:mx-0 lg:grid lg:shrink-0 lg:grid-cols-12 lg:gap-6 lg:border-0 lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-4">
         <div className="flex flex-col gap-3 lg:col-span-7 lg:pr-2 xl:col-span-8">
 
           <NavegacionPasos

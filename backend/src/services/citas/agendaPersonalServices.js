@@ -1,5 +1,13 @@
 import conexion from '../conexion.js';
 
+const ZONA = 'America/Mazatlan';
+
+const errorHttp = (status, mensaje) => {
+    const error = new Error(mensaje);
+    error.status = status;
+    return error;
+};
+
 export async function idOdontologoDeUsuario(idUsuario) {
     const { rows } = await conexion.query(
         `SELECT o.idOdontologo AS id
@@ -82,4 +90,47 @@ export async function listarCitasPersonal({
     );
 
     return rows;
+}
+
+export async function cambiarEstadoCita({
+    idCita,
+    estado,
+    idOdontologo = null,
+    idsClinica = null,
+}) {
+    const params = [idCita];
+    const where = ['c.idCita = $1::int'];
+
+    if (idOdontologo != null) {
+        params.push(idOdontologo);
+        where.push(`c.idOdontologo = $${params.length}::int`);
+    }
+    if (Array.isArray(idsClinica)) {
+        params.push(idsClinica);
+        where.push(`cl.idClinica = ANY($${params.length}::int[])`);
+    }
+
+    const { rows } = await conexion.query(
+        `SELECT c.idCita AS id,
+                (c.fecha + c.hora) > (now() AT TIME ZONE '${ZONA}') AS futura
+         FROM citas c
+         JOIN clinica_servicio cs ON cs.idClinica_Servicio = c.idClinica_Servicio
+         JOIN clinicas cl ON cl.idClinica = cs.idClinica
+         WHERE ${where.join(' AND ')}
+         LIMIT 1`,
+        params
+    );
+    if (!rows[0]) throw errorHttp(404, 'No encontramos esa cita');
+    if (estado === 'NO_ASISTIO' && rows[0].futura) {
+        throw errorHttp(409, 'No se puede marcar como no asistió una cita que todavía no ocurre.');
+    }
+
+    const { rows: actualizadas } = await conexion.query(
+        `UPDATE citas
+         SET estado = $2
+         WHERE idCita = $1::int
+         RETURNING idCita AS id, estado`,
+        [idCita, estado]
+    );
+    return actualizadas[0];
 }

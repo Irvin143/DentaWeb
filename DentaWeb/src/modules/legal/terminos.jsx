@@ -1,8 +1,9 @@
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import FondoAuth from '../../components/FondoAuth.jsx';
 
 const LegalFooter = () => (
-	<footer className="mt-8 flex w-full max-w-4xl flex-col items-center gap-3 text-center">
+	<footer className="relative z-10 mt-8 flex w-full max-w-4xl flex-col items-center gap-3 text-center">
 		<nav aria-label="Navegación legal" className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-medium text-login-muted">
 			<Link to="/legal/terminos" className="text-primary-container">Términos de servicio</Link>
 			<Link to="/legal/privacidad" className="transition-colors hover:text-login-active">Privacidad</Link>
@@ -13,9 +14,9 @@ const LegalFooter = () => (
 );
 
 const Terms = () => (
-	<div className="flex min-h-screen flex-col items-center bg-login-background px-4 py-8">
-		<div className="pointer-events-none fixed inset-0 bg-login-backdrop" />
-		<main className="relative w-full max-w-4xl rounded-3xl bg-on-primary p-8 shadow-login-card sm:p-10">
+	<div className="relative flex min-h-[var(--app-vvh,100svh)] flex-col items-center bg-login-background px-4 pt-[max(2rem,env(safe-area-inset-top,0px))] pb-[max(2rem,env(safe-area-inset-bottom,0px))]">
+		<FondoAuth />
+		<main className="relative z-10 w-full max-w-4xl rounded-3xl bg-on-primary p-8 shadow-login-card sm:p-10">
 			<header className="mb-8 flex flex-col items-center text-center">
 				<div className="mb-3 flex items-center gap-3">
 					<div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-container/10">

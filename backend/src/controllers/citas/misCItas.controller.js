@@ -2,6 +2,7 @@ import {
     cancelarCita,
     obtenerCitasPaciente,
     obtenerIdPaciente,
+    reagendarCita,
 } from '../../services/citas/misCitasServices.js';
 import * as agendaPersonal from '../../services/citas/agendaPersonalServices.js';
 
@@ -50,6 +51,43 @@ function enteroPositivo(valor) {
     if (valor === undefined || valor === null || valor === '') return null;
     const n = Number(valor);
     return Number.isInteger(n) && n > 0 ? n : undefined;
+}
+
+const ESTADOS_CITA = {
+    pendiente: 'PENDIENTE',
+    confirmada: 'CONFIRMADA',
+    atendida: 'ATENDIDA',
+    cancelada: 'CANCELADA',
+    no_asistio: 'NO_ASISTIO',
+};
+
+function normalizarEstadoCita(valor) {
+    const clave = String(valor ?? '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[\s-]+/g, '_');
+    return ESTADOS_CITA[clave] ?? null;
+}
+
+async function alcancePersonal(usuario) {
+    const esAdmin = tieneIdentidad(usuario, 'admin');
+    const esOdontologo = tieneIdentidad(usuario, 'odontologo');
+    const esClinica = tieneIdentidad(usuario, 'clinica');
+
+    if (esAdmin) return { idOdontologo: null, idsClinica: null };
+    if (esOdontologo) {
+        const id = await agendaPersonal.idOdontologoDeUsuario(usuario.sub);
+        if (id == null) throw errorHttp(403, 'No tienes permiso para esta acción.');
+        return { idOdontologo: id, idsClinica: null };
+    }
+    if (esClinica) {
+        const ids = await agendaPersonal.idsClinicaDeUsuario(usuario.sub);
+        if (ids.length === 0) throw errorHttp(403, 'No tienes permiso para esta acción.');
+        return { idOdontologo: null, idsClinica: ids };
+    }
+    throw errorHttp(403, 'No tienes permiso para esta acción.');
 }
 
 async function listarCitasDelPersonal(req) {
@@ -161,6 +199,30 @@ export const reagendarMiCita = async (req, res) => {
 
         const idPaciente = await obtenerIdPaciente(idUsuarioDe(req));
         const cita = await reagendarCita({ idCita, idPaciente, fecha, hora });
+        res.json(cita);
+    } catch (error) {
+        responderError(res, error);
+    }
+};
+
+export const cambiarEstadoCita = async (req, res) => {
+    try {
+        const idCita = Number.parseInt(req.params.id, 10);
+        if (!Number.isInteger(idCita)) {
+            return res.status(400).json({ error: 'El id de la cita no es válido' });
+        }
+
+        const estado = normalizarEstadoCita(req.body?.estado);
+        if (!estado) {
+            return res.status(400).json({ error: 'El estado no es válido' });
+        }
+
+        const alcance = await alcancePersonal(req.usuario);
+        const cita = await agendaPersonal.cambiarEstadoCita({
+            idCita,
+            estado,
+            ...alcance,
+        });
         res.json(cita);
     } catch (error) {
         responderError(res, error);

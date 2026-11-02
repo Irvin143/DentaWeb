@@ -5,13 +5,18 @@ import {
   ArrowUp,
   CalendarClock,
   CalendarX,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
   Plus,
+  Search,
+  User,
   X,
 } from 'lucide-react';
 
 import { citasApi } from '../../services/api.js';
 import AgendarCitaView from './AgendarCitaView';
-import CancelarCitaModal from './misCita/ModalCancelar.jsx';
+import ModalConfirmacion from '../../components/ModalConfirmacion.jsx';
 import ReagendarCitaModal from './misCita/ModalReagendar.jsx';
 import { ToastContainer } from '../../components/Toast.jsx';
 import { fechaCorta, fechaLarga, hora, mayuscula } from './misCita/Utils.js';
@@ -25,10 +30,22 @@ const FILTROS = [
   { id: 'pasadas', etiqueta: 'Pasadas' },
 ];
 
+const REGISTROS_POR_PAGINA = 10;
+
+const claseBotonAccion =
+  'flex cursor-pointer items-center gap-1.5 rounded-lg border border-outline-variant px-2.5 py-1.5 text-xs font-medium transition-colors';
+
 // Solo las citas pendientes se pueden reagendar o cancelar
 const ESTADOS_ACCIONABLES = ['Pendiente'];
 
 const puedeActuar = (c) => c.fecha >= new Date() && ESTADOS_ACCIONABLES.includes(c.estado);
+
+const normalizar = (texto) =>
+  String(texto ?? '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
 
 function adaptarCita(c) {
   // El backend manda fecha ('AAAA-MM-DD') y hora ('HH:mm') por separado
@@ -62,7 +79,6 @@ function useToasts() {
     temporizadores.current.add(t);
   }, []);
 
-  // Al salir de la página no quedan temporizadores pendientes
   useEffect(() => {
     const pendientes = temporizadores.current;
     return () => pendientes.forEach(clearTimeout);
@@ -89,6 +105,165 @@ function useToasts() {
   return { toasts, mostrar, cerrar };
 }
 
+function ResumenCitaCancelar({ cita }) {
+  return (
+    <>
+      <p className="text-sm font-medium text-error">Vas a cancelar esta cita.</p>
+      <div className="mt-3 rounded-xl border border-slate-200 dark:border-outline-variant bg-slate-50 dark:bg-surface-container p-4">
+        <p className="text-base font-semibold text-slate-800 dark:text-on-surface">{cita.motivo}</p>
+        <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-600 dark:text-on-surface-variant">
+          <User size={16} className="shrink-0 text-slate-400 dark:text-outline" aria-hidden="true" />
+          {cita.doctor}
+        </p>
+        <p className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-600 dark:text-on-surface-variant">
+          <CalendarClock size={16} className="shrink-0 text-slate-400 dark:text-outline" aria-hidden="true" />
+          {fechaLarga(cita.fecha)}
+        </p>
+        <p className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-600 dark:text-on-surface-variant">
+          <Clock size={16} className="shrink-0 text-slate-400 dark:text-outline" aria-hidden="true" />
+          {hora(cita.fecha)}
+        </p>
+      </div>
+      <p className="mt-3 text-sm text-slate-500 dark:text-on-surface-variant">
+        Si cambias de opinión, tendrás que agendar una nueva cita.
+      </p>
+    </>
+  );
+}
+
+function AccionesCita({ cita, onReagendar, onCancelar }) {
+  if (!puedeActuar(cita)) {
+    return (
+      <p className="text-right text-outline" aria-label="Sin acciones disponibles">
+        —
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex justify-end gap-2">
+      <button
+        type="button"
+        onClick={() => onReagendar(cita)}
+        aria-label={`Reagendar cita de ${cita.motivo} del ${fechaCorta(cita.fecha)}`}
+        className={`${claseBotonAccion} text-on-surface hover:bg-surface-container`}
+      >
+        <CalendarClock size={14} className="text-teal-700 dark:text-teal-400" aria-hidden="true" />
+        Reagendar
+      </button>
+      <button
+        type="button"
+        onClick={() => onCancelar(cita)}
+        aria-label={`Cancelar cita de ${cita.motivo} del ${fechaCorta(cita.fecha)}`}
+        className={`${claseBotonAccion} text-error hover:bg-error-container`}
+      >
+        <X size={14} aria-hidden="true" />
+        Cancelar
+      </button>
+    </div>
+  );
+}
+
+function EstadoLista({ errorCarga, hayBusqueda, filtro, onReintentar }) {
+  if (errorCarga) {
+    return (
+      <div role="alert" className="flex flex-col items-center gap-2 text-center">
+        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-error-container text-error">
+          <AlertTriangle size={22} aria-hidden="true" />
+        </span>
+        <p className="text-sm font-semibold text-on-surface">No pudimos cargar tus citas</p>
+        <p className="text-sm text-on-surface-variant">{errorCarga}</p>
+        <button
+          type="button"
+          onClick={onReintentar}
+          className="mt-2 cursor-pointer rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container"
+        >
+          Reintentar
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-2 text-center">
+      <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-surface-container text-on-surface-variant">
+        <CalendarX size={22} aria-hidden="true" />
+      </span>
+      <p className="text-sm font-semibold text-on-surface">
+        {hayBusqueda ? 'Ninguna cita coincide con la búsqueda.' : 'No hay citas para mostrar'}
+      </p>
+      {!hayBusqueda && (
+        <p className="text-sm text-on-surface-variant">
+          {filtro === 'pasadas'
+            ? 'Las citas que ya pasaron aparecerán aquí.'
+            : 'Agenda una nueva cita para verla aquí.'}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function TarjetaCita({ cita, onReagendar, onCancelar }) {
+  return (
+    <li className="px-4 py-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="font-semibold text-on-surface">{mayuscula(fechaCorta(cita.fecha))}</p>
+        <p className="text-sm text-on-surface-variant">{hora(cita.fecha)}</p>
+      </div>
+      <p className="mt-2 text-sm text-on-surface">{cita.motivo}</p>
+      <p className="mt-1 text-sm text-on-surface-variant">{cita.doctor}</p>
+      <div className="mt-2">
+        <BadgeEstado estado={cita.estado} />
+      </div>
+      <div className="mt-3">
+        <AccionesCita cita={cita} onReagendar={onReagendar} onCancelar={onCancelar} />
+      </div>
+    </li>
+  );
+}
+
+function PieTabla({ total, paginaActual, totalPaginas, onPagina }) {
+  const etiqueta = total === 1 ? '1 cita' : `${total} citas`;
+  const hayPaginas = total > REGISTROS_POR_PAGINA;
+  const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA + 1;
+  const fin = Math.min(paginaActual * REGISTROS_POR_PAGINA, total);
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-outline-variant px-5 py-3">
+      <p className="text-xs text-on-surface-variant">
+        {hayPaginas ? `Mostrando ${inicio}–${fin} de ${etiqueta}` : etiqueta}
+      </p>
+      {hayPaginas ? (
+        <nav aria-label="Paginación">
+          <menu className="m-0 flex items-center gap-2 p-0">
+            <button
+              type="button"
+              onClick={() => onPagina(paginaActual - 1)}
+              disabled={paginaActual === 1}
+              aria-label="Página anterior"
+              className="cursor-pointer rounded-lg border border-outline-variant p-1.5 text-on-surface-variant transition-colors hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <ChevronLeft size={16} aria-hidden="true" />
+            </button>
+            <span className="text-xs font-medium text-on-surface-variant">
+              Página {paginaActual} de {totalPaginas}
+            </span>
+            <button
+              type="button"
+              onClick={() => onPagina(paginaActual + 1)}
+              disabled={paginaActual === totalPaginas}
+              aria-label="Página siguiente"
+              className="cursor-pointer rounded-lg border border-outline-variant p-1.5 text-on-surface-variant transition-colors hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <ChevronRight size={16} aria-hidden="true" />
+            </button>
+          </menu>
+        </nav>
+      ) : null}
+    </div>
+  );
+}
+
 /* ---------- Página ---------- */
 export default function CitasTablaPage() {
   const [citas, setCitas] = useState([]);
@@ -96,6 +271,8 @@ export default function CitasTablaPage() {
   const [errorCarga, setErrorCarga] = useState('');
 
   const [filtro, setFiltro] = useState('todas');
+  const [busqueda, setBusqueda] = useState('');
+  const [pagina, setPagina] = useState(1);
   const [descendente, setDescendente] = useState(true);
 
   const [porCancelar, setPorCancelar] = useState(null);
@@ -104,11 +281,10 @@ export default function CitasTablaPage() {
   const { toasts, mostrar, cerrar: cerrarToast } = useToasts();
 
   const cargar = useCallback(async (signal) => {
-    setCargando(true);
-    setErrorCarga('');
     try {
       const datos = await citasApi.listar({ signal });
       setCitas(datos.map(adaptarCita).filter(Boolean));
+      setErrorCarga('');
     } catch (error) {
       if (error.name === 'AbortError') return;
       setErrorCarga(error.message || 'No se pudieron cargar tus citas.');
@@ -119,30 +295,66 @@ export default function CitasTablaPage() {
 
   useEffect(() => {
     const controlador = new AbortController();
-    cargar(controlador.signal);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch al montar
+    void cargar(controlador.signal);
     return () => controlador.abort();
   }, [cargar]);
 
   const ahora = new Date();
+  const ahoraMs = ahora.getTime();
   const conteo = {
     todas: citas.length,
-    proximas: citas.filter((c) => c.fecha >= ahora).length,
-    pasadas: citas.filter((c) => c.fecha < ahora).length,
+    proximas: citas.filter((c) => c.fecha.getTime() >= ahoraMs).length,
+    pasadas: citas.filter((c) => c.fecha.getTime() < ahoraMs).length,
   };
 
   const filas = useMemo(() => {
-    const ahoraMs = Date.now();
+    const q = normalizar(busqueda);
     return citas
       .filter((c) =>
         filtro === 'todas' ? true : filtro === 'proximas' ? c.fecha.getTime() >= ahoraMs : c.fecha.getTime() < ahoraMs,
       )
+      .filter((c) => {
+        if (!q) return true;
+        return normalizar(c.motivo).includes(q) || normalizar(c.doctor).includes(q);
+      })
       .sort((a, b) => (descendente ? b.fecha - a.fecha : a.fecha - b.fecha));
-  }, [citas, filtro, descendente]);
+  }, [citas, filtro, busqueda, descendente, ahoraMs]);
 
-  function alCancelar(cita) {
-    setCitas((actuales) => actuales.map((c) => (c.id === cita.id ? { ...c, estado: 'Cancelada' } : c)));
-    setPorCancelar(null);
-    mostrar('exito', 'Tu cita fue cancelada.');
+  const totalFilas = filas.length;
+  const totalPaginas = Math.max(1, Math.ceil(totalFilas / REGISTROS_POR_PAGINA));
+  const paginaActual = Math.min(pagina, totalPaginas);
+  const datosPagina = filas.slice(
+    (paginaActual - 1) * REGISTROS_POR_PAGINA,
+    paginaActual * REGISTROS_POR_PAGINA,
+  );
+
+  function elegirFiltro(id) {
+    setFiltro(id);
+    setPagina(1);
+  }
+
+  function alBuscar(valor) {
+    setBusqueda(valor);
+    setPagina(1);
+  }
+
+  function reintentar() {
+    setCargando(true);
+    setErrorCarga('');
+    cargar();
+  }
+
+  async function confirmarCancelacion() {
+    const cita = porCancelar;
+    if (!cita) return;
+    try {
+      await citasApi.cancelar(cita.id);
+      setCitas((actuales) => actuales.map((c) => (c.id === cita.id ? { ...c, estado: 'Cancelada' } : c)));
+      mostrar('exito', 'Tu cita fue cancelada.');
+    } catch (e) {
+      mostrar('error', e.message || 'No se pudo cancelar la cita.');
+    }
   }
 
   function alReagendar({ fecha, hora: horaNueva }) {
@@ -153,20 +365,23 @@ export default function CitasTablaPage() {
   }
 
   const IconoOrden = descendente ? ArrowDown : ArrowUp;
+  const hayBusqueda = Boolean(normalizar(busqueda));
+  const mostrarPie = !cargando && !errorCarga && totalFilas > 0;
+  const listaVacia = !cargando && (errorCarga || totalFilas === 0);
 
   if (vista === 'agendar') {
     return (
       <AgendarCitaView
         onVolver={() => {
           setVista('lista');
-          cargar();
+          reintentar();
         }}
       />
     );
   }
 
   return (
-    <section className="flex flex-col gap-6 bg-surface p-4 md:p-8">
+    <section className="flex min-h-full flex-col gap-6 overflow-x-hidden bg-surface p-4 md:p-8">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-on-surface">Mis citas</h1>
@@ -182,152 +397,161 @@ export default function CitasTablaPage() {
         </button>
       </header>
 
-      <article className="overflow-hidden rounded-2xl border border-outline-variant bg-on-primary">
-        {/* Filtros */}
-        <div className="flex flex-wrap gap-2 border-b border-outline-variant p-4">
-          {FILTROS.map((f) => {
-            const activo = filtro === f.id;
-            return (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => setFiltro(f.id)}
-                aria-pressed={activo}
-                disabled={cargando}
-                className={`flex cursor-pointer items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium transition-colors disabled:cursor-default disabled:opacity-60 ${
-                  activo
-                    ? 'bg-teal-50 text-teal-700'
-                    : 'bg-slate-50 text-slate-700 hover:text-slate-800'
-                }`}
-              >
-                {f.etiqueta}
-                {!cargando && <span className={`text-xs ${activo ? 'opacity-80' : 'text-outline'}`}>{conteo[f.id]}</span>}
-              </button>
-            );
-          })}
-        </div>
+      <search className="flex flex-wrap items-center gap-3 rounded-2xl border border-outline-variant bg-on-primary p-2.5 shadow-sm sm:gap-4">
+        <label className="relative min-w-0 flex-1 basis-48">
+          <span className="sr-only">Buscar por motivo o odontólogo</span>
+          <Search
+            size={18}
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-outline"
+          />
+          <input
+            type="search"
+            value={busqueda}
+            onChange={(e) => alBuscar(e.target.value)}
+            placeholder="Buscar por motivo o odontólogo…"
+            className="w-full rounded-xl bg-surface py-2.5 pr-4 pl-10 text-base leading-5 text-on-surface placeholder:text-outline outline-none focus:ring-2 focus:ring-teal-500/20"
+          />
+        </label>
 
-        {/* Tabla */}
-        <div className="overflow-x-auto" aria-busy={cargando}>
-          <table className="w-full min-w-[820px] border-collapse text-left text-sm">
-            <thead>
-              <tr className="border-b border-outline-variant bg-surface text-xs font-semibold uppercase tracking-wide text-outline">
-                <th scope="col" className="px-5 py-3">
+        <select
+          aria-label="Filtrar citas"
+          value={filtro}
+          onChange={(e) => elegirFiltro(e.target.value)}
+          disabled={cargando}
+          className="h-10 w-auto min-w-[10rem] shrink-0 cursor-pointer rounded-xl border border-outline-variant bg-surface px-3 text-base leading-5 text-on-surface focus:ring-2 focus:ring-teal-500/20 focus:outline-none disabled:cursor-default disabled:opacity-60"
+        >
+          {FILTROS.map((f) => (
+            <option key={f.id} value={f.id}>
+              {cargando ? f.etiqueta : `${f.etiqueta} (${conteo[f.id]})`}
+            </option>
+          ))}
+        </select>
+      </search>
+
+      <figure className="m-0 overflow-hidden rounded-2xl border border-outline-variant bg-on-primary shadow-sm">
+        <section className="hidden overflow-x-hidden md:block" aria-busy={cargando}>
+          <table className="w-full table-fixed border-collapse text-left text-sm">
+            <thead className="border-b border-outline-variant bg-surface text-xs font-semibold tracking-wider text-outline uppercase">
+              <tr>
+                <th scope="col" className="w-[18%] p-0" aria-sort={descendente ? 'descending' : 'ascending'}>
                   <button
                     type="button"
                     onClick={() => setDescendente((d) => !d)}
                     aria-label={`Ordenar por fecha ${descendente ? 'ascendente' : 'descendente'}`}
-                    className="flex cursor-pointer items-center gap-1 uppercase tracking-wide transition-colors hover:text-on-surface"
+                    className="flex w-full cursor-pointer items-center gap-1 px-5 py-3 uppercase tracking-wider transition-colors hover:text-on-surface"
                   >
                     Fecha
                     <IconoOrden size={13} aria-hidden="true" />
                   </button>
                 </th>
-                <th scope="col" className="px-5 py-3">Hora</th>
-                <th scope="col" className="px-5 py-3">Motivo</th>
-                <th scope="col" className="px-5 py-3">Doctor</th>
-                <th scope="col" className="px-5 py-3">Estado</th>
-                <th scope="col" className="px-5 py-3 text-right">Acciones</th>
+                <th scope="col" className="w-[12%] px-5 py-3">
+                  Hora
+                </th>
+                <th scope="col" className="w-[22%] px-5 py-3">
+                  Motivo
+                </th>
+                <th scope="col" className="w-[20%] px-5 py-3">
+                  Doctor
+                </th>
+                <th scope="col" className="w-[14%] px-5 py-3">
+                  Estado
+                </th>
+                <th
+                  scope="col"
+                  className="sticky right-0 z-20 w-[14%] bg-surface py-3 pr-5 pl-2 text-right"
+                >
+                  Acciones
+                </th>
               </tr>
             </thead>
             <tbody>
               {cargando ? (
                 <FilasCargando />
-              ) : errorCarga ? (
+              ) : listaVacia ? (
                 <tr>
                   <td colSpan={6} className="px-5 py-12">
-                    <div role="alert" className="flex flex-col items-center gap-2 text-center">
-                      <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-error-container text-error">
-                        <AlertTriangle size={22} aria-hidden="true" />
-                      </span>
-                      <p className="text-sm font-semibold text-on-surface">No pudimos cargar tus citas</p>
-                      <p className="text-sm text-on-surface-variant">{errorCarga}</p>
-                      <button
-                        type="button"
-                        onClick={() => cargar()}
-                        className="mt-2 cursor-pointer rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container"
-                      >
-                        Reintentar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ) : filas.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-5 py-12">
-                    <div className="flex flex-col items-center gap-2 text-center">
-                      <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-surface-container text-on-surface-variant">
-                        <CalendarX size={22} aria-hidden="true" />
-                      </span>
-                      <p className="text-sm font-semibold text-on-surface">No hay citas para mostrar</p>
-                      <p className="text-sm text-on-surface-variant">
-                        {filtro === 'pasadas'
-                          ? 'Las citas que ya pasaron aparecerán aquí.'
-                          : 'Agenda una nueva cita para verla aquí.'}
-                      </p>
-                    </div>
+                    <EstadoLista
+                      errorCarga={errorCarga}
+                      hayBusqueda={hayBusqueda}
+                      filtro={filtro}
+                      onReintentar={reintentar}
+                    />
                   </td>
                 </tr>
               ) : (
-                filas.map((c) => (
+                datosPagina.map((c) => (
                   <tr
                     key={c.id}
-                    className="border-b border-outline-variant transition-colors last:border-b-0 hover:bg-surface-container"
+                    className="group border-b border-outline-variant transition-colors last:border-b-0 hover:bg-surface-container"
                   >
-                    <td className="whitespace-nowrap px-5 py-4 font-medium text-on-surface">
+                    <td className="px-5 py-3 font-medium whitespace-nowrap text-on-surface">
                       {mayuscula(fechaCorta(c.fecha))}
                     </td>
-                    <td className="whitespace-nowrap px-5 py-4 text-on-surface-variant">{hora(c.fecha)}</td>
-                    <td className="px-5 py-4 text-on-surface">{c.motivo}</td>
-                    <td className="whitespace-nowrap px-5 py-4 text-on-surface-variant">{c.doctor}</td>
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-3 whitespace-nowrap text-on-surface-variant">{hora(c.fecha)}</td>
+                    <td className="min-w-0 px-5 py-3 break-words text-on-surface">{c.motivo}</td>
+                    <td className="min-w-0 px-5 py-3 break-words text-on-surface-variant">{c.doctor}</td>
+                    <td className="px-5 py-3">
                       <BadgeEstado estado={c.estado} />
                     </td>
-                    <td className="px-5 py-4">
-                      {puedeActuar(c) ? (
-                        <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setPorReagendar(c)}
-                            aria-label={`Reagendar cita de ${c.motivo} del ${fechaCorta(c.fecha)}`}
-                            className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-outline-variant px-3 py-1.5 text-xs font-medium text-on-surface transition-colors hover:bg-surface"
-                          >
-                            <CalendarClock size={14} className="text-primary" aria-hidden="true" />
-                            Reagendar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setPorCancelar(c)}
-                            aria-label={`Cancelar cita de ${c.motivo} del ${fechaCorta(c.fecha)}`}
-                            className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-outline-variant px-3 py-1.5 text-xs font-medium text-error transition-colors hover:bg-error-container"
-                          >
-                            <X size={14} aria-hidden="true" />
-                            Cancelar
-                          </button>
-                        </div>
-                      ) : (
-                        <p className="text-right text-outline" aria-label="Sin acciones disponibles">
-                          —
-                        </p>
-                      )}
+                    <td className="sticky right-0 z-10 bg-on-primary py-3 pr-5 pl-2 whitespace-nowrap transition-colors group-hover:bg-surface-container">
+                      <AccionesCita
+                        cita={c}
+                        onReagendar={setPorReagendar}
+                        onCancelar={setPorCancelar}
+                      />
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
-        </div>
+        </section>
 
-        {!cargando && !errorCarga && (
-          <p className="border-t border-outline-variant px-5 py-3 text-xs text-on-surface-variant">
-            {filas.length === 1 ? '1 cita' : `${filas.length} citas`}
-          </p>
+        <ul className="m-0 list-none divide-y divide-outline-variant p-0 md:hidden" aria-busy={cargando}>
+          {cargando ? (
+            <TarjetasCargando />
+          ) : listaVacia ? (
+            <li className="px-4 py-12">
+              <EstadoLista
+                errorCarga={errorCarga}
+                hayBusqueda={hayBusqueda}
+                filtro={filtro}
+                onReintentar={reintentar}
+              />
+            </li>
+          ) : (
+            datosPagina.map((c) => (
+              <TarjetaCita
+                key={c.id}
+                cita={c}
+                onReagendar={setPorReagendar}
+                onCancelar={setPorCancelar}
+              />
+            ))
+          )}
+        </ul>
+
+        {mostrarPie && (
+          <PieTabla
+            total={totalFilas}
+            paginaActual={paginaActual}
+            totalPaginas={totalPaginas}
+            onPagina={setPagina}
+          />
         )}
-      </article>
+      </figure>
 
-      {porCancelar && (
-        <CancelarCitaModal cita={porCancelar} onCancelada={alCancelar} onCerrar={() => setPorCancelar(null)} />
-      )}
+      <ModalConfirmacion
+        isOpen={Boolean(porCancelar)}
+        onClose={() => setPorCancelar(null)}
+        onConfirm={confirmarCancelacion}
+        titulo="Cancelar cita"
+        mensaje={porCancelar ? <ResumenCitaCancelar cita={porCancelar} /> : null}
+        textoConfirmar="Cancelar cita"
+        esPeligro
+        palabraRequerida="CANCELAR"
+      />
       {porReagendar && (
         <ReagendarCitaModal cita={porReagendar} onReagendada={alReagendar} onCerrar={() => setPorReagendar(null)} />
       )}
@@ -337,15 +561,27 @@ export default function CitasTablaPage() {
   );
 }
 
-/* ---------- Filas de carga ---------- */
 function FilasCargando() {
   return Array.from({ length: 4 }, (_, i) => (
     <tr key={i} className="border-b border-outline-variant last:border-b-0" aria-hidden="true">
       {[24, 16, 36, 24, 20, 28].map((ancho, j) => (
-        <td key={j} className="px-5 py-4">
-          <div className="h-4 animate-pulse rounded bg-surface-container" style={{ width: `${ancho * 4}px`, maxWidth: '100%' }} />
+        <td key={j} className="px-5 py-3">
+          <div
+            className="h-4 max-w-full animate-pulse rounded bg-surface-container"
+            style={{ width: `${ancho * 4}px` }}
+          />
         </td>
       ))}
     </tr>
+  ));
+}
+
+function TarjetasCargando() {
+  return Array.from({ length: 4 }, (_, i) => (
+    <li key={i} className="space-y-2 px-4 py-4" aria-hidden="true">
+      <div className="h-4 w-40 animate-pulse rounded bg-surface-container" />
+      <div className="h-4 w-56 animate-pulse rounded bg-surface-container" />
+      <div className="h-4 w-32 animate-pulse rounded bg-surface-container" />
+    </li>
   ));
 }

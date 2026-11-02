@@ -88,19 +88,29 @@ const obtenerServicioUrgencia = async (idSede) => {
     return rows[0]?.id_servicio ?? null;
 };
 
-// Tipo de cita 'Urgencia'.
-// TODO: ajusta esta consulta a la estructura real de tipos_cita
+const SQL_TIPO_URGENCIA = `
+    SELECT idTipo FROM tipo_cita WHERE lower(nombre) IN ('urgencia', 'urgencias') LIMIT 1
+`;
+
+const errorSinTipoUrgencia = () =>
+    errorHttp(500, 'No pudimos agendar tu urgencia. Intenta de nuevo o llama a la clínica.');
+
 const obtenerIdTipoUrgencia = async () => {
-    const { rows } = await conexion.query(
-        `SELECT idTipo FROM tipos_cita WHERE lower(nombre) IN ('urgencia', 'urgencias') LIMIT 1`
-    );
-    if (!rows[0]) {
-        throw errorHttp(
-            500,
-            "No hay un tipo de cita llamado 'Urgencia'. Créalo en el catálogo de tipos de cita."
+    const { rows } = await conexion.query(SQL_TIPO_URGENCIA);
+    if (rows[0]?.idtipo) return rows[0].idtipo;
+
+    try {
+        const insertadas = await conexion.query(
+            `INSERT INTO tipo_cita (nombre) VALUES ('Urgencia') RETURNING idTipo`
         );
+        if (insertadas.rows[0]?.idtipo) return insertadas.rows[0].idtipo;
+    } catch (err) {
+        if (err.code !== '23505') throw err;
+        const otra = await conexion.query(SQL_TIPO_URGENCIA);
+        if (otra.rows[0]?.idtipo) return otra.rows[0].idtipo;
     }
-    return rows[0].idtipo;
+
+    throw errorSinTipoUrgencia();
 };
 
 // Primer espacio libre de hoy en la sede, a partir de la hora indicada.

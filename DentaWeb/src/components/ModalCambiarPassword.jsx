@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Eye, EyeOff, Lock, Check, Circle } from 'lucide-react';
 import { authApi } from '../services/api';
 
@@ -54,8 +54,8 @@ export default function ModalCambiarPassword({ isOpen, onClose, onExito }) {
   const [showPasswordNueva, setShowPasswordNueva] = useState(false);
   const [error, setError] = useState(null);
   const [cargando, setCargando] = useState(false);
-
-  if (!isOpen) return null;
+  const ocupadoRef = useRef(cargando);
+  ocupadoRef.current = cargando;
 
   const resetearYcerrar = () => {
     setPasswordActual('');
@@ -65,6 +65,23 @@ export default function ModalCambiarPassword({ isOpen, onClose, onExito }) {
     setError(null);
     onClose();
   };
+  const cerrarRef = useRef(resetearYcerrar);
+  cerrarRef.current = resetearYcerrar;
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const alPresionar = (e) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (ocupadoRef.current) return;
+      cerrarRef.current();
+    };
+    window.addEventListener('keydown', alPresionar);
+    return () => window.removeEventListener('keydown', alPresionar);
+  }, [isOpen]);
+
+  if (!isOpen) return null;
 
   const handleGuardar = async (e) => {
     e.preventDefault();
@@ -96,32 +113,32 @@ export default function ModalCambiarPassword({ isOpen, onClose, onExito }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-        <h3 className="mb-4 text-lg font-bold text-slate-800">Cambiar contraseña</h3>
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-on-primary">
+        <h3 className="mb-4 text-lg font-bold text-slate-800 dark:text-on-surface">Cambiar contraseña</h3>
 
           <form onSubmit={handleGuardar} className="flex flex-col gap-4">
             {error && (
-              <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</p>
+              <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-error-container dark:text-error">{error}</p>
             )}
             
             {/* Campo: Contraseña Actual */}
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Contraseña actual</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-on-surface">Contraseña actual</label>
               <div className="relative">
                 <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
-                  <Lock className="text-slate-400" size={18} />
+                  <Lock className="text-slate-400 dark:text-outline" size={18} />
                 </div>
                 <input
                   type={showPasswordActual ? "text" : "password"}
                   required
                   value={passwordActual}
                   onChange={(e) => setPasswordActual(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 p-2.5 pl-10 pr-12! text-sm outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                  className="w-full rounded-xl border border-slate-200 p-2.5 pl-10 pr-12! text-base leading-5 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPasswordActual(!showPasswordActual)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-on-surface"
                 >
                   {showPasswordActual ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -130,22 +147,22 @@ export default function ModalCambiarPassword({ isOpen, onClose, onExito }) {
 
             {/* Campo: Nueva Contraseña */}
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Nueva contraseña</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-on-surface">Nueva contraseña</label>
               <div className="relative">
                 <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
-                  <Lock className="text-slate-400" size={18} />
+                  <Lock className="text-slate-400 dark:text-outline" size={18} />
                 </div>
                 <input
                   type={showPasswordNueva ? "text" : "password"}
                   required
                   value={passwordNueva}
                   onChange={(e) => setPasswordNueva(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 p-2.5 pl-10 pr-12! text-sm outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                  className="w-full rounded-xl border border-slate-200 p-2.5 pl-10 pr-12! text-base leading-5 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPasswordNueva(!showPasswordNueva)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-on-surface"
                 >
                   {showPasswordNueva ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -162,11 +179,11 @@ export default function ModalCambiarPassword({ isOpen, onClose, onExito }) {
                     <li
                       key={regla.id}
                       className={`flex items-center gap-2 text-xs ${
-                        !mostrarFeedback ? "text-slate-400" : cumplida ? "text-teal-600" : "text-slate-400"
+                        !mostrarFeedback ? "text-slate-400 dark:text-outline" : cumplida ? "text-teal-600 dark:text-teal-400" : "text-slate-400 dark:text-outline"
                       }`}
                     >
                       {mostrarFeedback && cumplida ? (
-                        <Check className="shrink-0 text-teal-600" size={14} strokeWidth={2.5} />
+                        <Check className="shrink-0 text-teal-600 dark:text-teal-400" size={14} strokeWidth={2.5} />
                       ) : (
                         <Circle className="shrink-0 text-slate-300" size={14} />
                       )}
@@ -181,14 +198,14 @@ export default function ModalCambiarPassword({ isOpen, onClose, onExito }) {
               <button
                 type="button"
                 onClick={resetearYcerrar}
-                className="cursor-pointer rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                className="cursor-pointer rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-outline-variant dark:text-on-surface-variant dark:hover:bg-surface-container"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={cargando || !passwordActual || !passwordNueva}
-                className="cursor-pointer rounded-xl bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-600 disabled:cursor-not-allowed disabled:bg-slate-300"
+                className="cursor-pointer rounded-xl bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-600 disabled:cursor-not-allowed disabled:bg-slate-300 dark:disabled:bg-surface-container-high"
               >
                 {cargando ? 'Guardando...' : 'Actualizar contraseña'}
               </button>

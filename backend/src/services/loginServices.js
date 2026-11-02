@@ -35,7 +35,7 @@ export async function registrarPaciente({
         throw err;
     }
 }
-export async function login({ correo, contrasena }) {
+export async function login({ correo, contrasena, mantener = false }) {
     // 1. Buscar al usuario con su tipo, paquete y roles
     const { rows } = await conexion.query('SELECT * FROM fn_login_usuario($1)', [correo]);
     const user = rows[0];
@@ -59,7 +59,7 @@ export async function login({ correo, contrasena }) {
             roles: user.roles,
         },
         process.env.JWT_SECRET,
-        { expiresIn: '1h' }
+        { expiresIn: mantener ? '7d' : '1h' }
     );
 
     const usuario = {

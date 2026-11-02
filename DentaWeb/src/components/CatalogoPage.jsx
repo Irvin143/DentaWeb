@@ -94,7 +94,7 @@ function FlechaOrden({ activa, direccion }) {
     <Icono
       size={14}
       aria-hidden="true"
-      className={`shrink-0 text-slate-500 ${activa ? '' : 'invisible'}`}
+      className={`shrink-0 text-slate-500 dark:text-on-surface-variant ${activa ? '' : 'invisible'}`}
     />
   );
 }
@@ -108,11 +108,11 @@ function Interruptor({ activo, onClick }) {
       aria-label={activo ? 'Desactivar' : 'Reactivar'}
       title={activo ? 'Desactivar' : 'Reactivar'}
       onClick={onClick}
-      className={`relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors ${activo ? 'bg-teal-600' : 'bg-slate-300'}`}
+      className={`relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors ${activo ? 'bg-teal-600' : 'bg-slate-300 dark:bg-outline'}`}
     >
       <span
         aria-hidden="true"
-        className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${activo ? 'translate-x-5' : 'translate-x-0'}`}
+        className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform  ${activo ? 'translate-x-5' : 'translate-x-0'}`}
       />
     </button>
   );
@@ -240,7 +240,7 @@ export function CatalogoPage({
       : busqueda.trim()
         ? 'No se encontraron resultados.'
         : 'Aún no hay registros.';
-  const claseTextoTabla = !cargando && errorCarga ? 'text-red-600' : 'text-slate-500';
+  const claseTextoTabla = !cargando && errorCarga ? 'text-red-600 dark:text-error' : 'text-slate-500 dark:text-on-surface-variant';
   // Botón de ícono 1.875rem, interruptor 2.75rem, hueco 0.5rem, padding derecho 1.25rem.
   const anchoAccionesRem = hayAcciones
     ? 0.5 +
@@ -379,7 +379,7 @@ export function CatalogoPage({
     }
   };
 
-  const botonIcono = 'shrink-0 rounded-lg border border-slate-200 p-1.5 text-slate-600 transition-colors';
+  const botonIcono = 'shrink-0 rounded-lg border border-slate-200 dark:border-outline-variant p-1.5 text-slate-600 dark:text-on-surface-variant transition-colors';
   const medidaAcciones =
     anchoAccionesRem > 0
       ? {
@@ -392,12 +392,12 @@ export function CatalogoPage({
 
   return (
     <div>
-      <section className="flex min-h-screen flex-col gap-6 bg-slate-50/30 p-4 md:p-8">
+      <section className="flex min-h-screen flex-col gap-6 bg-slate-50/30 p-4 md:p-8 dark:bg-surface">
         {/* Encabezado */}
         <header className="flex flex-wrap items-start justify-between gap-4">
           <hgroup className="flex flex-col gap-2">
-            <h1 className="text-2xl font-bold text-slate-800">{titulo}</h1>
-            <p className="text-sm text-slate-500">{subtitulo}</p>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-on-surface">{titulo}</h1>
+            <p className="text-sm text-slate-500 dark:text-on-surface-variant">{subtitulo}</p>
           </hgroup>
 
           <button
@@ -411,11 +411,11 @@ export function CatalogoPage({
         </header>
 
         {/* Buscador y filtros */}
-        <search className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm">
+        <search className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 dark:border-outline-variant bg-white dark:bg-on-primary p-2.5 shadow-sm">
           <label className="relative min-w-0 flex-1 basis-48">
             <span className="sr-only">{placeholderBusqueda}</span>
             <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-outline"
               size={18}
             />
             <input
@@ -423,7 +423,7 @@ export function CatalogoPage({
               value={busqueda}
               onChange={handleBusqueda}
               placeholder={placeholderBusqueda}
-              className="w-full rounded-xl bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/20"
+              className="w-full rounded-xl bg-slate-50 py-2.5 pl-10 pr-4 text-base leading-5 outline-none transition-all focus:ring-2 focus:ring-teal-500/20 dark:bg-surface-container dark:text-on-surface dark:placeholder:text-on-surface-variant"
             />
           </label>
 
@@ -436,8 +436,8 @@ export function CatalogoPage({
             }
             className={`hidden shrink-0 cursor-pointer items-center gap-1.5 rounded-xl px-3 py-2.5 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/20 md:flex ${
               ordenandoPorRecientes
-                ? 'bg-teal-50 text-teal-700'
-                : 'bg-slate-50 text-slate-700 hover:text-slate-800'
+                ? 'bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-400'
+                : 'bg-slate-50 text-slate-700 hover:text-slate-800 dark:bg-surface-container dark:text-on-surface dark:hover:text-on-surface'
             }`}
           >
             {ordenandoPorRecientes && orden.direccion === 'asc' ? 'Más antiguos' : 'Más recientes'}
@@ -450,7 +450,7 @@ export function CatalogoPage({
               aria-label="Ordenar por"
               value={ordenandoPorRecientes ? ORDEN_RECIENTES : (columnaOrden ?? '')}
               onChange={(e) => elegirColumna(e.target.value)}
-              className="cursor-pointer rounded-xl bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition-all focus:ring-2 focus:ring-teal-500/20"
+              className="cursor-pointer rounded-xl bg-slate-50 dark:bg-surface-container px-3 py-2.5 text-base leading-5 text-slate-700 dark:text-on-surface outline-none transition-all focus:ring-2 focus:ring-teal-500/20"
             >
               {cols.map((col) => (
                 <option key={col.key} value={col.key}>
@@ -471,7 +471,7 @@ export function CatalogoPage({
                     ? 'Orden ascendente'
                     : 'Orden descendente'
               }
-              className="cursor-pointer rounded-xl bg-slate-50 p-2.5 text-slate-500 outline-none transition-all hover:text-slate-700 focus:ring-2 focus:ring-teal-500/20"
+              className="cursor-pointer rounded-xl bg-slate-50 p-2.5 text-slate-500 outline-none transition-all hover:text-slate-700 focus:ring-2 focus:ring-teal-500/20 dark:bg-surface-container dark:text-on-surface-variant dark:hover:text-on-surface"
             >
               {orden.direccion === 'asc' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
             </button>
@@ -480,11 +480,11 @@ export function CatalogoPage({
 
         {/* Tabla */}
         <main className="flex flex-col gap-4">
-          <figure className="m-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <figure className="m-0 overflow-hidden rounded-2xl border border-slate-200 dark:border-outline-variant bg-white dark:bg-on-primary shadow-sm">
             {/* Escritorio: tabla */}
             <section className="hidden overflow-x-hidden md:block">
-              <table className="w-full min-w-full table-fixed border-separate border-spacing-0 text-left text-sm text-slate-600">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <table className="w-full min-w-full table-fixed border-separate border-spacing-0 text-left text-sm text-slate-600 dark:text-on-surface-variant">
+                <thead className="border-b border-slate-200 dark:border-outline-variant bg-slate-50 dark:bg-surface-container text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-on-surface-variant">
                   <tr>
                     {cols.length > 0 && (
                       <th scope="col" className="w-20 px-5 py-3 whitespace-nowrap normal-case">
@@ -508,7 +508,7 @@ export function CatalogoPage({
                             type="button"
                             onClick={() => ordenarPor(col.key)}
                             aria-label={`${etiquetaColumna(col.label)}, orden ${siguiente}`}
-                            className="flex w-full min-w-0 cursor-pointer items-center gap-1.5 px-5 py-3 text-left whitespace-normal uppercase transition-colors hover:bg-slate-100 hover:text-slate-700"
+                            className="flex w-full min-w-0 cursor-pointer items-center gap-1.5 px-5 py-3 text-left whitespace-normal uppercase transition-colors hover:bg-slate-100 dark:hover:bg-surface-container hover:text-slate-700 dark:text-on-surface dark:hover:text-on-surface"
                           >
                             <span className="min-w-0 break-words">{col.label}</span>
                             <FlechaOrden activa={activa} direccion={orden.direccion} />
@@ -520,14 +520,14 @@ export function CatalogoPage({
                       <th
                         scope="col"
                         style={medidaAcciones}
-                        className="sticky right-0 z-20 bg-slate-50 py-3 pl-2 pr-5 text-right whitespace-nowrap"
+                        className="sticky right-0 z-20 bg-slate-50 dark:bg-surface-container py-3 pl-2 pr-5 text-right whitespace-nowrap"
                       >
                         Acciones
                       </th>
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-outline-variant">
                   {cargando || errorCarga || totalRegistros === 0 ? (
                     <tr>
                       <td
@@ -543,22 +543,22 @@ export function CatalogoPage({
                         key={fila.id ?? rowIndex}
                         className={
                           estaInactiva(fila)
-                            ? 'group bg-slate-50 transition-colors'
-                            : 'group transition-colors hover:bg-slate-50/50'
+                            ? 'group bg-slate-50 dark:bg-surface-container transition-colors'
+                            : 'group transition-colors hover:bg-slate-50/50 dark:hover:bg-surface-container/50'
                         }
                       >
                         <td
-                          className={`w-20 px-5 py-3 align-top whitespace-nowrap ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
+                          className={`w-20 px-5 py-3 align-top whitespace-nowrap ${estaInactiva(fila) ? 'text-slate-400 dark:text-outline' : 'text-slate-700 dark:text-on-surface'}`}
                         >
                           {inicio + rowIndex + 1}
                         </td>
                         {cols.map((col) => (
                           <td
                             key={col.key}
-                            className={`w-auto min-w-0 break-words px-5 py-3 align-top ${col.key === 'estado' ? 'uppercase' : ''} ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
+                            className={`w-auto min-w-0 break-words px-5 py-3 align-top ${col.key === 'estado' ? 'uppercase' : ''} ${estaInactiva(fila) ? 'text-slate-400 dark:text-outline' : 'text-slate-700 dark:text-on-surface'}`}
                           >
                             {esVacio(fila[col.key]) ? (
-                              <span className="text-slate-400">—</span>
+                              <span className="text-slate-400 dark:text-outline">—</span>
                             ) : col.render ? (
                               col.render(fila[col.key], fila)
                             ) : (
@@ -571,8 +571,8 @@ export function CatalogoPage({
                             style={medidaAcciones}
                             className={`sticky right-0 z-10 py-3 pl-2 pr-5 align-top whitespace-nowrap ${
                               estaInactiva(fila)
-                                ? 'bg-slate-50'
-                                : 'bg-white group-hover:bg-slate-50'
+                                ? 'bg-slate-50 dark:bg-surface-container'
+                                : 'bg-white transition-colors group-hover:bg-slate-50/50 dark:bg-on-primary dark:group-hover:bg-surface-container/50'
                             }`}
                           >
                             <div className="flex w-full items-center justify-end gap-2">
@@ -582,7 +582,7 @@ export function CatalogoPage({
                                   onClick={() => handleEditar(fila)}
                                   title="Editar"
                                   aria-label="Editar"
-                                  className={`${botonIcono} cursor-pointer hover:border-slate-300 hover:bg-slate-100 hover:text-slate-800`}
+                                  className={`${botonIcono} cursor-pointer hover:border-slate-300 hover:bg-slate-100 dark:hover:bg-surface-container hover:text-slate-800 dark:text-on-surface dark:hover:text-on-surface dark:hover:border-outline-variant dark:hover:bg-surface-container dark:hover:text-on-surface`}
                                 >
                                   <Pencil size={16} />
                                 </button>
@@ -604,7 +604,7 @@ export function CatalogoPage({
                                   onClick={() => pedirConfirmacion(fila, 'borrar')}
                                   title="Eliminar permanentemente"
                                   aria-label="Eliminar permanentemente"
-                                  className={`${botonIcono} cursor-pointer hover:border-red-200 hover:bg-red-50 hover:text-red-600`}
+                                  className={`${botonIcono} cursor-pointer hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:hover:border-error dark:hover:bg-error-container dark:hover:text-error`}
                                 >
                                   <Trash2 size={16} />
                                 </button>
@@ -620,7 +620,7 @@ export function CatalogoPage({
             </section>
 
             {/* Mobile: tarjetas */}
-            <ul className="m-0 list-none divide-y divide-slate-100 p-0 md:hidden">
+            <ul className="m-0 list-none divide-y divide-slate-100 dark:divide-outline-variant p-0 md:hidden">
               {cargando || errorCarga || totalRegistros === 0 ? (
                 <li className={`px-4 py-12 text-center text-sm ${claseTextoTabla}`}>
                   {textoTabla}
@@ -629,17 +629,17 @@ export function CatalogoPage({
                 datosPagina.map((fila, rowIndex) => (
                   <li
                     key={fila.id ?? rowIndex}
-                    className={estaInactiva(fila) ? 'bg-slate-50 px-4 py-4' : 'px-4 py-4'}
+                    className={estaInactiva(fila) ? 'bg-slate-50 dark:bg-surface-container px-4 py-4' : 'px-4 py-4'}
                   >
                     <dl className="m-0 grid gap-2">
                       <div className="grid grid-cols-[6.5rem_1fr] gap-3 text-sm">
                         <dt
-                          className={`text-xs font-semibold normal-case tracking-wider ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-500'}`}
+                          className={`text-xs font-semibold normal-case tracking-wider ${estaInactiva(fila) ? 'text-slate-400 dark:text-outline' : 'text-slate-500 dark:text-on-surface-variant'}`}
                         >
                           No.
                         </dt>
                         <dd
-                          className={`m-0 break-words ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
+                          className={`m-0 break-words ${estaInactiva(fila) ? 'text-slate-400 dark:text-outline' : 'text-slate-700 dark:text-on-surface'}`}
                         >
                           {inicio + rowIndex + 1}
                         </dd>
@@ -647,15 +647,15 @@ export function CatalogoPage({
                       {cols.map((col) => (
                         <div key={col.key} className="grid grid-cols-[6.5rem_1fr] gap-3 text-sm">
                           <dt
-                            className={`text-xs font-semibold uppercase tracking-wider ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-500'}`}
+                            className={`text-xs font-semibold uppercase tracking-wider ${estaInactiva(fila) ? 'text-slate-400 dark:text-outline' : 'text-slate-500 dark:text-on-surface-variant'}`}
                           >
                             {col.label}
                           </dt>
                           <dd
-                            className={`m-0 break-words ${col.key === 'estado' ? 'uppercase' : ''} ${estaInactiva(fila) ? 'text-slate-400' : 'text-slate-700'}`}
+                            className={`m-0 break-words ${col.key === 'estado' ? 'uppercase' : ''} ${estaInactiva(fila) ? 'text-slate-400 dark:text-outline' : 'text-slate-700 dark:text-on-surface'}`}
                           >
                             {esVacio(fila[col.key]) ? (
-                              <span className="text-slate-400">—</span>
+                              <span className="text-slate-400 dark:text-outline">—</span>
                             ) : col.render ? (
                               col.render(fila[col.key], fila)
                             ) : (
@@ -672,7 +672,7 @@ export function CatalogoPage({
                           <button
                             type="button"
                             onClick={() => handleEditar(fila)}
-                            className={`${botonIcono} flex cursor-pointer items-center gap-1.5 px-3 text-xs font-medium hover:border-slate-300 hover:bg-slate-100 hover:text-slate-800`}
+                            className={`${botonIcono} flex cursor-pointer items-center gap-1.5 px-3 text-xs font-medium hover:border-slate-300 hover:bg-slate-100 dark:hover:bg-surface-container hover:text-slate-800 dark:text-on-surface dark:hover:text-on-surface dark:hover:border-outline-variant dark:hover:bg-surface-container dark:hover:text-on-surface`}
                           >
                             <Pencil size={14} />
                             Editar
@@ -691,7 +691,7 @@ export function CatalogoPage({
                             type="button"
                             onClick={() => pedirConfirmacion(fila, 'borrar')}
                             aria-label="Eliminar permanentemente"
-                            className={`${botonIcono} flex cursor-pointer items-center gap-1.5 px-3 text-xs font-medium hover:border-red-200 hover:bg-red-50 hover:text-red-600`}
+                            className={`${botonIcono} flex cursor-pointer items-center gap-1.5 px-3 text-xs font-medium hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:hover:border-error dark:hover:bg-error-container dark:hover:text-error`}
                           >
                             <Trash2 size={14} />
                             Eliminar
@@ -708,7 +708,7 @@ export function CatalogoPage({
             {!cargando && totalRegistros > 0 && (
               <nav
                 aria-label="Paginación"
-                className="flex items-center justify-end border-t border-slate-200 px-5 py-3"
+                className="flex items-center justify-end border-t border-slate-200 dark:border-outline-variant px-5 py-3"
               >
                 <menu className="m-0 flex items-center gap-2 p-0">
                   <button
@@ -716,12 +716,12 @@ export function CatalogoPage({
                     onClick={() => setPagina(paginaActual - 1)}
                     disabled={paginaActual === 1}
                     aria-label="Página anterior"
-                    className="cursor-pointer rounded-lg border border-slate-200 p-1.5 text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="cursor-pointer rounded-lg border border-slate-200 p-1.5 text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-outline-variant dark:text-on-surface-variant dark:hover:bg-surface-container"
                   >
                     <ChevronLeft size={16} />
                   </button>
 
-                  <span className="text-xs font-medium text-slate-600">
+                  <span className="text-xs font-medium text-slate-600 dark:text-on-surface-variant">
                     Página {paginaActual} de {totalPaginas}
                   </span>
 
@@ -730,7 +730,7 @@ export function CatalogoPage({
                     onClick={() => setPagina(paginaActual + 1)}
                     disabled={paginaActual === totalPaginas}
                     aria-label="Página siguiente"
-                    className="cursor-pointer rounded-lg border border-slate-200 p-1.5 text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="cursor-pointer rounded-lg border border-slate-200 p-1.5 text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-outline-variant dark:text-on-surface-variant dark:hover:bg-surface-container"
                   >
                     <ChevronRight size={16} />
                   </button>
