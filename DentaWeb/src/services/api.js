@@ -354,28 +354,32 @@ export const tiposUsuarioApi = {
 };
 
 export const agendarCitasApi = {
-  horarios(idSede, fecha) {
+  sedes(idServicio) {
+    return apiRequest("/api/agendar/sedes", { method: "GET", query: { idservicio: idServicio } });
+  },
+  odontologoFijo(idServicio) {
+    return apiRequest("/api/agendar/odontologo-fijo", { method: "GET", query: { idservicio: idServicio } });
+  },
+  horarios(idSede, fecha, idServicio) {
     return apiRequest("/api/agendar/disponibilidad", {
       method: "GET",
-      query: { idsede: idSede, fecha },
+      query: { idsede: idSede, fecha, idservicio: idServicio },
     });
   },
-
-  crear(payload) {
-    return apiRequest("/api/agendar/citas", { method: "POST", body: payload });
-  },
-  
-  odontologoPropuesto(idSede, fecha, hora) {
-    return apiRequest("/api/agendar/odontologo-propuesto", {
-      method: "GET",
-      query: { idsede: idSede, fecha, hora },
-    });
-  },
-  dias(idSede, dias) {
+  dias(idSede, dias, idServicio) {
     return apiRequest("/api/agendar/dias-disponibles", {
       method: "GET",
-      query: { idsede: idSede, dias },
+      query: { idsede: idSede, dias, idservicio: idServicio },
     });
+  },
+  odontologoPropuesto(idSede, fecha, hora, idServicio) {
+    return apiRequest("/api/agendar/odontologo-propuesto", {
+      method: "GET",
+      query: { idsede: idSede, fecha, hora, idservicio: idServicio },
+    });
+  },
+  crear(payload) {
+    return apiRequest("/api/agendar/citas", { method: "POST", body: payload });
   },
 };
 

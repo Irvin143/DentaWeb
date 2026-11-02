@@ -17,28 +17,28 @@ function FilaResumen({ icono: Icono, titulo, valor, detalle, extra, onEditar }) 
     <div className="flex items-start gap-3 py-3">
       <span
         className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-          valor ? 'bg-teal-50 dark:bg-teal-950 text-teal-600 dark:text-teal-400' : 'bg-slate-100 dark:bg-surface-container text-slate-400 dark:text-outline'
+          valor ? 'bg-teal-50 text-teal-600' : 'bg-slate-100 text-slate-400'
         }`}
       >
         <Icono size={16} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-outline">{titulo}</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{titulo}</p>
         {valor ? (
           <>
-            <p className="break-words text-sm font-bold text-slate-800 dark:text-on-surface">{valor}</p>
-            {detalle && <p className="break-words text-xs text-slate-500 dark:text-on-surface-variant">{detalle}</p>}
+            <p className="break-words text-sm font-bold text-slate-800">{valor}</p>
+            {detalle && <p className="break-words text-xs text-slate-500">{detalle}</p>}
             {extra}
           </>
         ) : (
-          <p className="text-sm text-slate-400 dark:text-outline">Pendiente</p>
+          <p className="text-sm text-slate-400">Pendiente</p>
         )}
       </div>
       {onEditar && valor && (
         <button
           type="button"
           onClick={onEditar}
-          className="shrink-0 cursor-pointer text-xs font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
+          className="shrink-0 cursor-pointer text-xs font-semibold text-teal-600 hover:text-teal-700"
         >
           Editar
         </button>
@@ -64,9 +64,9 @@ export default function ResumenCita({
   const editar = (paso) => (onEditarPaso ? () => onEditarPaso(paso) : undefined);
 
   return (
-    <aside className="rounded-2xl border border-slate-200 dark:border-outline-variant bg-white dark:bg-on-primary p-5">
-      <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-on-surface-variant">{titulo}</h2>
-      <div className="divide-y divide-slate-100 dark:divide-outline-variant">
+    <aside className="rounded-2xl border border-slate-200 bg-white p-5">
+      <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-slate-500">{titulo}</h2>
+      <div className="divide-y divide-slate-100">
         <FilaResumen
           icono={IconoServicio}
           titulo="Servicio"
@@ -107,15 +107,15 @@ export default function ResumenCita({
 }
 
 // Pantalla final cuando la cita ya quedó agendada
-export function CitaConfirmada({ resumen, odontologo, onVolver }) {
+export function CitaConfirmada({ resumen, odontologo, cabeceraNueva = false, onVolver }) {
   return (
     <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-6 lg:my-auto">
-      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 dark:bg-teal-950 text-teal-600 dark:text-teal-400">
+      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 text-teal-600">
         <CheckCircle2 size={36} />
       </span>
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-on-surface">¡Tu cita está agendada!</h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-on-surface-variant">
+        <h1 className="text-2xl font-bold text-slate-800">¡Tu cita está agendada!</h1>
+        <p className="mt-1 text-sm text-slate-500">
           Te enviaremos la confirmación por WhatsApp y correo.
         </p>
       </div>
@@ -127,6 +127,12 @@ export function CitaConfirmada({ resumen, odontologo, onVolver }) {
           mostrarOdontologo
         />
       </div>
+      {cabeceraNueva && odontologo?.nombre && (
+        <p className="w-full rounded-xl bg-teal-50 p-3 text-center text-sm text-teal-800">
+          {odontologo.nombre} quedó como tu odontólogo: en tus próximas consultas solo verás sus
+          horarios.
+        </p>
+      )}
       <button
         type="button"
         onClick={onVolver}

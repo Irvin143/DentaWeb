@@ -20,9 +20,60 @@ const horaValida = (valor) => /^([01]\d|2[0-3]):[0-5]\d$/.test(valor ?? '');
 
 const MAX_MOTIVO = 500;
 
-// GET /disponibilidad?idsede=1&fecha=2026-10-28
+// idservicio es opcional en las consultas; si viene, debe ser válido
+const idServicioInvalido = (valor) => valor !== undefined && !idValido(valor);
+
+// Odontólogo de cabecera que corresponde a este servicio para quien hace la petición:
+// { id_odontologo, nombre, cedula } o null (sin restricción: no es paciente, no tiene
+// odontólogo, o el servicio no es una consulta).
+const odontologoFijoDe = async (req, idServicio) => {
+    const { sub } = req.usuario || {};
+    if (!sub || idServicio === undefined) return null;
+
+    const idPaciente = await agendarService.obtenerIdPacientePorUsuario(sub);
+    return agendarService.obtenerOdontologoFijo({ idPaciente, idServicio: Number(idServicio) });
+};
+
+// GET /agendar/sedes?idservicio=1
+// Sedes que ofrecen el servicio (solo donde atiende su odontólogo de cabecera, si tiene).
+export const listarSedes = async (req, res) => {
+    const { idservicio } = req.query;
+    if (!idValido(idservicio)) {
+        return res.status(400).json({ error: 'idservicio debe ser un entero positivo' });
+    }
+
+    try {
+        const { sub } = req.usuario || {};
+        const idPaciente = sub ? await agendarService.obtenerIdPacientePorUsuario(sub) : null;
+        res.json(
+            await agendarService.obtenerSedesParaAgendar({
+                idServicio: Number(idservicio),
+                idPaciente,
+            })
+        );
+    } catch (err) {
+        responderError(res, err);
+    }
+};
+
+// GET /agendar/odontologo-fijo?idservicio=1
+// Odontólogo de cabecera del paciente para ese servicio. Responde { odontologo: {...} | null }
+export const miOdontologo = async (req, res) => {
+    const { idservicio } = req.query;
+    if (!idValido(idservicio)) {
+        return res.status(400).json({ error: 'idservicio debe ser un entero positivo' });
+    }
+
+    try {
+        res.json({ odontologo: await odontologoFijoDe(req, idservicio) });
+    } catch (err) {
+        responderError(res, err);
+    }
+};
+
+// GET /agendar/disponibilidad?idsede=1&fecha=2026-10-28&idservicio=1
 export const listar = async (req, res) => {
-    const { idsede, fecha } = req.query;
+    const { idsede, fecha, idservicio } = req.query;
 
     if (!idValido(idsede)) {
         return res.status(400).json({ error: 'idsede debe ser un entero positivo' });
@@ -30,11 +81,16 @@ export const listar = async (req, res) => {
     if (!fechaValida(fecha)) {
         return res.status(400).json({ error: 'fecha debe tener el formato AAAA-MM-DD' });
     }
+    if (idServicioInvalido(idservicio)) {
+        return res.status(400).json({ error: 'idservicio debe ser un entero positivo' });
+    }
 
     try {
+        const fijo = await odontologoFijoDe(req, idservicio);
         const disponibilidad = await agendarService.obtenerHorariosDisponibles({
             idClinica: Number(idsede),
             fecha,
+            idOdontologo: fijo?.id_odontologo ?? null,
         });
         res.json(disponibilidad);
     } catch (err) {
@@ -42,10 +98,10 @@ export const listar = async (req, res) => {
     }
 };
 
-// GET /agendar/dias-disponibles?idsede=1&dias=30
+// GET /agendar/dias-disponibles?idsede=1&dias=30&idservicio=1
 // Días con al menos un horario libre en la sede. Responde { dias: ['AAAA-MM-DD', ...] }
 export const listarDias = async (req, res) => {
-    const { idsede } = req.query;
+    const { idsede, idservicio } = req.query;
     const dias = req.query.dias === undefined ? 30 : Number(req.query.dias);
 
     if (!idValido(idsede)) {
@@ -54,18 +110,28 @@ export const listarDias = async (req, res) => {
     if (!Number.isInteger(dias) || dias < 1 || dias > 60) {
         return res.status(400).json({ error: 'dias debe ser un entero entre 1 y 60' });
     }
+    if (idServicioInvalido(idservicio)) {
+        return res.status(400).json({ error: 'idservicio debe ser un entero positivo' });
+    }
 
     try {
-        res.json(await agendarService.obtenerDiasDisponibles({ idClinica: Number(idsede), dias }));
+        const fijo = await odontologoFijoDe(req, idservicio);
+        res.json(
+            await agendarService.obtenerDiasDisponibles({
+                idClinica: Number(idsede),
+                dias,
+                idOdontologo: fijo?.id_odontologo ?? null,
+            })
+        );
     } catch (err) {
         responderError(res, err);
     }
 };
 
-// GET /agendar/odontologo-propuesto?idsede=1&fecha=2026-10-28&hora=09:30
+// GET /agendar/odontologo-propuesto?idsede=1&fecha=2026-10-28&hora=09:30&idservicio=1
 // Odontólogo que se asignaría hoy a ese horario. Responde { odontologo: {...} | null }
 export const proponerOdontologo = async (req, res) => {
-    const { idsede, fecha, hora } = req.query;
+    const { idsede, fecha, hora, idservicio } = req.query;
 
     if (!idValido(idsede)) {
         return res.status(400).json({ error: 'idsede debe ser un entero positivo' });
@@ -76,12 +142,17 @@ export const proponerOdontologo = async (req, res) => {
     if (!horaValida(hora)) {
         return res.status(400).json({ error: 'hora debe tener el formato HH:mm' });
     }
+    if (idServicioInvalido(idservicio)) {
+        return res.status(400).json({ error: 'idservicio debe ser un entero positivo' });
+    }
 
     try {
+        const fijo = await odontologoFijoDe(req, idservicio);
         const odontologo = await agendarService.obtenerOdontologoPropuesto({
             idClinica: Number(idsede),
             fecha,
             hora,
+            idOdontologo: fijo?.id_odontologo ?? null,
         });
         res.json({ odontologo });
     } catch (err) {
@@ -91,7 +162,7 @@ export const proponerOdontologo = async (req, res) => {
 
 // POST /citas
 // body: { id_servicio, id_sede, fecha: 'AAAA-MM-DD', hora: 'HH:mm', motivo?, idtipo? }
-// El paciente sale de la sesión; el odontólogo lo asigna el sistema.
+// El paciente sale de la sesión; el odontólogo lo asigna el sistema (el de cabecera, si tiene).
 export const crear = async (req, res) => {
     const { sub } = req.usuario || {};
     const { id_servicio, id_sede, fecha, hora, idtipo } = req.body ?? {};
@@ -131,10 +202,12 @@ export const crear = async (req, res) => {
             motivo,
             idTipo: idtipo != null ? Number(idtipo) : null,
         });
-        res.status(201).json(cita);
 
-        // El correo se manda después de responder y sin esperar: si falla, la cita sigue agendada
-        agendarService.notificarCitaPorCorreo(cita.id_cita);
+        // Se espera el correo antes de responder: en Vercel, el trabajo posterior a la respuesta
+        // puede cortarse. Esta función nunca lanza error.
+        await agendarService.notificarCitaPorCorreo(cita.id_cita);
+
+        res.status(201).json(cita);
     } catch (err) {
         responderError(res, err);
     }

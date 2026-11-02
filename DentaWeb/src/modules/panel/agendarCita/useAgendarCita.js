@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 // TODO: ajusta la ruta a donde tengas tu api.js (la carpeta agendarCita está junto a AgendarCitaView.jsx)
-import { serviciosApi, clinicasApi, agendarCitasApi } from '../../../services/api.js';
+import { serviciosApi, agendarCitasApi } from '../../../services/api.js';
 // TODO: ajusta la ruta a donde guardes useToasts.js
 import { useToasts } from '../../../hooks/useToasts.js';
 import {
@@ -111,8 +111,8 @@ function useSedes(idServicio) {
     let cancelado = false;
     setCargando(true);
 
-    clinicasApi
-      .listarSedes(idServicio)
+    agendarCitasApi
+      .sedes(idServicio)
       .then((res) => {
         if (cancelado) return;
         const lista = Array.isArray(res) ? res : res?.data ?? res?.sedes ?? [];
@@ -138,9 +138,39 @@ function useSedes(idServicio) {
 }
 
 /* ============================================================
+   Odontólogo de cabecera del paciente para el servicio elegido.
+   null si no tiene uno, o si el servicio no se atiende con él (estudios y urgencias).
+   ============================================================ */
+function useOdontologoFijo(idServicio) {
+  const [odontologo, setOdontologo] = useState(null);
+
+  useEffect(() => {
+    setOdontologo(null);
+    if (!idServicio) return undefined;
+
+    let cancelado = false;
+    agendarCitasApi
+      .odontologoFijo(idServicio)
+      .then((res) => {
+        if (!cancelado) setOdontologo(res?.odontologo ?? null);
+      })
+      .catch((err) => {
+        // Si falla, simplemente no se muestra el aviso; el servidor aplica la regla igual
+        console.error('Error al consultar el odontólogo de cabecera:', err);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [idServicio]);
+
+  return odontologo;
+}
+
+/* ============================================================
    Días en los que la sede tiene horarios libres (solo esos se ofrecen en la tira de días)
    ============================================================ */
-function useDiasDisponibles(idSede) {
+function useDiasDisponibles(idSede, idServicio) {
   const [dias, setDias] = useState([]); // ['AAAA-MM-DD', ...]
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(false);
@@ -159,7 +189,7 @@ function useDiasDisponibles(idSede) {
     setCargando(true);
 
     agendarCitasApi
-      .dias(idSede, DIAS_A_CONSULTAR)
+      .dias(idSede, DIAS_A_CONSULTAR, idServicio)
       .then((res) => {
         if (cancelado) return;
         setDias(res?.dias ?? []);
@@ -176,7 +206,7 @@ function useDiasDisponibles(idSede) {
     return () => {
       cancelado = true;
     };
-  }, [idSede, intento]);
+  }, [idSede, idServicio, intento]);
 
   const reintentar = useCallback(() => setIntento((n) => n + 1), []);
 
@@ -187,7 +217,7 @@ function useDiasDisponibles(idSede) {
    Horarios libres de la sede en la fecha elegida.
    Si ese día no hay ninguno, el backend también devuelve el próximo día con espacio.
    ============================================================ */
-function useHorarios(idSede, fecha) {
+function useHorarios(idSede, fecha, idServicio) {
   const [horas, setHoras] = useState([]); // ['09:00', '09:30', ...]
   const [proximoDia, setProximoDia] = useState(null); // 'AAAA-MM-DD' | null
   const [cargando, setCargando] = useState(false);
@@ -208,7 +238,7 @@ function useHorarios(idSede, fecha) {
     setCargando(true);
 
     agendarCitasApi
-      .horarios(idSede, fecha)
+      .horarios(idSede, fecha, idServicio)
       .then((res) => {
         if (cancelado) return;
         setHoras(res?.horas ?? []);
@@ -226,7 +256,7 @@ function useHorarios(idSede, fecha) {
     return () => {
       cancelado = true;
     };
-  }, [idSede, fecha, intento]);
+  }, [idSede, fecha, idServicio, intento]);
 
   const reintentar = useCallback(() => setIntento((n) => n + 1), []);
 
@@ -238,7 +268,7 @@ function useHorarios(idSede, fecha) {
    Es una propuesta: al confirmar, el servidor vuelve a calcular y puede asignar a otro.
    consultado = ya hubo respuesta; con consultado y sin odontologo, el horario se llenó.
    ============================================================ */
-function useOdontologoPropuesto(idSede, fecha, hora, activo) {
+function useOdontologoPropuesto(idSede, fecha, hora, idServicio, activo) {
   const [odontologo, setOdontologo] = useState(null);
   const [consultado, setConsultado] = useState(false);
   const [cargando, setCargando] = useState(false);
@@ -259,7 +289,7 @@ function useOdontologoPropuesto(idSede, fecha, hora, activo) {
     setCargando(true);
 
     agendarCitasApi
-      .odontologoPropuesto(idSede, fecha, hora)
+      .odontologoPropuesto(idSede, fecha, hora, idServicio)
       .then((res) => {
         if (cancelado) return;
         setOdontologo(res?.odontologo ?? null);
@@ -277,7 +307,7 @@ function useOdontologoPropuesto(idSede, fecha, hora, activo) {
     return () => {
       cancelado = true;
     };
-  }, [activo, idSede, fecha, hora, intento]);
+  }, [activo, idSede, fecha, hora, idServicio, intento]);
 
   const reintentar = useCallback(() => setIntento((n) => n + 1), []);
 
@@ -303,16 +333,20 @@ export function useAgendarCita() {
   const toasts = useToasts();
   // El odontólogo lo asigna el backend al confirmar. Formato esperado: { nombre }
   const [odontologoAsignado, setOdontologoAsignado] = useState(null);
+  // true si con esta cita el odontólogo quedó como su odontólogo de cabecera
+  const [cabeceraNueva, setCabeceraNueva] = useState(false);
 
   const catalogo = useServicios();
   const sedesData = useSedes(form.id_servicio);
   const { sedes } = sedesData;
-  const diasData = useDiasDisponibles(form.id_sede);
-  const horariosData = useHorarios(form.id_sede, form.fecha);
+  const odontologoFijo = useOdontologoFijo(form.id_servicio);
+  const diasData = useDiasDisponibles(form.id_sede, form.id_servicio);
+  const horariosData = useHorarios(form.id_sede, form.fecha, form.id_servicio);
   const propuesta = useOdontologoPropuesto(
     form.id_sede,
     form.fecha,
     form.hora,
+    form.id_servicio,
     paso === TOTAL_PASOS && !confirmada
   );
 
@@ -391,6 +425,7 @@ export function useAgendarCita() {
         motivo: form.motivo.trim() || null,
       });
       setOdontologoAsignado(cita?.odontologo ?? null);
+      setCabeceraNueva(Boolean(cita?.cabecera_nueva));
       setConfirmada(true);
       toasts.exito(`¡Cita agendada! ${formatearFecha(form.fecha)}, ${formatearHora(form.hora)}.`);
     } catch (err) {
@@ -421,6 +456,8 @@ export function useAgendarCita() {
     diasData,
     horariosData,
     propuesta,
+    odontologoFijo,
+    cabeceraNueva,
     servicioActivo,
     resumen,
     puedeContinuar,
