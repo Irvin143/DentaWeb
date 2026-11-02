@@ -89,10 +89,10 @@ const obtenerServicioUrgencia = async (idSede) => {
 };
 
 // Tipo de cita 'Urgencia'.
-// TODO: ajusta esta consulta a la estructura real de tipos_cita
+// TODO: ajusta esta consulta a la estructura real de tipo_cita
 const obtenerIdTipoUrgencia = async () => {
     const { rows } = await conexion.query(
-        `SELECT idTipo FROM tipos_cita WHERE lower(nombre) IN ('urgencia', 'urgencias') LIMIT 1`
+        `SELECT idTipo FROM tipo_cita WHERE lower(nombre) IN ('urgencia', 'urgencias') LIMIT 1`
     );
     if (!rows[0]) {
         throw errorHttp(
