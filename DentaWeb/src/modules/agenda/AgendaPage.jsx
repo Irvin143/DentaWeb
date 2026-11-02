@@ -33,6 +33,12 @@ const aYmd = (date) => {
   return `${y}-${m}-${d}`;
 };
 
+const parseYmd = (ymd) => {
+  const [y, m, d] = String(ymd ?? '').slice(0, 10).split('-').map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
+};
+
 const addDays = (date, n) => {
   const x = inicioDia(date);
   x.setDate(x.getDate() + n);
@@ -75,6 +81,19 @@ const etiquetaPeriodo = (vista, ancla) => {
   if (vista === 'semana') return etiquetaRango(lunesDe(ancla));
   return capitalizar(
     ancla.toLocaleDateString(LOCALE, {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+  );
+};
+
+const fechaLarga = (ymd) => {
+  const date = parseYmd(ymd);
+  if (!date) return '';
+  return capitalizar(
+    date.toLocaleDateString(LOCALE, {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
@@ -161,47 +180,123 @@ const moverPeriodo = (ancla, vista, dir) => {
   return addDays(ancla, dir);
 };
 
-const mensajeVacio = {
-  mes: 'No hay citas en este mes.',
-  semana: 'No hay citas en esta semana.',
-  dia: 'No hay citas en este día.',
-};
-
 const etiquetaNav = {
   mes: { prev: 'Mes anterior', next: 'Mes siguiente' },
   semana: { prev: 'Semana anterior', next: 'Semana siguiente' },
   dia: { prev: 'Día anterior', next: 'Día siguiente' },
 };
 
-function TarjetaCita({ cita, densa, onAbrir }) {
+/* ---------- Recuadro de un día (solo resumen breve) ---------- */
+
+function CeldaDia({
+  dia,
+  citas,
+  esHoy,
+  deshabilitada = false,
+  seleccionada = false,
+  maxLineas = 3,
+  etiqueta,
+  onSeleccionar,
+  className = '',
+}) {
+  const visibles = citas.slice(0, maxLineas);
+  const restantes = citas.length - visibles.length;
+
+  const fondo = deshabilitada
+    ? 'bg-surface/70 cursor-default'
+    : seleccionada
+      ? 'bg-teal-100 ring-2 ring-teal-500 ring-inset dark:bg-teal-900/60'
+      : esHoy
+        ? 'bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 dark:hover:bg-teal-900/60'
+        : 'hover:bg-surface-container cursor-pointer';
+
+  return (
+    <button
+      type="button"
+      disabled={deshabilitada}
+      aria-pressed={seleccionada}
+      onClick={() => onSeleccionar?.(aYmd(dia))}
+      className={`flex min-w-0 flex-col gap-1 p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-inset ${fondo} ${className}`}
+    >
+      <span className="flex items-center justify-between gap-2">
+        <span className="flex items-center gap-2">
+          {etiqueta ? (
+            <span
+              className={`text-[11px] font-bold tracking-wider uppercase ${
+                esHoy ? 'text-teal-700 dark:text-teal-400' : 'text-on-surface-variant'
+              }`}
+            >
+              {etiqueta}
+            </span>
+          ) : null}
+          <span
+            className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${
+              deshabilitada
+                ? 'text-outline'
+                : esHoy
+                  ? 'bg-teal-600 text-white'
+                  : 'text-on-surface'
+            }`}
+          >
+            {dia.getDate()}
+          </span>
+        </span>
+        {!deshabilitada && citas.length > 0 ? (
+          <span className="rounded-full bg-teal-100 px-2 py-0.5 text-[10px] font-bold text-teal-800 dark:bg-teal-900 dark:text-teal-200">
+            {citas.length} {citas.length === 1 ? 'cita' : 'citas'}
+          </span>
+        ) : null}
+      </span>
+
+      {!deshabilitada
+        ? visibles.map((cita) => (
+            <span
+              key={cita.id_cita}
+              className="flex min-w-0 items-center gap-1.5 text-[11px] leading-4 text-on-surface-variant"
+            >
+              <span
+                aria-hidden="true"
+                className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                  esUrgencia(cita) ? 'bg-error' : 'bg-teal-600'
+                }`}
+              />
+              <span className="truncate">
+                <span className="font-bold text-on-surface">{horaCorta(cita.hora)}</span>{' '}
+                {nombrePaciente(cita.paciente)}
+              </span>
+            </span>
+          ))
+        : null}
+      {!deshabilitada && restantes > 0 ? (
+        <span className="text-[11px] font-semibold text-teal-700 dark:text-teal-400">
+          +{restantes} más
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
+/* ---------- Tarjeta (solo en el panel derecho) ---------- */
+
+function TarjetaCita({ cita, onAbrir }) {
   const urgencia = esUrgencia(cita);
-  const hora = densa
-    ? horaCorta(cita.hora)
-    : [horaCorta(cita.hora), horaCorta(cita.hora_fin)].filter(Boolean).join(' – ');
+  const hora = [horaCorta(cita.hora), horaCorta(cita.hora_fin)].filter(Boolean).join(' – ');
 
   return (
     <button
       type="button"
       onClick={() => onAbrir(cita)}
-      className={`w-full cursor-pointer rounded-xl border border-l-4 border-outline-variant text-left transition-colors ${
-        densa ? 'px-2 py-1.5' : 'px-3 py-2.5'
-      } ${
+      className={`w-full cursor-pointer rounded-xl border border-l-4 border-outline-variant px-3 py-2.5 text-left transition-colors ${
         urgencia
           ? 'border-l-error bg-error-container/40 hover:bg-error-container'
           : 'border-l-teal-600 bg-surface hover:bg-surface-container'
       }`}
     >
-      <p className={`font-bold text-on-surface-variant ${densa ? 'text-[11px]' : 'text-xs'}`}>
-        {hora}
-      </p>
-      <p
-        className={`mt-0.5 font-semibold wrap-break-word text-on-surface ${
-          densa ? 'text-xs' : 'text-sm'
-        }`}
-      >
+      <p className="text-xs font-bold text-on-surface-variant">{hora}</p>
+      <p className="mt-0.5 text-sm font-semibold wrap-break-word text-on-surface">
         {nombrePaciente(cita.paciente)}
       </p>
-      {!densa && cita.estado ? (
+      {cita.estado ? (
         <div className="mt-2">
           <BadgeEstado estado={cita.estado} />
         </div>
@@ -210,28 +305,41 @@ function TarjetaCita({ cita, densa, onAbrir }) {
   );
 }
 
-function CabeceraDia({ dia, etiqueta, esHoy }) {
+function PanelDia({ ymd, citas, onAbrir }) {
   return (
-    <div className="flex items-center gap-2 lg:flex-col lg:gap-1">
-      <span
-        className={`text-[11px] font-bold tracking-wider uppercase ${
-          esHoy ? 'text-teal-700 dark:text-teal-400' : 'text-on-surface-variant'
-        }`}
-      >
-        {etiqueta}
-      </span>
-      <span
-        className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${
-          esHoy ? 'bg-teal-600 text-white' : 'text-on-surface'
-        }`}
-      >
-        {dia.getDate()}
-      </span>
-    </div>
+    <aside className="flex min-w-0 flex-col rounded-2xl border border-outline-variant bg-on-primary shadow-sm lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)]">
+      {ymd ? (
+        <>
+          <div className="border-b border-outline-variant p-4">
+            <h2 className="text-base font-bold text-on-surface">{fechaLarga(ymd)}</h2>
+            <p className="mt-0.5 text-xs text-on-surface-variant">
+              {citas.length === 0
+                ? 'Sin citas'
+                : `${citas.length} ${citas.length === 1 ? 'cita' : 'citas'}`}
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 overflow-y-auto p-3">
+            {citas.length === 0 ? (
+              <p className="py-8 text-center text-sm text-on-surface-variant">
+                No hay citas en este día.
+              </p>
+            ) : (
+              citas.map((cita) => <TarjetaCita key={cita.id_cita} cita={cita} onAbrir={onAbrir} />)
+            )}
+          </div>
+        </>
+      ) : (
+        <p className="px-5 py-12 text-center text-sm text-on-surface-variant">
+          Selecciona un día para ver sus citas.
+        </p>
+      )}
+    </aside>
   );
 }
 
-function VistaMes({ celdas, mesVisible, hoyYmd, citasPorDia, onAbrir }) {
+/* ---------- Vistas ---------- */
+
+function VistaMes({ celdas, mesVisible, hoyYmd, citasPorDia, seleccionado, onSeleccionar }) {
   const enMes = (dia) => dia.getMonth() === mesVisible;
 
   return (
@@ -251,30 +359,18 @@ function VistaMes({ celdas, mesVisible, hoyYmd, citasPorDia, onAbrir }) {
         {celdas.map((dia) => {
           const ymd = aYmd(dia);
           const pertenece = enMes(dia);
-          const esHoy = pertenece && ymd === hoyYmd;
-          const delDia = pertenece ? (citasPorDia[ymd] ?? []) : [];
           return (
-            <section
+            <CeldaDia
               key={ymd}
-              className={`flex min-h-[7.5rem] max-h-44 min-w-0 flex-col gap-1 overflow-y-auto border-r border-b border-outline-variant p-1.5 ${
-                !pertenece ? 'bg-surface/70' : esHoy ? 'bg-teal-50 dark:bg-teal-950/60' : ''
-              }`}
-            >
-              <span
-                className={`mb-1 flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${
-                  !pertenece
-                    ? 'text-outline'
-                    : esHoy
-                      ? 'bg-teal-600 text-white'
-                      : 'text-on-surface'
-                }`}
-              >
-                {dia.getDate()}
-              </span>
-              {delDia.map((cita) => (
-                <TarjetaCita key={cita.id_cita} cita={cita} densa onAbrir={onAbrir} />
-              ))}
-            </section>
+              dia={dia}
+              citas={pertenece ? (citasPorDia[ymd] ?? []) : []}
+              esHoy={pertenece && ymd === hoyYmd}
+              deshabilitada={!pertenece}
+              seleccionada={pertenece && ymd === seleccionado}
+              maxLineas={2}
+              onSeleccionar={onSeleccionar}
+              className="min-h-[6.5rem] border-r border-b border-outline-variant"
+            />
           );
         })}
       </div>
@@ -282,19 +378,18 @@ function VistaMes({ celdas, mesVisible, hoyYmd, citasPorDia, onAbrir }) {
       <div className="flex flex-col divide-y divide-outline-variant lg:hidden">
         {celdas.filter(enMes).map((dia) => {
           const ymd = aYmd(dia);
-          const esHoy = ymd === hoyYmd;
-          const delDia = citasPorDia[ymd] ?? [];
-          const indice = (dia.getDay() + 6) % 7;
           return (
-            <section
+            <CeldaDia
               key={ymd}
-              className={`flex min-w-0 flex-col gap-2 p-3 ${esHoy ? 'bg-teal-50 dark:bg-teal-950/60' : ''}`}
-            >
-              <CabeceraDia dia={dia} etiqueta={DIAS_CABECERA[indice]} esHoy={esHoy} />
-              {delDia.map((cita) => (
-                <TarjetaCita key={cita.id_cita} cita={cita} densa onAbrir={onAbrir} />
-              ))}
-            </section>
+              dia={dia}
+              citas={citasPorDia[ymd] ?? []}
+              esHoy={ymd === hoyYmd}
+              seleccionada={ymd === seleccionado}
+              maxLineas={3}
+              etiqueta={DIAS_CABECERA[(dia.getDay() + 6) % 7]}
+              onSeleccionar={onSeleccionar}
+              className="w-full"
+            />
           );
         })}
       </div>
@@ -302,64 +397,45 @@ function VistaMes({ celdas, mesVisible, hoyYmd, citasPorDia, onAbrir }) {
   );
 }
 
-function VistaSemana({ dias, hoyYmd, citasPorDia, onAbrir }) {
+function VistaSemana({ dias, hoyYmd, citasPorDia, seleccionado, onSeleccionar }) {
   return (
-    <>
-      <div className="hidden grid-cols-7 border-b border-outline-variant lg:grid">
-        {dias.map((dia, i) => {
-          const ymd = aYmd(dia);
-          return (
-            <div key={ymd} className={`px-2 py-3 ${ymd === hoyYmd ? 'bg-teal-50 dark:bg-teal-950' : ''}`}>
-              <CabeceraDia dia={dia} etiqueta={DIAS_CABECERA[i]} esHoy={ymd === hoyYmd} />
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="flex flex-col divide-y divide-outline-variant lg:grid lg:grid-cols-7 lg:divide-x lg:divide-y-0">
-        {dias.map((dia, i) => {
-          const ymd = aYmd(dia);
-          const esHoy = ymd === hoyYmd;
-          const delDia = citasPorDia[ymd] ?? [];
-          return (
-            <section
-              key={ymd}
-              className={`flex min-w-0 flex-col gap-2 p-3 ${esHoy ? 'bg-teal-50 dark:bg-teal-950/60' : ''}`}
-            >
-              <div className="lg:hidden">
-                <CabeceraDia dia={dia} etiqueta={DIAS_CABECERA[i]} esHoy={esHoy} />
-              </div>
-              {delDia.map((cita) => (
-                <TarjetaCita key={cita.id_cita} cita={cita} onAbrir={onAbrir} />
-              ))}
-            </section>
-          );
-        })}
-      </div>
-    </>
+    <div className="flex flex-col divide-y divide-outline-variant lg:grid lg:grid-cols-7 lg:divide-x lg:divide-y-0">
+      {dias.map((dia, i) => {
+        const ymd = aYmd(dia);
+        return (
+          <CeldaDia
+            key={ymd}
+            dia={dia}
+            citas={citasPorDia[ymd] ?? []}
+            esHoy={ymd === hoyYmd}
+            seleccionada={ymd === seleccionado}
+            maxLineas={6}
+            etiqueta={DIAS_CABECERA[i]}
+            onSeleccionar={onSeleccionar}
+            className="w-full lg:min-h-[10rem]"
+          />
+        );
+      })}
+    </div>
   );
 }
 
-function VistaDia({ dia, hoyYmd, citasDelDia, onAbrir }) {
+function VistaDia({ dia, hoyYmd, citasDelDia }) {
   const ymd = aYmd(dia);
-  const esHoy = ymd === hoyYmd;
-  const indice = (dia.getDay() + 6) % 7;
-
   return (
-    <section className={`flex min-w-0 flex-col gap-3 p-4 md:p-6 ${esHoy ? 'bg-teal-50 dark:bg-teal-950/60' : ''}`}>
-      <CabeceraDia dia={dia} etiqueta={DIAS_CABECERA[indice]} esHoy={esHoy} />
-      {citasDelDia.length === 0 ? (
-        <p className="py-8 text-center text-sm text-on-surface-variant">No hay citas en este día.</p>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {citasDelDia.map((cita) => (
-            <TarjetaCita key={cita.id_cita} cita={cita} onAbrir={onAbrir} />
-          ))}
-        </div>
-      )}
-    </section>
+    <CeldaDia
+      dia={dia}
+      citas={citasDelDia}
+      esHoy={ymd === hoyYmd}
+      seleccionada
+      maxLineas={50}
+      etiqueta={DIAS_CABECERA[(dia.getDay() + 6) % 7]}
+      className="min-h-[12rem] w-full"
+    />
   );
 }
+
+/* ---------- Página ---------- */
 
 export default function AgendaPage() {
   const [vista, setVista] = useState('mes');
@@ -371,6 +447,7 @@ export default function AgendaPage() {
   const [idOdontologo, setIdOdontologo] = useState('');
   const [busquedaPaciente, setBusquedaPaciente] = useState('');
   const [citaAbierta, setCitaAbierta] = useState(null);
+  const [diaSeleccionado, setDiaSeleccionado] = useState(null);
 
   const { desde, hasta } = useMemo(() => rangoConsulta(vista, ancla), [vista, ancla]);
 
@@ -398,6 +475,11 @@ export default function AgendaPage() {
   useEffect(() => {
     cargar();
   }, [cargar]);
+
+  // Al cambiar de periodo, se limpia el día seleccionado.
+  useEffect(() => {
+    setDiaSeleccionado(null);
+  }, [desde, hasta]);
 
   const opcionesClinica = useMemo(
     () => opcionesUnicas(citas, (c) => c?.clinica?.id_clinica, (c) => nombreClinica(c.clinica)),
@@ -449,9 +531,11 @@ export default function AgendaPage() {
     return mapa;
   }, [citasFiltradas]);
 
-  const hayCitas = citas.length > 0;
-  const hayFiltradas = citasFiltradas.length > 0;
   const nav = etiquetaNav[vista];
+
+  // En vista día el panel siempre muestra el día actual del calendario.
+  const ymdPanel = vista === 'dia' ? aYmd(ancla) : diaSeleccionado;
+  const citasPanel = ymdPanel ? (citasPorDia[ymdPanel] ?? []) : [];
 
   const cambiarVista = (nueva) => {
     setAncla((prev) => anclaAlCambiarVista(vista, nueva, prev));
@@ -564,42 +648,40 @@ export default function AgendaPage() {
         </label>
       </div>
 
-      <div className="min-w-0 overflow-hidden rounded-2xl border border-outline-variant bg-on-primary shadow-sm">
-        {cargando ? (
-          <p className="px-5 py-12 text-center text-sm text-on-surface-variant">Cargando...</p>
-        ) : errorCarga ? (
-          <p className="px-5 py-12 text-center text-sm text-error">{errorCarga}</p>
-        ) : !hayCitas ? (
-          <p className="px-5 py-12 text-center text-sm text-on-surface-variant">
-            {mensajeVacio[vista]}
-          </p>
-        ) : !hayFiltradas ? (
-          <p className="px-5 py-12 text-center text-sm text-on-surface-variant">
-            Ninguna cita coincide con los filtros.
-          </p>
-        ) : vista === 'mes' ? (
-          <VistaMes
-            celdas={celdasMes}
-            mesVisible={ancla.getMonth()}
-            hoyYmd={hoyYmd}
-            citasPorDia={citasPorDia}
-            onAbrir={setCitaAbierta}
-          />
-        ) : vista === 'semana' ? (
-          <VistaSemana
-            dias={diasSemana}
-            hoyYmd={hoyYmd}
-            citasPorDia={citasPorDia}
-            onAbrir={setCitaAbierta}
-          />
-        ) : (
-          <VistaDia
-            dia={ancla}
-            hoyYmd={hoyYmd}
-            citasDelDia={citasPorDia[aYmd(ancla)] ?? []}
-            onAbrir={setCitaAbierta}
-          />
-        )}
+      {/* Calendario a la izquierda + panel de citas a la derecha (siempre reservado) */}
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-outline-variant bg-on-primary shadow-sm">
+          {cargando ? (
+            <p className="px-5 py-12 text-center text-sm text-on-surface-variant">Cargando...</p>
+          ) : errorCarga ? (
+            <p className="px-5 py-12 text-center text-sm text-error">{errorCarga}</p>
+          ) : vista === 'mes' ? (
+            <VistaMes
+              celdas={celdasMes}
+              mesVisible={ancla.getMonth()}
+              hoyYmd={hoyYmd}
+              citasPorDia={citasPorDia}
+              seleccionado={diaSeleccionado}
+              onSeleccionar={setDiaSeleccionado}
+            />
+          ) : vista === 'semana' ? (
+            <VistaSemana
+              dias={diasSemana}
+              hoyYmd={hoyYmd}
+              citasPorDia={citasPorDia}
+              seleccionado={diaSeleccionado}
+              onSeleccionar={setDiaSeleccionado}
+            />
+          ) : (
+            <VistaDia
+              dia={ancla}
+              hoyYmd={hoyYmd}
+              citasDelDia={citasPorDia[aYmd(ancla)] ?? []}
+            />
+          )}
+        </div>
+
+        <PanelDia ymd={ymdPanel} citas={citasPanel} onAbrir={setCitaAbierta} />
       </div>
 
       {citaAbierta ? (
