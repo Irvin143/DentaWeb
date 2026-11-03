@@ -26,9 +26,9 @@ export const listarSedes = async (req, res) => {
 };
 
 // POST /urgencias
-// body: { id_sede, motivo, sintomas, hora_llegada?: 'HH:mm' }  (sin hora_llegada = lo antes posible)
-// Agenda la urgencia como una cita en el primer espacio libre de hoy.
-// Responde { id_cita, fecha, hora, hora_fin, odontologo, sede }, o 409 si hoy no hay espacio.
+// body: { id_sede, motivo, sintomas, hora_llegada?: 'HH:mm' }  (sin hora_llegada = en 30 a 45 min)
+// Registra la urgencia de hoy con el odontólogo genérico "Odontólogo Urgencia".
+// Responde { id_cita, fecha, hora, hora_fin, odontologo, sede }, o 409 si ya no se reciben urgencias hoy.
 // El paciente sale de la sesión.
 export const crear = async (req, res) => {
     const { sub } = req.usuario || {};

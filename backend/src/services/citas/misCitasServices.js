@@ -103,45 +103,81 @@ export const cancelarCita = async ({ idCita, idPaciente }) => {
 // del odontólogo.
 // fecha: 'AAAA-MM-DD' · hora: 'HH:mm'
 export const reagendarCita = async ({ idCita, idPaciente, fecha, hora }) => {
-    const { rows } = await conexion.query(
-        `UPDATE citas c
-         SET fecha    = $3::date,
-             hora     = $4::time,
-             hora_fin = $4::time + (c.hora_fin - c.hora)
-         FROM clinica_servicio cs
-         WHERE c.idCita = $1::int
-           AND c.idPaciente = $2::int
-           AND cs.idClinica_Servicio = c.idClinica_Servicio
-           AND lower(c.estado) = 'pendiente'
-           AND (c.fecha + c.hora) > (now() AT TIME ZONE '${ZONA}')
-           AND ($3::date + $4::time) > (now() AT TIME ZONE '${ZONA}')
-           AND $4::time IN (SELECT f.hora FROM fn_slots_disponibles(cs.idClinica, $3::date) f)
-           AND NOT EXISTS (
-                 SELECT 1
-                 FROM citas o
-                 WHERE o.idOdontologo = c.idOdontologo
-                   AND o.idCita <> c.idCita
-                   AND lower(o.estado) <> 'cancelada'
-                   AND o.fecha = $3::date
-                   AND o.hora < ($4::time + (c.hora_fin - c.hora))
-                   AND o.hora_fin > $4::time
-           )
-         RETURNING c.idCita AS id,
-                   to_char(c.fecha, 'YYYY-MM-DD') AS fecha,
-                   to_char(c.hora, 'HH24:MI')     AS hora,
-                   to_char(c.hora_fin, 'HH24:MI') AS hora_fin,
-                   c.estado AS estado`,
-        [idCita, idPaciente, fecha, hora]
-    );
+    let rows;
+    try {
+        ({ rows } = await conexion.query(
+            `UPDATE citas c
+             SET fecha    = $3::date,
+                 hora     = $4::time,
+                 hora_fin = $4::time + (c.hora_fin - c.hora)
+             FROM clinica_servicio cs
+             WHERE c.idCita = $1::int
+               AND c.idPaciente = $2::int
+               AND cs.idClinica_Servicio = c.idClinica_Servicio
+               AND lower(c.estado) = 'pendiente'
+               AND (c.fecha + c.hora) > (now() AT TIME ZONE '${ZONA}')
+               AND ($3::date + $4::time) > (now() AT TIME ZONE '${ZONA}')
+               AND $4::time IN (SELECT f.hora FROM fn_slots_disponibles(cs.idClinica, $3::date) f)
+               AND NOT EXISTS (
+                     SELECT 1
+                     FROM citas o
+                     WHERE o.idOdontologo = c.idOdontologo
+                       AND o.idCita <> c.idCita
+                       AND lower(o.estado) <> 'cancelada'
+                       AND o.fecha = $3::date
+                       AND o.hora < ($4::time + (c.hora_fin - c.hora))
+                       AND o.hora_fin > $4::time
+               )
+               AND NOT EXISTS (
+                     SELECT 1
+                     FROM citas o
+                     WHERE o.idPaciente = c.idPaciente
+                       AND o.idCita <> c.idCita
+                       AND lower(o.estado) <> 'cancelada'
+                       AND o.fecha = $3::date
+                       AND o.hora < ($4::time + (c.hora_fin - c.hora))
+                       AND o.hora_fin > $4::time
+               )
+             RETURNING c.idCita AS id,
+                       to_char(c.fecha, 'YYYY-MM-DD') AS fecha,
+                       to_char(c.hora, 'HH24:MI')     AS hora,
+                       to_char(c.hora_fin, 'HH24:MI') AS hora_fin,
+                       c.estado AS estado`,
+            [idCita, idPaciente, fecha, hora]
+        ));
+    } catch (err) {
+        // Alguien tomó el horario justo ahora (la restricción de la tabla lo rechazó)
+        if (err.code === '23P01') {
+            if (String(err.constraint ?? '').includes('paciente')) {
+                throw errorHttp(409, 'Ya tienes otra cita en ese horario. Elige otro.');
+            }
+            throw errorHttp(409, 'Ese horario ya no está disponible. Elige otro.');
+        }
+        // fecha u hora con formato inválido
+        if (['22007', '22008', '22P02'].includes(err.code)) {
+            throw errorHttp(400, 'La fecha o la hora no son válidas');
+        }
+        throw err;
+    }
     if (rows[0]) return rows[0];
 
     // No se actualizó nada: se averigua por qué para dar el mensaje correcto
     const { rows: existente } = await conexion.query(
-        `SELECT lower(estado) AS estado,
-                (fecha + hora) <= (now() AT TIME ZONE '${ZONA}') AS ya_paso,
-                ($3::date + $4::time) <= (now() AT TIME ZONE '${ZONA}') AS nueva_pasada
-         FROM citas
-         WHERE idCita = $1::int AND idPaciente = $2::int`,
+        `SELECT lower(c.estado) AS estado,
+                (c.fecha + c.hora) <= (now() AT TIME ZONE '${ZONA}') AS ya_paso,
+                ($3::date + $4::time) <= (now() AT TIME ZONE '${ZONA}') AS nueva_pasada,
+                EXISTS (
+                    SELECT 1
+                    FROM citas o
+                    WHERE o.idPaciente = c.idPaciente
+                      AND o.idCita <> c.idCita
+                      AND lower(o.estado) <> 'cancelada'
+                      AND o.fecha = $3::date
+                      AND o.hora < ($4::time + (c.hora_fin - c.hora))
+                      AND o.hora_fin > $4::time
+                ) AS choque_paciente
+         FROM citas c
+         WHERE c.idCita = $1::int AND c.idPaciente = $2::int`,
         [idCita, idPaciente, fecha, hora]
     );
     const cita = existente[0];
@@ -151,5 +187,8 @@ export const reagendarCita = async ({ idCita, idPaciente, fecha, hora }) => {
     }
     if (cita.ya_paso) throw errorHttp(409, 'Esta cita ya pasó y no se puede reagendar');
     if (cita.nueva_pasada) throw errorHttp(400, 'Elige una fecha y hora que todavía no hayan pasado');
+    if (cita.choque_paciente) {
+        throw errorHttp(409, 'Ya tienes otra cita en ese horario. Elige otro.');
+    }
     throw errorHttp(409, 'Ese horario ya no está disponible. Elige otro.');
 };

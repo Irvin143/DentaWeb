@@ -97,6 +97,7 @@ export default function UrgenciaView({ onVolver }) {
   const toasts = useToasts();
   const [resultado, setResultado] = useState(null);
   const formularioRef = useRef(null);
+  const [confirmando, setConfirmando] = useState(false);
 
   const [sedes, setSedes] = useState([]);
   const [cargandoSedes, setCargandoSedes] = useState(true);
@@ -160,9 +161,8 @@ export default function UrgenciaView({ onVolver }) {
     return errores;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (cargando) return;
 
     const errores = validar();
     if (Object.keys(errores).length > 0) {
@@ -176,6 +176,12 @@ export default function UrgenciaView({ onVolver }) {
       return;
     }
 
+    setConfirmando(true);
+    window.scrollTo({ top: 0 });
+  };
+
+  const confirmarCita = async () => {
+    if (cargando) return;
     setCargando(true);
     try {
       const urgencia = await urgenciasApi.crear({
@@ -185,9 +191,9 @@ export default function UrgenciaView({ onVolver }) {
         hora_llegada: form.llegada === 'hora' ? form.hora : null,
       });
       setResultado(urgencia);
-      toasts.exito(`Urgencia agendada: te esperamos hoy a las ${hhmmA12(urgencia.hora)}.`);
+      toasts.exito(`Urgencia registrada: te esperamos hoy a las ${hhmmA12(urgencia.hora)}.`);
     } catch (err) {
-      toasts.error(err.message || 'No pudimos agendar tu urgencia. Intenta de nuevo o llama a la clínica.');
+      toasts.error(err.message || 'No pudimos registrar tu urgencia. Intenta de nuevo o llama a la clínica.');
     } finally {
       setCargando(false);
     }
@@ -203,76 +209,102 @@ export default function UrgenciaView({ onVolver }) {
   const avisoCampo = (campo) =>
     erroresCampos[campo] && <p className="mt-2 text-xs text-error">{erroresCampos[campo]}</p>;
 
-  if (resultado) {
-    const sede = resultado.sede;
-    const mapa = urlMapa(sede?.direccion);
+  if (confirmando) {
+    const sedeElegida = sedes.find((s) => s.id === form.sede);
+    const motivoElegido = motivos.find((m) => m.id === form.motivo);
+    const IconoMotivo = motivoElegido?.icono ?? Plus;
+    const mapa = urlMapa(sedeElegida?.direccion);
+    const textoLlegada =
+      form.llegada === 'hora'
+        ? `Hoy desde las ${hhmmA12(form.hora)}`
+        : `En 30-45 min (desde las ${hora12(new Date(ahora.getTime() + 30 * 60000))})`;
+
     return (
       <div className="min-h-full w-full bg-surface p-4 md:p-8 lg:px-10 lg:py-8">
         <ToastContainer toasts={toasts.toasts} onCerrar={toasts.cerrar} />
         <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-6">
           <span className="flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 dark:bg-teal-950 text-teal-600 dark:text-teal-400">
-            <CheckCircle2 size={36} />
+            <ShieldAlert size={36} />
           </span>
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-on-surface">Tu cita de urgencia está confirmada</h1>
+            <h1 className="text-2xl font-bold text-on-surface">¿Confirmas tu cita de urgencia?</h1>
             <p className="mt-1 text-sm text-on-surface-variant">
-              Te esperamos hoy a las {hhmmA12(resultado.hora)}. También te enviamos los datos por correo.
+              Revisa los datos. Al confirmar, registraremos tu urgencia de inmediato.
             </p>
           </div>
 
           <div className="w-full rounded-2xl border border-outline-variant bg-on-primary p-5">
             <div className="divide-y divide-outline-variant">
               <div className="flex items-start gap-3 pb-3">
+                <IconoMotivo size={18} className="mt-0.5 shrink-0 text-teal-600 dark:text-teal-400" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold tracking-wider text-outline uppercase">Motivo</p>
+                  <p className="break-words text-sm font-bold text-on-surface">{motivoElegido?.titulo}</p>
+                  <p className="mt-1 line-clamp-3 break-words text-xs text-on-surface-variant">
+                    {form.sintomas.trim()}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 py-3">
                 <Building2 size={18} className="mt-0.5 shrink-0 text-teal-600 dark:text-teal-400" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold tracking-wider text-outline uppercase">Sede</p>
-                  <p className="break-words text-sm font-bold text-on-surface">{sede?.nombre}</p>
-                  {sede?.direccion && (
-                    <p className="break-words text-xs text-on-surface-variant">{sede.direccion}</p>
+                  <p className="break-words text-sm font-bold text-on-surface">{sedeElegida?.nombre}</p>
+                  {sedeElegida?.direccion && (
+                    <p className="break-words text-xs text-on-surface-variant">{sedeElegida.direccion}</p>
                   )}
                   {mapa && (
                     <a
                       href={mapa}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
+                      className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300"
                     >
                       <MapPin size={14} /> Ver en mapa
                     </a>
                   )}
                 </div>
               </div>
-              <div className="flex items-start gap-3 py-3">
+              <div className="flex items-start gap-3 pt-3">
                 <Clock size={18} className="mt-0.5 shrink-0 text-teal-600 dark:text-teal-400" />
                 <div>
-                  <p className="text-xs font-semibold tracking-wider text-outline uppercase">Hora</p>
-                  <p className="text-sm font-bold text-on-surface">Hoy a las {hhmmA12(resultado.hora)}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 pt-3">
-                <User size={18} className="mt-0.5 shrink-0 text-teal-600 dark:text-teal-400" />
-                <div>
-                  <p className="text-xs font-semibold tracking-wider text-outline uppercase">Odontólogo</p>
-                  <p className="break-words text-sm font-bold text-on-surface">
-                    {resultado.odontologo?.nombre ?? 'Asignación automática'}
+                  <p className="text-xs font-semibold tracking-wider text-outline uppercase">Llegada</p>
+                  <p className="text-sm font-bold text-on-surface">{textoLlegada}</p>
+                  <p className="text-xs text-on-surface-variant">
+                    Tu cita queda registrada como «Odontólogo Urgencia». Al llegar, te atiende el primer
+                    odontólogo disponible.
                   </p>
-                  {resultado.odontologo?.cedula && (
-                    <p className="text-xs text-on-surface-variant">
-                      Cédula profesional: {resultado.odontologo.cedula}
-                    </p>
-                  )}
                 </div>
               </div>
             </div>
           </div>
 
-          <p className="text-center text-xs text-on-surface-variant">
-            Si tu situación empeora o tienes dificultad para respirar, acude a urgencias hospitalarias.
-          </p>
-
-          <button type="button" onClick={onVolver} className={`${botonPrimario} w-full`}>
-            Volver al panel
-          </button>
+          <div className="flex w-full flex-col gap-3">
+            <button
+              type="button"
+              onClick={confirmarCita}
+              disabled={cargando}
+              className={`${botonPrimario} w-full`}
+            >
+              {cargando ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" /> Confirmando…
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 size={18} /> Confirmar cita
+                </>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmando(false)}
+              disabled={cargando}
+              className="cursor-pointer rounded-xl border border-outline-variant px-5 py-3.5 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Editar datos
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -294,7 +326,7 @@ export default function UrgenciaView({ onVolver }) {
           <div>
             <h1 className="text-2xl font-bold text-on-surface">Urgencia dental</h1>
             <p className="text-sm text-on-surface-variant">
-              Atención el mismo día en el primer espacio disponible
+              Atención el mismo día: te atiende el primer odontólogo disponible al llegar
             </p>
           </div>
         </div>
@@ -450,7 +482,7 @@ export default function UrgenciaView({ onVolver }) {
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={`Ver ${sede.nombre} en Google Maps`}
-                        className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
+                        className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300"
                       >
                         <MapPin size={14} /> Mapa
                       </a>
@@ -483,7 +515,7 @@ export default function UrgenciaView({ onVolver }) {
                       </span>
                     </p>
                     <p className="text-xs text-on-surface-variant">
-                      Primer espacio disponible desde las {hora12(new Date(ahora.getTime() + 30 * 60000))}
+                      Llegada estimada desde las {hora12(new Date(ahora.getTime() + 30 * 60000))}
                     </p>
                   </div>
                 </div>
@@ -509,7 +541,7 @@ export default function UrgenciaView({ onVolver }) {
                     <p className="text-xs text-on-surface-variant">
                       {horasLlegada.length === 0
                         ? 'Ya no hay horarios disponibles para hoy'
-                        : 'Se te asigna el primer espacio desde esa hora'}
+                        : 'Te atendemos al llegar, a partir de esa hora'}
                     </p>
                   </div>
                 </div>
@@ -548,8 +580,8 @@ export default function UrgenciaView({ onVolver }) {
               {cargando ? 'Agendando…' : 'Agendar urgencia'}
             </button>
             <p className="mt-4 text-center text-xs font-medium text-on-surface-variant">
-              <ShieldAlert size={14} className="inline text-teal-600 dark:text-teal-400" /> Tu urgencia se agenda en el primer espacio
-              disponible de hoy con un odontólogo de la sede.
+              <ShieldAlert size={14} className="inline text-teal-600 dark:text-teal-400" /> Tu urgencia se registra para
+              hoy y te atiende el primer odontólogo disponible al llegar.
             </p>
           </div>
         </div>

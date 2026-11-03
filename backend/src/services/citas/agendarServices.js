@@ -31,7 +31,7 @@ const manejarErrorPg = (err) => {
    ============================================================ */
 
 // Solo las consultas se atienden con el odontólogo de cabecera. Los estudios no (no todos
-// los odontólogos los hacen) ni las urgencias (necesitan a quien esté libre).
+// los odontólogos los hacen) ni las urgencias (se registran con el odontólogo genérico).
 const CATEGORIAS_CON_CABECERA = ['consulta'];
 
 // Paciente ligado a la cuenta que inició sesión
@@ -188,6 +188,9 @@ export const obtenerDiasDisponibles = async ({ idClinica, dias = 30, idOdontolog
 // Estado con el que nace una cita agendada por el paciente
 const ESTADO_INICIAL = 'PENDIENTE';
 
+// Duración que se reserva a una urgencia (no depende de la agenda de ningún odontólogo)
+const DURACION_URGENCIA_MIN = 30;
+
 // Tipo de cita cuando la vista no manda uno: el que se llame igual que la categoría
 // del servicio ('consulta' / 'estudio').
 // TODO: ajusta esta consulta a la estructura real de tipos_cita
@@ -258,7 +261,11 @@ const SQL_CANDIDATOS = `
 // Odontólogo de cabecera (solo servicios de consulta):
 //   - Si el paciente ya tiene uno, la cita es con él (si no está libre a esa hora, no se agenda).
 //   - Si no tiene, el odontólogo asignado queda como su odontólogo de cabecera.
-// usarOdontologoDelPaciente = false lo desactiva (por ejemplo, para urgencias).
+// usarOdontologoDelPaciente = false lo desactiva.
+//
+// URGENCIAS (esUrgencia = true): se registran con `idOdontologo` (el odontólogo genérico
+// "Odontólogo Urgencia"). No se consulta fn_slots_disponibles, ni la carga de los odontólogos,
+// ni el odontólogo de cabecera. El paciente es atendido por quien esté libre al llegar.
 //
 // hora: 'HH:mm' · fecha: 'AAAA-MM-DD' · idTipo: opcional
 // Requiere que `conexion` sea un Pool de pg.
@@ -271,6 +278,8 @@ export const crearCita = async ({
     motivo = null,
     idTipo = null,
     usarOdontologoDelPaciente = true,
+    idOdontologo = null, // solo urgencias: odontólogo genérico
+    esUrgencia = false,
 }) => {
     const cliente = await conexion.connect();
 
@@ -289,6 +298,73 @@ export const crearCita = async ({
 
         // 2. Tipo de cita
         const tipo = idTipo ?? (await resolverIdTipo(cliente, relacion[0].categoria));
+
+        // 2.1 URGENCIA: se registra con el odontólogo genérico, sin buscar disponibilidad
+        if (esUrgencia) {
+            if (!idOdontologo) throw errorHttp(500, 'Falta el odontólogo genérico de urgencias');
+
+            let fila;
+            try {
+                const { rows } = await cliente.query(
+                    `INSERT INTO citas
+                        (fecha, hora, hora_fin, idPaciente, idOdontologo,
+                         idClinica_Servicio, idTipo, estado, observaciones)
+                     VALUES (
+                        $1::date, $2::time,
+                        CASE WHEN $2::time < '23:59'::time - make_interval(mins => $3::int)
+                             THEN $2::time + make_interval(mins => $3::int)
+                             ELSE '23:59'::time END,
+                        $4, $5, $6, $7, $8, $9)
+                     RETURNING idCita AS id_cita, hora_fin`,
+                    [
+                        fecha,
+                        hora,
+                        DURACION_URGENCIA_MIN,
+                        idPaciente,
+                        idOdontologo,
+                        relacion[0].id_clinica_servicio,
+                        tipo,
+                        ESTADO_INICIAL,
+                        motivo,
+                    ]
+                );
+                fila = rows[0];
+            } catch (err) {
+                if (err.code === '23P01') {
+                    if (String(err.constraint ?? '').includes('paciente')) {
+                        throw errorHttp(409, 'Ya tienes una cita en ese horario');
+                    }
+                    // La restricción del odontólogo no excluye al genérico (ver migración)
+                    throw errorHttp(
+                        409,
+                        'Ya hay una urgencia registrada a esa hora. Elige otra hora de llegada.'
+                    );
+                }
+                throw err;
+            }
+
+            const { rows: odo } = await cliente.query(
+                `SELECT CONCAT_WS(' ', nombre, ape_pat, ape_mat) AS nombre
+                 FROM odontologos
+                 WHERE idOdontologo = $1`,
+                [idOdontologo]
+            );
+
+            await cliente.query('COMMIT');
+
+            return {
+                id_cita: fila.id_cita,
+                fecha,
+                hora,
+                hora_fin: hhmm(fila.hora_fin),
+                odontologo: {
+                    id_odontologo: idOdontologo,
+                    nombre: odo[0]?.nombre ?? 'Odontólogo Urgencia',
+                    cedula: null,
+                },
+                cabecera_nueva: false,
+            };
+        }
 
         // 3. Odontólogos libres a esa hora, del menos al más cargado.
         //    Si el paciente tiene odontólogo de cabecera, solo cuenta él.

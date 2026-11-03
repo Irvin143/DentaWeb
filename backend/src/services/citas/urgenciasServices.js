@@ -20,7 +20,10 @@ export const MOTIVOS_URGENCIA = {
 
 const ZONA = 'America/Mazatlan';
 const MINUTOS_LLEGADA_INMEDIATA = 30; // tiempo que se le da al paciente para llegar
-const INTENTOS_MAXIMOS = 3; // veces que se busca otro espacio si alguien se adelanta
+
+// Odontólogo genérico: se identifica por su correo (ver migración)
+const CORREO_ODONTOLOGO_URGENCIA = 'urgencia@clinicware.com';
+export const NOMBRE_ODONTOLOGO_URGENCIA = 'Odontólogo Urgencia';
 
 // Dirección en una sola línea (igual que en el service de clínicas)
 const DIRECCION_COMPLETA = `
@@ -71,7 +74,7 @@ export const obtenerSedesUrgencia = async () => {
 };
 
 /* ============================================================
-   CREAR URGENCIA (se agenda como una cita)
+   CREAR URGENCIA (se registra como una cita con el odontólogo genérico)
    ============================================================ */
 
 // Servicio de urgencia que ofrece la sede
@@ -103,33 +106,51 @@ const obtenerIdTipoUrgencia = async () => {
     return rows[0].idtipo;
 };
 
-// Primer espacio libre de hoy en la sede, a partir de la hora indicada.
-// Sin hora, se toma el que empieza dentro de MINUTOS_LLEGADA_INMEDIATA minutos o después.
-// Devuelve { fecha: 'AAAA-MM-DD', hora: 'HH:mm' } o null si hoy ya no queda ninguno.
-const primerEspacioDisponible = async (idSede, horaLlegada) => {
+// Id del odontólogo genérico (se guarda en memoria después de la primera consulta)
+let idOdontologoUrgenciaCache = null;
+
+const obtenerIdOdontologoUrgencia = async () => {
+    if (idOdontologoUrgenciaCache) return idOdontologoUrgenciaCache;
+    const { rows } = await conexion.query(
+        `SELECT o.idOdontologo AS id
+         FROM odontologos o
+         JOIN usuarios u ON u.idUsuario = o.idUsuario
+         WHERE u.correo = $1
+         LIMIT 1`,
+        [CORREO_ODONTOLOGO_URGENCIA]
+    );
+    if (!rows[0]) {
+        throw errorHttp(
+            500,
+            `No existe el odontólogo '${NOMBRE_ODONTOLOGO_URGENCIA}'. Ejecuta la migración que lo crea.`
+        );
+    }
+    idOdontologoUrgenciaCache = rows[0].id;
+    return idOdontologoUrgenciaCache;
+};
+
+// Hora de llegada de la urgencia. NO consulta fn_slots_disponibles ni agendas individuales:
+// es la hora elegida por el paciente o, si no hay, ahora + MINUTOS_LLEGADA_INMEDIATA.
+// Devuelve { fecha, hora } o null si esa hora ya cae en el día siguiente.
+const horaDeLlegada = async (horaLlegada) => {
     const { rows } = await conexion.query(
         `SELECT
             to_char((now() AT TIME ZONE '${ZONA}')::date, 'YYYY-MM-DD') AS fecha,
-            to_char(
-                (SELECT MIN(hora)
-                 FROM fn_slots_disponibles($1::int, (now() AT TIME ZONE '${ZONA}')::date)
-                 WHERE hora >= COALESCE(
-                     $2::time,
-                     ((now() AT TIME ZONE '${ZONA}') + make_interval(mins => $3::int))::time
-                 )),
-                'HH24:MI'
-            ) AS hora`,
-        [idSede, horaLlegada, MINUTOS_LLEGADA_INMEDIATA]
+            to_char($1::time, 'HH24:MI') AS hora_elegida,
+            to_char(((now() AT TIME ZONE '${ZONA}') + make_interval(mins => $2::int))::time, 'HH24:MI') AS hora_inmediata,
+            (((now() AT TIME ZONE '${ZONA}') + make_interval(mins => $2::int))::date
+              = (now() AT TIME ZONE '${ZONA}')::date) AS mismo_dia`,
+        [horaLlegada, MINUTOS_LLEGADA_INMEDIATA]
     );
-    const fila = rows[0];
-    return fila?.hora ? { fecha: fila.fecha, hora: fila.hora } : null;
+    const f = rows[0];
+    if (horaLlegada) return { fecha: f.fecha, hora: f.hora_elegida };
+    return f.mismo_dia ? { fecha: f.fecha, hora: f.hora_inmediata } : null;
 };
 
-// Agenda la urgencia como una cita en el primer espacio libre de hoy, con el odontólogo libre
-// de menor carga (el mismo criterio que al agendar normal).
-// horaLlegada: 'HH:mm' o null (lo antes posible)
-// Si hoy no queda ningún espacio, responde 409 y avisa a la clínica por correo para que
-// pueda contactar al paciente.
+// Registra la urgencia como una cita de hoy con el odontólogo genérico "Odontólogo Urgencia".
+// No se asigna un odontólogo real: el paciente lo atiende quien esté libre al llegar.
+// horaLlegada: 'HH:mm' o null (en 30 a 45 minutos)
+// Si ya no se puede registrar para hoy, responde 409 y avisa a la clínica por correo.
 export const crearUrgencia = async ({ idPaciente, idSede, motivo, sintomas, horaLlegada = null }) => {
     // 1. La sede debe recibir urgencias
     const { rows: sedes } = await conexion.query(SQL_SEDES, [idSede]);
@@ -139,47 +160,41 @@ export const crearUrgencia = async ({ idPaciente, idSede, motivo, sintomas, hora
     const idServicio = await obtenerServicioUrgencia(idSede);
     if (!idServicio) throw errorHttp(400, 'La sede indicada no atiende urgencias');
     const idTipo = await obtenerIdTipoUrgencia();
+    const idOdontologo = await obtenerIdOdontologoUrgencia();
 
-    // Queda en la cita como observaciones, para que el odontólogo sepa a qué viene el paciente
+    // Queda en la cita como observaciones, para que el personal sepa a qué viene el paciente
     const observaciones = `URGENCIA - ${MOTIVOS_URGENCIA[motivo] ?? motivo}: ${sintomas}`;
 
-    // 2. Se busca el primer espacio libre. Si alguien lo toma antes, se busca el siguiente.
-    for (let intento = 0; intento < INTENTOS_MAXIMOS; intento += 1) {
-        const espacio = await primerEspacioDisponible(idSede, horaLlegada);
-        if (!espacio) break;
-
-        try {
-            const cita = await crearCita({
-                idPaciente,
-                idSede,
-                idServicio,
-                fecha: espacio.fecha,
-                hora: espacio.hora,
-                motivo: observaciones,
-                idTipo,
-                usarOdontologoDelPaciente: false, // una urgencia la atiende quien esté libre
-            });
-
-            // Aviso a la clínica y correo de la cita al paciente (ninguno lanza error)
-            await Promise.all([
-                avisarClinica({ idPaciente, idSede, motivo, sintomas, horaLlegada, cita }),
-                notificarCitaPorCorreo(cita.id_cita),
-            ]);
-
-            return { ...cita, sede };
-        } catch (err) {
-            // Otra persona tomó ese espacio justo antes: se prueba con el siguiente
-            if (err.status === 409 && /ya no está disponible/i.test(err.message)) continue;
-            throw err;
-        }
+    // 2. Hora de llegada (sin depender de la agenda de ningún odontólogo)
+    const espacio = await horaDeLlegada(horaLlegada);
+    if (!espacio) {
+        await avisarClinica({ idPaciente, idSede, motivo, sintomas, horaLlegada, cita: null });
+        throw errorHttp(
+            409,
+            'Ya no se reciben urgencias en línea hoy. Ya avisamos a la clínica; si es muy urgente, llámales directamente.'
+        );
     }
 
-    // 3. No hay ningún espacio libre hoy: la clínica se entera de todos modos
-    await avisarClinica({ idPaciente, idSede, motivo, sintomas, horaLlegada, cita: null });
-    throw errorHttp(
-        409,
-        'Hoy no hay espacio disponible en esta sede. Ya avisamos a la clínica; si es muy urgente, llámales directamente o prueba con otra sede.'
-    );
+    // 3. Se registra con el odontólogo genérico
+    const cita = await crearCita({
+        idPaciente,
+        idSede,
+        idServicio,
+        fecha: espacio.fecha,
+        hora: espacio.hora,
+        motivo: observaciones,
+        idTipo,
+        idOdontologo, // odontólogo genérico
+        esUrgencia: true, // crearCita se salta la lógica de disponibilidad
+    });
+
+    // Aviso a la clínica y correo de la cita al paciente (ninguno lanza error)
+    await Promise.all([
+        avisarClinica({ idPaciente, idSede, motivo, sintomas, horaLlegada, cita }),
+        notificarCitaPorCorreo(cita.id_cita),
+    ]);
+
+    return { ...cita, sede, odontologo: { nombre: NOMBRE_ODONTOLOGO_URGENCIA } };
 };
 
 /* ============================================================
@@ -201,7 +216,7 @@ const horaLegible = (hhmm) => {
     return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
 };
 
-// Avisa a la clínica que entró una urgencia, con la cita asignada o, si no hubo espacio
+// Avisa a la clínica que entró una urgencia, con la cita registrada o, si no se pudo
 // (cita = null), con la indicación de contactar al paciente de inmediato.
 // Nunca lanza error: si el correo falla solo se registra en la consola.
 // TODO: ajusta nombre, ape_pat, ape_mat y telefono a las columnas reales de pacientes
@@ -231,12 +246,12 @@ const avisarClinica = async ({ idPaciente, idSede, motivo, sintomas, horaLlegada
             ? `Hoy a las ${horaLegible(horaLlegada)}`
             : 'Lo antes posible (30 a 45 minutos)';
         const citaTexto = cita
-            ? `Cita asignada: hoy a las ${horaLegible(cita.hora)} con ${cita.odontologo?.nombre ?? 'un odontólogo'}`
-            : 'NO HAY ESPACIO HOY EN LA AGENDA. Comunícate con el paciente de inmediato.';
+            ? `Urgencia registrada hoy a las ${horaLegible(cita.hora)} como "${NOMBRE_ODONTOLOGO_URGENCIA}". Atiéndela con el primer odontólogo libre al llegar.`
+            : 'NO SE PUDO REGISTRAR LA URGENCIA HOY. Comunícate con el paciente de inmediato.';
 
         const asunto = cita
             ? `URGENCIA agendada: ${motivoTexto} - ${d.paciente}`
-            : `URGENCIA SIN ESPACIO: ${motivoTexto} - ${d.paciente}`;
+            : `URGENCIA SIN REGISTRAR: ${motivoTexto} - ${d.paciente}`;
 
         const texto = [
             citaTexto,
@@ -259,7 +274,7 @@ const avisarClinica = async ({ idPaciente, idSede, motivo, sintomas, horaLlegada
 
         const html = `
         <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;padding:24px;">
-            <h2 style="color:#b91c1c;margin:0 0 8px;">${cita ? 'Urgencia agendada' : 'Urgencia sin espacio'}</h2>
+            <h2 style="color:#b91c1c;margin:0 0 8px;">${cita ? 'Urgencia agendada' : 'Urgencia sin registrar'}</h2>
             <p style="color:#1e293b;font-size:15px;margin:0 0 16px;">${escaparHtml(citaTexto)}</p>
             <table style="border-collapse:collapse;margin:0 0 16px;">
                 ${fila('Paciente', escaparHtml(d.paciente))}
