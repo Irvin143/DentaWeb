@@ -32,7 +32,8 @@ export const obtenerIdPaciente = async (idUsuario) => {
 // `fecha` ('AAAA-MM-DD') y `hora` ('HH:mm') van separadas para evitar desfases de zona horaria.
 // El motivo que se muestra es el nombre del servicio (la cita no guarda el servicio directo,
 // sino idclinica_servicio). `observaciones` queda para el detalle.
-// TODO: confirma servicios.nombre y odontologos.nombre/ape_pat/ape_mat
+// Las urgencias salen con el odontólogo genérico "Odontólogo Urgencia" (LEFT JOIN, sin filtrar
+// por usuario activo, porque ese usuario está inactivo a propósito).
 export const obtenerCitasPaciente = async (idPaciente) => {
     const { rows } = await conexion.query(
         `SELECT c.idCita                                    AS id,
@@ -62,7 +63,7 @@ export const obtenerCitasPaciente = async (idPaciente) => {
 
 // Solo se cancela una cita propia, pendiente y que todavía no pasa.
 // La condición va dentro del UPDATE para que sea atómica (nadie la cambia a la mitad).
-// Estados en la base: 'pendiente' (por defecto) y 'cancelada' al cancelar.
+// Estados en la base: 'PENDIENTE' (por defecto) y 'CANCELADA' al cancelar.
 export const cancelarCita = async ({ idCita, idPaciente }) => {
     const { rows } = await conexion.query(
         `UPDATE citas
@@ -99,8 +100,9 @@ export const cancelarCita = async ({ idCita, idPaciente }) => {
 // Mueve la cita a otra fecha y hora, en la misma sede y con el mismo odontólogo.
 // Se mantiene la duración original (hora_fin - hora).
 // Todo va en un solo UPDATE: la cita debe ser propia y pendiente, el nuevo horario debe ser
-// futuro, estar entre los espacios disponibles de la sede y no empalmarse con otra cita
-// del odontólogo.
+// futuro, estar libre PARA ESE MISMO ODONTÓLOGO según su agenda y no empalmarse con otra cita
+// del odontólogo ni del paciente.
+// Las urgencias (odontólogo genérico, sin agenda) no se reagendan: se cancelan y se registra otra.
 // fecha: 'AAAA-MM-DD' · hora: 'HH:mm'
 export const reagendarCita = async ({ idCita, idPaciente, fecha, hora }) => {
     let rows;
@@ -117,7 +119,11 @@ export const reagendarCita = async ({ idCita, idPaciente, fecha, hora }) => {
                AND lower(c.estado) = 'pendiente'
                AND (c.fecha + c.hora) > (now() AT TIME ZONE '${ZONA}')
                AND ($3::date + $4::time) > (now() AT TIME ZONE '${ZONA}')
-               AND $4::time IN (SELECT f.hora FROM fn_slots_disponibles(cs.idClinica, $3::date) f)
+               AND EXISTS (
+                     SELECT 1
+                     FROM fn_slots_disponibles(cs.idClinica, $3::date) f
+                     WHERE f.hora = $4::time AND f.idodontologo = c.idOdontologo
+               )
                AND NOT EXISTS (
                      SELECT 1
                      FROM citas o
@@ -167,6 +173,10 @@ export const reagendarCita = async ({ idCita, idPaciente, fecha, hora }) => {
                 (c.fecha + c.hora) <= (now() AT TIME ZONE '${ZONA}') AS ya_paso,
                 ($3::date + $4::time) <= (now() AT TIME ZONE '${ZONA}') AS nueva_pasada,
                 EXISTS (
+                    SELECT 1 FROM tipo_cita t
+                    WHERE t.idTipo = c.idTipo AND lower(t.nombre) IN ('urgencia', 'urgencias')
+                ) AS es_urgencia,
+                EXISTS (
                     SELECT 1
                     FROM citas o
                     WHERE o.idPaciente = c.idPaciente
@@ -186,6 +196,12 @@ export const reagendarCita = async ({ idCita, idPaciente, fecha, hora }) => {
         throw errorHttp(409, `Esta cita ya está ${cita.estado}, solo se pueden reagendar las pendientes`);
     }
     if (cita.ya_paso) throw errorHttp(409, 'Esta cita ya pasó y no se puede reagendar');
+    if (cita.es_urgencia) {
+        throw errorHttp(
+            409,
+            'Las urgencias no se pueden reagendar. Cancélala y registra otra con la hora que necesites.'
+        );
+    }
     if (cita.nueva_pasada) throw errorHttp(400, 'Elige una fecha y hora que todavía no hayan pasado');
     if (cita.choque_paciente) {
         throw errorHttp(409, 'Ya tienes otra cita en ese horario. Elige otro.');

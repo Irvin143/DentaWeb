@@ -2,11 +2,41 @@ import conexion from '../conexion.js';
 
 const ZONA = 'America/Mazatlan';
 
+// Odontólogo genérico de urgencias (se identifica por el correo de su usuario)
+const CORREO_ODONTOLOGO_URGENCIA = 'urgencia@clinicware.com';
+
 const errorHttp = (status, mensaje) => {
     const error = new Error(mensaje);
     error.status = status;
     return error;
 };
+
+// Condición SQL para un odontólogo que consulta su agenda: sus propias citas MÁS las urgencias
+// de las sedes donde trabaja. Las urgencias se registran con el odontólogo genérico, pero las
+// atiende quien esté libre, así que todos los odontólogos de la sede deben verlas.
+// Agrega los parámetros que necesita a `params`. Requiere los alias c (citas) y cl (clinicas).
+function condicionOdontologo(params, idOdontologo) {
+    params.push(idOdontologo);
+    const iOdo = params.length;
+    params.push(CORREO_ODONTOLOGO_URGENCIA);
+    const iCorreo = params.length;
+    return `(
+        c.idOdontologo = $${iOdo}::int
+        OR (
+            c.idOdontologo = (
+                SELECT og.idOdontologo
+                FROM odontologos og
+                JOIN usuarios ug ON ug.idUsuario = og.idUsuario
+                WHERE ug.correo = $${iCorreo}
+            )
+            AND cl.idClinica IN (
+                SELECT oc.idClinica
+                FROM odontologo_clinica oc
+                WHERE oc.idOdontologo = $${iOdo}::int AND oc.activo
+            )
+        )
+    )`;
+}
 
 export async function idOdontologoDeUsuario(idUsuario) {
     const { rows } = await conexion.query(
@@ -44,8 +74,7 @@ export async function listarCitasPersonal({
     }
 
     if (idOdontologo != null) {
-        params.push(idOdontologo);
-        where.push(`c.idOdontologo = $${params.length}::int`);
+        where.push(condicionOdontologo(params, idOdontologo));
     }
 
     if (Array.isArray(idsClinica)) {
@@ -102,8 +131,7 @@ export async function cambiarEstadoCita({
     const where = ['c.idCita = $1::int'];
 
     if (idOdontologo != null) {
-        params.push(idOdontologo);
-        where.push(`c.idOdontologo = $${params.length}::int`);
+        where.push(condicionOdontologo(params, idOdontologo));
     }
     if (Array.isArray(idsClinica)) {
         params.push(idsClinica);

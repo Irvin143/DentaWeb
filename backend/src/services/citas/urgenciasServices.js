@@ -51,15 +51,17 @@ const SQL_SEDES = `
       AND EXISTS (
             SELECT 1
             FROM clinica_servicio cs
-            JOIN servicios s ON s.idServicio = cs.idServicio AND s.activo
-            WHERE cs.idClinica = c.idClinica AND cs.activo AND s.categoria = 'urgencia'
-      )
-      AND EXISTS (
-            SELECT 1
-            FROM odontologo_clinica oc
-            JOIN odontologos o ON o.idOdontologo = oc.idOdontologo
-            JOIN usuarios uo   ON uo.idUsuario = o.idUsuario AND uo.activo
-            WHERE oc.idClinica = c.idClinica AND oc.activo
+            JOIN servicios s          ON s.idServicio = cs.idServicio AND s.activo
+            JOIN odontologo_clinica oc ON oc.idClinica = cs.idClinica AND oc.activo
+            JOIN odontologos o        ON o.idOdontologo = oc.idOdontologo
+            JOIN usuarios uo          ON uo.idUsuario = o.idUsuario AND uo.activo
+            WHERE cs.idClinica = c.idClinica
+              AND cs.activo
+              AND lower(s.categoria) = 'urgencia'
+              AND (s.idEspecialidad IS NULL
+                   OR EXISTS (SELECT 1 FROM espe_odon eo
+                              WHERE eo.idOdontologo = o.idOdontologo
+                                AND eo.idEspecialidad = s.idEspecialidad))
       )
     ORDER BY c.nombre
 `;
@@ -83,7 +85,7 @@ const obtenerServicioUrgencia = async (idSede) => {
         `SELECT cs.idServicio AS id_servicio
          FROM clinica_servicio cs
          JOIN servicios s ON s.idServicio = cs.idServicio AND s.activo
-         WHERE cs.idClinica = $1::int AND cs.activo AND s.categoria = 'urgencia'
+         WHERE cs.idClinica = $1::int AND cs.activo AND lower(s.categoria) = 'urgencia'
          ORDER BY cs.idClinica_Servicio DESC
          LIMIT 1`,
         [idSede]
@@ -137,13 +139,17 @@ const horaDeLlegada = async (horaLlegada) => {
         `SELECT
             to_char((now() AT TIME ZONE '${ZONA}')::date, 'YYYY-MM-DD') AS fecha,
             to_char($1::time, 'HH24:MI') AS hora_elegida,
+            ($1::time < (now() AT TIME ZONE '${ZONA}')::time) AS ya_paso,
             to_char(((now() AT TIME ZONE '${ZONA}') + make_interval(mins => $2::int))::time, 'HH24:MI') AS hora_inmediata,
             (((now() AT TIME ZONE '${ZONA}') + make_interval(mins => $2::int))::date
               = (now() AT TIME ZONE '${ZONA}')::date) AS mismo_dia`,
         [horaLlegada, MINUTOS_LLEGADA_INMEDIATA]
     );
     const f = rows[0];
-    if (horaLlegada) return { fecha: f.fecha, hora: f.hora_elegida };
+    if (horaLlegada) {
+        if (f.ya_paso) throw errorHttp(400, 'La hora de llegada ya pasó. Elige una hora posterior.');
+        return { fecha: f.fecha, hora: f.hora_elegida };
+    }
     return f.mismo_dia ? { fecha: f.fecha, hora: f.hora_inmediata } : null;
 };
 

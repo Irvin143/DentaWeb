@@ -13,6 +13,17 @@ const hhmm = (valor) => String(valor).slice(0, 5);
 // Zona horaria de las sedes (para saber qué es "hoy" y qué espacios ya pasaron)
 const ZONA = 'America/Mazatlan';
 
+// Condición SQL: el odontólogo `col` puede hacer el servicio `srv` (ambos son expresiones SQL).
+// Un servicio sin especialidad (idEspecialidad NULL) lo puede hacer cualquier odontólogo.
+const PUEDE_HACER = (col, srv) => `EXISTS (
+        SELECT 1 FROM servicios sv
+        WHERE sv.idServicio = ${srv}
+          AND (sv.idEspecialidad IS NULL
+               OR EXISTS (SELECT 1 FROM espe_odon eo
+                          WHERE eo.idOdontologo = ${col}
+                            AND eo.idEspecialidad = sv.idEspecialidad))
+    )`;
+
 // Traduce errores de Postgres a errores HTTP
 const manejarErrorPg = (err) => {
     if (err.code === '23503') throw errorHttp(400, 'Alguno de los datos de la cita no existe');
@@ -68,7 +79,9 @@ export const obtenerOdontologoFijo = async ({ idPaciente, idServicio, db = conex
     const { rows } = await db.query('SELECT categoria FROM servicios WHERE idServicio = $1::int', [
         idServicio,
     ]);
-    if (!rows[0] || !CATEGORIAS_CON_CABECERA.includes(rows[0].categoria)) return null;
+    if (!rows[0] || !CATEGORIAS_CON_CABECERA.includes(String(rows[0].categoria).toLowerCase())) {
+        return null;
+    }
 
     return obtenerOdontologoDePaciente(idPaciente, db);
 };
@@ -104,15 +117,15 @@ export const obtenerSedesParaAgendar = async ({ idServicio, idPaciente = null })
          JOIN servicios s         ON s.idServicio = cs.idServicio AND s.activo
          LEFT JOIN direcciones d  ON d.idDireccion = c.idDireccion
          WHERE cs.idServicio = $1::int
-           AND (
-                $2::int IS NULL
-                OR EXISTS (
-                    SELECT 1
-                    FROM odontologo_clinica oc
-                    WHERE oc.idOdontologo = $2::int
-                      AND oc.idClinica = c.idClinica
-                      AND oc.activo
-                )
+           AND EXISTS (
+                SELECT 1
+                FROM odontologo_clinica oc
+                JOIN odontologos o ON o.idOdontologo = oc.idOdontologo
+                JOIN usuarios u    ON u.idUsuario = o.idUsuario AND u.activo
+                WHERE oc.idClinica = c.idClinica
+                  AND oc.activo
+                  AND ($2::int IS NULL OR oc.idOdontologo = $2::int)
+                  AND ${PUEDE_HACER('oc.idOdontologo', '$1::int')}
            )
          ORDER BY c.nombre`,
         [idServicio, fijo?.id_odontologo ?? null]
@@ -121,16 +134,23 @@ export const obtenerSedesParaAgendar = async ({ idServicio, idPaciente = null })
 };
 
 // Horarios en los que al menos un odontólogo de la sede está libre (o solo `idOdontologo`,
-// si se indica). Si no hay ninguno ese día, devuelve también el próximo día con disponibilidad.
+// si se indica). Si se manda `idServicio`, solo cuentan los odontólogos que pueden hacerlo.
+// Si no hay ninguno ese día, devuelve también el próximo día con disponibilidad.
 // fecha: 'AAAA-MM-DD'
-export const obtenerHorariosDisponibles = async ({ idClinica, fecha, idOdontologo = null }) => {
+export const obtenerHorariosDisponibles = async ({
+    idClinica,
+    fecha,
+    idOdontologo = null,
+    idServicio = null,
+}) => {
     const { rows } = await conexion.query(
-        `SELECT hora
-         FROM fn_slots_disponibles($1::int, $2::date)
-         WHERE ($3::int IS NULL OR idodontologo = $3::int)
-         GROUP BY hora
-         ORDER BY hora`,
-        [idClinica, fecha, idOdontologo]
+        `SELECT f.hora
+         FROM fn_slots_disponibles($1::int, $2::date) f
+         WHERE ($3::int IS NULL OR f.idodontologo = $3::int)
+           AND ($4::int IS NULL OR ${PUEDE_HACER('f.idodontologo', '$4::int')})
+         GROUP BY f.hora
+         ORDER BY f.hora`,
+        [idClinica, fecha, idOdontologo, idServicio]
     );
     const horas = rows.map((r) => hhmm(r.hora));
 
@@ -147,11 +167,12 @@ export const obtenerHorariosDisponibles = async ({ idClinica, fecha, idOdontolog
              WHERE EXISTS (
                     SELECT 1
                     FROM fn_slots_disponibles($1::int, d::date) s
-                    WHERE $3::int IS NULL OR s.idodontologo = $3::int
+                    WHERE ($3::int IS NULL OR s.idodontologo = $3::int)
+                      AND ($4::int IS NULL OR ${PUEDE_HACER('s.idodontologo', '$4::int')})
              )
              ORDER BY d
              LIMIT 1`,
-            [idClinica, fecha, idOdontologo]
+            [idClinica, fecha, idOdontologo, idServicio]
         );
         proximoDia = prox[0]?.dia ?? null;
     }
@@ -160,8 +181,14 @@ export const obtenerHorariosDisponibles = async ({ idClinica, fecha, idOdontolog
 };
 
 // Días (desde hoy y hasta `dias` días adelante) en los que la sede tiene horarios libres
-// (o solo `idOdontologo`, si se indica). Devuelve { dias: ['AAAA-MM-DD', ...] }
-export const obtenerDiasDisponibles = async ({ idClinica, dias = 30, idOdontologo = null }) => {
+// (o solo `idOdontologo`, si se indica; o solo odontólogos que pueden hacer `idServicio`).
+// Devuelve { dias: ['AAAA-MM-DD', ...] }
+export const obtenerDiasDisponibles = async ({
+    idClinica,
+    dias = 30,
+    idOdontologo = null,
+    idServicio = null,
+}) => {
     // to_char evita que el driver convierta la fecha a un Date con zona horaria
     const { rows } = await conexion.query(
         `SELECT to_char(d::date, 'YYYY-MM-DD') AS dia
@@ -173,10 +200,11 @@ export const obtenerDiasDisponibles = async ({ idClinica, dias = 30, idOdontolog
          WHERE EXISTS (
                 SELECT 1
                 FROM fn_slots_disponibles($1::int, d::date) s
-                WHERE $3::int IS NULL OR s.idodontologo = $3::int
+                WHERE ($3::int IS NULL OR s.idodontologo = $3::int)
+                  AND ($4::int IS NULL OR ${PUEDE_HACER('s.idodontologo', '$4::int')})
          )
          ORDER BY d`,
-        [idClinica, dias, idOdontologo]
+        [idClinica, dias, idOdontologo, idServicio]
     );
     return { dias: rows.map((r) => r.dia) };
 };
@@ -210,12 +238,14 @@ const resolverIdTipo = async (cliente, categoria) => {
 //   2. Menos citas en ese periodo
 //   3. Id más bajo, para que el resultado siempre sea el mismo
 // $4 = si no es null, solo se considera a ese odontólogo (el de cabecera del paciente)
+// $5 = id del servicio: solo odontólogos que pueden hacerlo (null = sin filtro)
 const SQL_CANDIDATOS = `
     WITH candidatos AS (
-        SELECT idodontologo, hora_fin
-        FROM fn_slots_disponibles($1::int, $2::date)
-        WHERE hora = $3::time
-          AND ($4::int IS NULL OR idodontologo = $4::int)
+        SELECT fs.idodontologo, fs.hora_fin
+        FROM fn_slots_disponibles($1::int, $2::date) fs
+        WHERE fs.hora = $3::time
+          AND ($4::int IS NULL OR fs.idodontologo = $4::int)
+          AND ($5::int IS NULL OR ${PUEDE_HACER('fs.idodontologo', '$5::int')})
     ),
     dias AS (
         SELECT d::date AS dia
@@ -239,7 +269,7 @@ const SQL_CANDIDATOS = `
         FROM citas c
         JOIN clinica_servicio cs ON cs.idclinica_servicio = c.idclinica_servicio
         WHERE cs.idclinica = $1::int
-          AND c.estado <> 'cancelada'
+          AND upper(c.estado) <> 'CANCELADA'
           AND c.fecha BETWEEN $2::date AND $2::date + 13
           AND c.idodontologo IN (SELECT idodontologo FROM candidatos)
         GROUP BY c.idodontologo
@@ -377,6 +407,7 @@ export const crearCita = async ({
             fecha,
             hora,
             fijo?.id_odontologo ?? null,
+            idServicio,
         ]);
         if (candidatos.length === 0) {
             throw errorHttp(409, 'Ese horario ya no está disponible. Elige otro.');
@@ -424,7 +455,7 @@ export const crearCita = async ({
         if (!creada) throw errorHttp(409, 'Ese horario ya no está disponible. Elige otro.');
 
         // 5. Primera consulta (o su odontólogo ya no está activo): queda como su odontólogo de cabecera
-        const esConsulta = CATEGORIAS_CON_CABECERA.includes(relacion[0].categoria);
+        const esConsulta = CATEGORIAS_CON_CABECERA.includes(String(relacion[0].categoria).toLowerCase());
         const cabeceraNueva = usarOdontologoDelPaciente && esConsulta && !fijo;
         if (cabeceraNueva) {
             await cliente.query(
@@ -516,18 +547,21 @@ export const notificarCitaPorCorreo = async (idCita) => {
 // Es solo una propuesta para mostrarla antes de confirmar: al confirmar se vuelve a calcular,
 // así que si alguien toma ese horario antes, se asigna a otro disponible.
 // idOdontologo: si se indica, solo se considera a ese odontólogo (el de cabecera).
+// idServicio: solo odontólogos que pueden hacer ese servicio.
 // Devuelve null si ya no queda nadie libre a esa hora.
 export const obtenerOdontologoPropuesto = async ({
     idClinica,
     fecha,
     hora,
     idOdontologo = null,
+    idServicio = null,
 }) => {
     const { rows: candidatos } = await conexion.query(SQL_CANDIDATOS, [
         idClinica,
         fecha,
         hora,
         idOdontologo,
+        idServicio,
     ]);
     if (candidatos.length === 0) return null;
 
