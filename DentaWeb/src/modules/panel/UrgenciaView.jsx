@@ -192,6 +192,7 @@ export default function UrgenciaView({ onVolver }) {
       });
       setResultado(urgencia);
       toasts.exito(`Urgencia registrada: te esperamos hoy a las ${hhmmA12(urgencia.hora)}.`);
+      onVolver();
     } catch (err) {
       toasts.error(err.message || 'No pudimos registrar tu urgencia. Intenta de nuevo o llama a la clínica.');
     } finally {
