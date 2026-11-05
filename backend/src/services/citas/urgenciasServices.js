@@ -171,24 +171,7 @@ export const crearUrgencia = async ({ idPaciente, idSede, motivo, sintomas, hora
     // Queda en la cita como observaciones, para que el personal sepa a qué viene el paciente
     const observaciones = `URGENCIA - ${MOTIVOS_URGENCIA[motivo] ?? motivo}: ${sintomas}`;
 
-    // 1.1 Un paciente no puede tener más de una urgencia activa a la vez:
-    //     pendiente y cuya hora de término todavía no pasa.
-    const { rows: activas } = await conexion.query(
-        `SELECT to_char(c.hora, 'HH24:MI') AS hora
-         FROM citas c
-         WHERE c.idPaciente = $1::int
-           AND (c.idTipo = $2::int OR c.idOdontologo = $3::int)
-           AND lower(c.estado) = 'pendiente'
-           AND (c.fecha + c.hora_fin) > (now() AT TIME ZONE '${ZONA}')
-         LIMIT 1`,
-        [idPaciente, idTipo, idOdontologo]
-    );
-    if (activas[0]) {
-        throw errorHttp(
-            409,
-            `Ya tienes una urgencia registrada para hoy a las ${horaLegible(activas[0].hora)}. Si necesitas cambiarla, cancélala primero en Mis citas.`
-        );
-    }
+    // (El límite de una urgencia activa por paciente se valida dentro de crearCita.)
 
     // 2. Hora de llegada (sin depender de la agenda de ningún odontólogo)
     const espacio = await horaDeLlegada(horaLlegada);

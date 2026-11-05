@@ -284,6 +284,61 @@ const SQL_CANDIDATOS = `
     ORDER BY ocupacion NULLS LAST, citas, ca.idodontologo
 `;
 
+/* ============================================================
+   LÍMITE DE CITAS POR PACIENTE
+   ============================================================ */
+
+// Un paciente puede tener, al mismo tiempo, como máximo:
+//   - UNA cita normal (consulta, estudio...) pendiente o confirmada que todavía no termina, y
+//   - UNA urgencia pendiente o confirmada que todavía no termina.
+// Con una cita normal pendiente no puede sacar otra hasta que la atiendan o la cancele,
+// pero sí puede registrar una urgencia (y al revés).
+const ES_URGENCIA_SQL = `EXISTS (
+    SELECT 1 FROM tipo_cita t
+    WHERE t.idTipo = c.idTipo AND lower(t.nombre) IN ('urgencia', 'urgencias')
+)`;
+
+const fechaCorta = (iso) => String(iso).split('-').reverse().join('/'); // 2026-11-20 → 20/11/2026
+
+// '14:30' → '02:30 PM'
+const horaLegible = (valor) => {
+    const [h, m] = String(valor).split(':').map(Number);
+    const h12 = h % 12 === 0 ? 12 : h % 12;
+    return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+};
+
+// Se llama al inicio de la transacción de crearCita. Con el candado por paciente, dos
+// solicitudes simultáneas del mismo paciente se esperan una a la otra y no se cuelan las dos.
+const verificarLimiteCitas = async (cliente, { idPaciente, esUrgencia }) => {
+    await cliente.query('SELECT pg_advisory_xact_lock(1001, $1::int)', [idPaciente]);
+
+    const { rows } = await cliente.query(
+        `SELECT to_char(c.fecha, 'YYYY-MM-DD') AS fecha,
+                to_char(c.hora, 'HH24:MI')     AS hora
+         FROM citas c
+         WHERE c.idPaciente = $1::int
+           AND upper(c.estado) IN ('PENDIENTE', 'CONFIRMADA')
+           AND (c.fecha + c.hora_fin) > (now() AT TIME ZONE '${ZONA}')
+           AND (${ES_URGENCIA_SQL}) = $2::boolean
+         ORDER BY c.fecha, c.hora
+         LIMIT 1`,
+        [idPaciente, esUrgencia]
+    );
+    const activa = rows[0];
+    if (!activa) return;
+
+    if (esUrgencia) {
+        throw errorHttp(
+            409,
+            `Ya tienes una urgencia registrada para hoy a las ${horaLegible(activa.hora)}. Si necesitas cambiarla, cancélala primero en Mis citas.`
+        );
+    }
+    throw errorHttp(
+        409,
+        `Ya tienes una cita pendiente el ${fechaCorta(activa.fecha)} a las ${horaLegible(activa.hora)}. Podrás agendar otra cuando la atiendan o la canceles. Si se trata de una urgencia, puedes registrarla aparte.`
+    );
+};
+
 // Agenda la cita: vuelve a revisar la disponibilidad, escoge al odontólogo libre con menos
 // carga y la guarda, todo en una transacción. Si otra persona se adelanta con ese odontólogo,
 // la restricción contra traslapes de la tabla lo rechaza y se prueba con el siguiente.
@@ -315,6 +370,9 @@ export const crearCita = async ({
 
     try {
         await cliente.query('BEGIN');
+
+        // 0. Límite por paciente: una cita normal y una urgencia a la vez
+        await verificarLimiteCitas(cliente, { idPaciente, esUrgencia });
 
         // 1. La sede debe ofrecer el servicio (y el servicio estar activo)
         const { rows: relacion } = await cliente.query(
