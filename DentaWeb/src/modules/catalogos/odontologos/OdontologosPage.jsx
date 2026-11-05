@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Eye, EyeOff, KeyRound, Stethoscope } from 'lucide-react';
+import { Clock, Eye, EyeOff, KeyRound, Plus, Stethoscope, Trash2 } from 'lucide-react';
 import { CatalogoPage } from '../../../components/CatalogoPage.jsx';
 import { ChecklistContrasena, errorContrasena } from '../../../components/ChecklistContrasena.jsx';
 import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../../components/avisosFormulario.jsx';
@@ -41,6 +41,100 @@ const MAX_CORREO = 150;
 // Cuenta palabras para evitar nombres absurdamente largos
 const contarPalabras = (str) =>
   str.trim().split(/\s+/).filter(Boolean).length;
+
+/* ------------------------------------------------------------
+   Horario semanal
+   ------------------------------------------------------------ */
+
+// 1 = lunes … 7 = domingo (igual que ISODOW en la base de datos)
+const DIAS = [
+  { n: 1, corto: 'L', nombre: 'Lunes' },
+  { n: 2, corto: 'M', nombre: 'Martes' },
+  { n: 3, corto: 'X', nombre: 'Miércoles' },
+  { n: 4, corto: 'J', nombre: 'Jueves' },
+  { n: 5, corto: 'V', nombre: 'Viernes' },
+  { n: 6, corto: 'S', nombre: 'Sábado' },
+  { n: 7, corto: 'D', nombre: 'Domingo' },
+];
+
+const DURACIONES = [15, 20, 30, 45, 60];
+
+const aMinutos = (hhmm) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+
+let contadorBloques = 0;
+const bloqueNuevo = (idClinica) => {
+  contadorBloques += 1;
+  return {
+    clave: `b${contadorBloques}`,
+    id_clinica: idClinica,
+    dias: [1, 2, 3, 4, 5],
+    hora_inicio: '09:00',
+    hora_fin: '14:00',
+    duracion: 30,
+  };
+};
+
+// Un bloque (clínica + varios días + horas) → una fila por día, como las guarda la base de datos
+const expandirBloques = (bloques) =>
+  bloques.flatMap((b) =>
+    b.dias.map((dia) => ({
+      id_clinica: Number(b.id_clinica),
+      dia_semana: dia,
+      hora_inicio: b.hora_inicio,
+      hora_fin: b.hora_fin,
+      duracion_cita_min: Number(b.duracion),
+    }))
+  );
+
+// Filas de la base de datos → bloques (junta los días que comparten clínica, horas y duración)
+const agruparHorarios = (filas = []) => {
+  const mapa = new Map();
+  filas.forEach((f) => {
+    const llave = `${f.id_clinica}|${f.hora_inicio}|${f.hora_fin}|${f.duracion_cita_min}`;
+    if (!mapa.has(llave)) {
+      const bloque = bloqueNuevo(Number(f.id_clinica));
+      bloque.dias = [];
+      bloque.hora_inicio = f.hora_inicio;
+      bloque.hora_fin = f.hora_fin;
+      bloque.duracion = Number(f.duracion_cita_min);
+      mapa.set(llave, bloque);
+    }
+    mapa.get(llave).dias.push(Number(f.dia_semana));
+  });
+  return [...mapa.values()].map((b) => ({ ...b, dias: [...b.dias].sort((a, c) => a - c) }));
+};
+
+const validarHorarios = (bloques, idsClinicas) => {
+  for (const b of bloques) {
+    if (!b.id_clinica || !idsClinicas.includes(Number(b.id_clinica)))
+      return 'Cada horario necesita una clínica de las seleccionadas';
+    if (b.dias.length === 0) return 'Elige al menos un día en cada horario';
+    if (!b.hora_inicio || !b.hora_fin) return 'Indica la hora de inicio y de fin en cada horario';
+    if (aMinutos(b.hora_fin) <= aMinutos(b.hora_inicio))
+      return 'La hora de fin debe ser posterior a la de inicio';
+    if (aMinutos(b.hora_fin) - aMinutos(b.hora_inicio) < Number(b.duracion))
+      return 'Un horario es más corto que la duración de una cita';
+  }
+
+  // Un odontólogo no puede estar en dos lugares a la vez: ningún día se empalma,
+  // ni siquiera entre clínicas distintas.
+  const filas = expandirBloques(bloques);
+  for (let i = 0; i < filas.length; i += 1) {
+    for (let j = i + 1; j < filas.length; j += 1) {
+      const a = filas[i];
+      const b = filas[j];
+      if (
+        a.dia_semana === b.dia_semana &&
+        aMinutos(a.hora_inicio) < aMinutos(b.hora_fin) &&
+        aMinutos(b.hora_inicio) < aMinutos(a.hora_fin)
+      ) {
+        const dia = DIAS.find((d) => d.n === a.dia_semana)?.nombre ?? 'un día';
+        return `Los horarios se empalman el ${dia.toLowerCase()}`;
+      }
+    }
+  }
+  return null;
+};
 
 /* ------------------------------------------------------------
    Validadores por campo
@@ -144,6 +238,10 @@ const validarFormulario = (
     errores.ids_clinicas = 'Selecciona al menos una clínica';
   }
 
+  // --- Horario semanal (opcional, pero si se captura debe ser coherente) ---
+  const errHorarios = validarHorarios(form.bloques, form.ids_clinicas);
+  if (errHorarios) errores.horarios = errHorarios;
+
   // --- Credenciales (solo al crear) ---
   if (creando) {
     const errCorreo = validarCorreo(form.correo, { obligatorio: true });
@@ -172,6 +270,8 @@ const FORM_INICIAL = {
   telefono: '',
   cedula: '',
   ids_clinicas: [], // arreglo de ids (número)
+  ids_especialidades: [], // arreglo de ids (número)
+  bloques: [], // horario semanal (ver bloqueNuevo)
   idusuario: '',
   correo: '',
   contrasena: '',
@@ -200,6 +300,10 @@ const mapearOdontologo = (o) => ({
   estado: o.activo ? 'Activo' : 'Inactivo',
 });
 
+// Id del odontólogo recién creado, según lo que responda el backend
+const idDeRespuesta = (resp) =>
+  resp?.id_odontologo ?? resp?.id ?? resp?.odontologo?.id_odontologo ?? resp?.odontologo?.id ?? null;
+
 const Etiqueta = ({ children, requerido }) => (
   <label className="mb-1 block text-xs font-medium text-slate-700 md:mb-1.5 md:text-sm dark:text-on-surface">
     {children}
@@ -223,6 +327,7 @@ const Seccion = ({ titulo, children }) => (
 export default function OdontologosPage() {
   const [odontologos, setOdontologos] = useState([]);
   const [clinicas, setClinicas] = useState([]);
+  const [especialidades, setEspecialidades] = useState([]);
   const formularioRef = useRef(null);
   const [cargando, setCargando] = useState(true);
   const [form, setForm] = useState(FORM_INICIAL);
@@ -233,6 +338,9 @@ export default function OdontologosPage() {
   const [guardando, setGuardando] = useState(false);
   const [verContrasena, setVerContrasena] = useState(false);
   const [verConfirmar, setVerConfirmar] = useState(false);
+  // Al editar, el horario y las especialidades se cargan aparte. Hasta que llegan no se
+  // guardan, para no borrar por error lo que ya tenía el odontólogo.
+  const [perfilListo, setPerfilListo] = useState(true);
 
   const creando = editandoId === null;
 
@@ -258,6 +366,12 @@ export default function OdontologosPage() {
     } catch (err) {
       console.error('Error al cargar clínicas:', err);
     }
+    try {
+      const data = await odontologosApi.catalogoPerfil();
+      setEspecialidades(comoLista(data, 'especialidades'));
+    } catch (err) {
+      console.error('Error al cargar especialidades:', err);
+    }
   }, []);
 
   useEffect(() => {
@@ -271,6 +385,12 @@ export default function OdontologosPage() {
       clinicas.filter(
         (c) => c.activo || form.ids_clinicas.includes(Number(c.id_clinica))
       ),
+    [clinicas, form.ids_clinicas]
+  );
+
+  // Clínicas marcadas arriba: son las únicas donde se puede poner horario
+  const clinicasSeleccionadas = useMemo(
+    () => clinicas.filter((c) => form.ids_clinicas.includes(Number(c.id_clinica))),
     [clinicas, form.ids_clinicas]
   );
 
@@ -312,22 +432,79 @@ export default function OdontologosPage() {
     });
   };
 
-  // Marca / desmarca una clínica en la lista
-  const toggleClinica = (idClinica) => {
-    const id = Number(idClinica);
-    setForm((prev) => ({
-      ...prev,
-      ids_clinicas: prev.ids_clinicas.includes(id)
-        ? prev.ids_clinicas.filter((x) => x !== id)
-        : [...prev.ids_clinicas, id],
-    }));
-
+  const limpiarError = (campo) =>
     setErroresCampos((prev) => {
-      if (!prev.ids_clinicas) return prev;
+      if (!prev[campo]) return prev;
       const copia = { ...prev };
-      delete copia.ids_clinicas;
+      delete copia[campo];
       return copia;
     });
+
+  // Marca / desmarca una clínica en la lista. Al quitar una, también se quitan sus horarios.
+  const toggleClinica = (idClinica) => {
+    const id = Number(idClinica);
+    setForm((prev) => {
+      const quitando = prev.ids_clinicas.includes(id);
+      return {
+        ...prev,
+        ids_clinicas: quitando
+          ? prev.ids_clinicas.filter((x) => x !== id)
+          : [...prev.ids_clinicas, id],
+        bloques: quitando
+          ? prev.bloques.filter((b) => Number(b.id_clinica) !== id)
+          : prev.bloques,
+      };
+    });
+    limpiarError('ids_clinicas');
+    limpiarError('horarios');
+  };
+
+  const toggleEspecialidad = (idEspecialidad) => {
+    const id = Number(idEspecialidad);
+    setForm((prev) => ({
+      ...prev,
+      ids_especialidades: prev.ids_especialidades.includes(id)
+        ? prev.ids_especialidades.filter((x) => x !== id)
+        : [...prev.ids_especialidades, id],
+    }));
+  };
+
+  /* ------------------------------------------------------------
+     Horario semanal
+     ------------------------------------------------------------ */
+  const agregarBloque = () => {
+    const primera = clinicasSeleccionadas[0];
+    if (!primera) return;
+    setForm((prev) => ({
+      ...prev,
+      bloques: [...prev.bloques, bloqueNuevo(Number(primera.id_clinica))],
+    }));
+    limpiarError('horarios');
+  };
+
+  const cambiarBloque = (clave, cambios) => {
+    setForm((prev) => ({
+      ...prev,
+      bloques: prev.bloques.map((b) => (b.clave === clave ? { ...b, ...cambios } : b)),
+    }));
+    limpiarError('horarios');
+  };
+
+  const toggleDia = (clave, dia) => {
+    setForm((prev) => ({
+      ...prev,
+      bloques: prev.bloques.map((b) => {
+        if (b.clave !== clave) return b;
+        const dias = b.dias.includes(dia) ? b.dias.filter((d) => d !== dia) : [...b.dias, dia];
+        return { ...b, dias: dias.sort((a, c) => a - c) };
+      }),
+    }));
+    limpiarError('horarios');
+  };
+
+  const quitarBloque = (clave) => {
+    setForm((prev) => ({ ...prev, bloques: prev.bloques.filter((b) => b.clave !== clave) }));
+    limpiarError('horarios');
   };
 
   /* ------------------------------------------------------------
@@ -353,6 +530,7 @@ export default function OdontologosPage() {
     setEditandoId(null);
     setError(null);
     setErroresCampos({});
+    setPerfilListo(true);
   };
 
   /* ------------------------------------------------------------
@@ -387,17 +565,53 @@ export default function OdontologosPage() {
         ids_clinicas: form.ids_clinicas.map(Number),
       };
 
+      // 1. Datos del odontólogo (y sus clínicas)
+      let idGuardado = editandoId;
       if (editandoId) {
         await odontologosApi.actualizar(editandoId, {
           ...datosBase,
           idusuario: form.idusuario ? Number(form.idusuario) : null,
         });
       } else {
-        await odontologosApi.crear({
+        const creado = await odontologosApi.crear({
           ...datosBase,
           correo: form.correo.trim().toLowerCase(),
           contrasena: form.contrasena,
         });
+        idGuardado = idDeRespuesta(creado);
+
+        // Si el backend no devuelve el id, se busca el odontólogo recién creado
+        if (!idGuardado) {
+          const lista = comoLista(await odontologosApi.listar(), 'odontologos');
+          idGuardado =
+            lista.find(
+              (o) =>
+                (datosBase.cedula && o.cedula === datosBase.cedula) ||
+                o.telefono === datosBase.telefono
+            )?.id_odontologo ?? null;
+        }
+      }
+
+      // 2. Especialidades y horario semanal
+      if (perfilListo && idGuardado) {
+        try {
+          await odontologosApi.guardarPerfil(idGuardado, {
+            ids_especialidades: form.ids_especialidades.map(Number),
+            horarios: expandirBloques(form.bloques),
+          });
+        } catch (err) {
+          // El odontólogo ya quedó guardado: se pasa a modo edición para reintentar
+          // sin crear otro duplicado.
+          await cargar();
+          setEditandoId(idGuardado);
+          setForm((prev) => ({ ...prev, correo: '', contrasena: '', confirmarContrasena: '' }));
+          setError(
+            `El odontólogo se guardó, pero no se pudo guardar su horario o especialidades: ${
+              err.message || 'error desconocido'
+            }`
+          );
+          return false;
+        }
       }
 
       resetFormulario();
@@ -411,7 +625,7 @@ export default function OdontologosPage() {
     }
   };
 
-  const handleEditar = (id) => {
+  const handleEditar = async (id) => {
     const o = odontologos.find((x) => x.id_odontologo === id);
     if (!o) return;
 
@@ -425,6 +639,7 @@ export default function OdontologosPage() {
     setEditandoId(id);
     setError(null);
     setErroresCampos({});
+    setPerfilListo(false);
     setForm({
       ...FORM_INICIAL,
       nombre: (o.nombre ?? '').toUpperCase(),
@@ -435,6 +650,23 @@ export default function OdontologosPage() {
       ids_clinicas: idsClinicas.map(Number),
       idusuario: o.id_usuario != null ? String(o.id_usuario) : '',
     });
+
+    // Especialidades y horario actuales
+    try {
+      const perfil = await odontologosApi.obtenerPerfil(id);
+      setForm((prev) => ({
+        ...prev,
+        ids_especialidades: (perfil?.ids_especialidades ?? []).map(Number),
+        bloques: agruparHorarios(perfil?.horarios ?? []),
+      }));
+      setPerfilListo(true);
+    } catch (err) {
+      console.error('Error al cargar el perfil del odontólogo:', err);
+      setError(
+        'No se pudieron cargar sus especialidades y horario. Puedes editar los demás datos; ' +
+          'el horario no se modificará.'
+      );
+    }
   };
 
   const handleEliminar = async (id) => {
@@ -610,6 +842,186 @@ export default function OdontologosPage() {
               </p>
             )}
           </div>
+
+          <div data-campo="ids_especialidades" className="md:col-span-2">
+            <Etiqueta>
+              Especialidades
+              {form.ids_especialidades.length > 0 && (
+                <span className="ml-2 font-normal text-slate-500 dark:text-on-surface-variant">
+                  ({form.ids_especialidades.length}{' '}
+                  {form.ids_especialidades.length === 1 ? 'seleccionada' : 'seleccionadas'})
+                </span>
+              )}
+              :
+            </Etiqueta>
+            <div className="max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-white p-1 md:rounded-xl md:p-2 dark:border-outline-variant dark:bg-surface-container">
+              {!perfilListo ? (
+                <p className="px-2 py-2 text-sm text-slate-500 dark:text-on-surface-variant">
+                  Cargando especialidades...
+                </p>
+              ) : especialidades.length === 0 ? (
+                <p className="px-2 py-2 text-sm text-slate-500 dark:text-on-surface-variant">
+                  No hay especialidades disponibles.
+                </p>
+              ) : (
+                especialidades.map((e) => {
+                  const id = Number(e.id_especialidad);
+                  const marcada = form.ids_especialidades.includes(id);
+                  return (
+                    <label
+                      key={id}
+                      className={`flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors md:gap-3 md:py-2 md:text-base ${
+                        marcada ? 'bg-teal-50 text-teal-800 dark:bg-teal-950 dark:text-teal-400' : 'text-slate-700 hover:bg-slate-50 dark:text-on-surface dark:hover:bg-surface-container-high'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 cursor-pointer accent-teal-600"
+                        checked={marcada}
+                        onChange={() => toggleEspecialidad(id)}
+                      />
+                      <span className="flex-1">{e.nombre}</span>
+                    </label>
+                  );
+                })
+              )}
+            </div>
+            <p className="mt-1 text-xs text-slate-500 dark:text-on-surface-variant">
+              Un servicio que requiere una especialidad solo se agenda con quien la tenga.
+            </p>
+          </div>
+        </div>
+      </Seccion>
+
+      {/* Horario de atención */}
+      <Seccion titulo="Horario de atención">
+        <div data-campo="horarios" className="flex flex-col gap-3">
+          <p className="text-xs text-slate-500 md:text-sm dark:text-on-surface-variant">
+            Elige los días y las horas en que atiende en cada clínica. Sin horario no se le
+            asignan citas.
+          </p>
+
+          {!perfilListo && (
+            <p className="text-sm text-slate-500 dark:text-on-surface-variant">Cargando horario...</p>
+          )}
+
+          {perfilListo &&
+            form.bloques.map((b) => (
+              <div
+                key={b.clave}
+                className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 md:rounded-xl md:p-4 dark:border-outline-variant dark:bg-surface-container"
+              >
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+                  <div>
+                    <Etiqueta requerido>Clínica:</Etiqueta>
+                    <select
+                      className={inputClass}
+                      value={b.id_clinica}
+                      onChange={(e) => cambiarBloque(b.clave, { id_clinica: Number(e.target.value) })}
+                    >
+                      {clinicasSeleccionadas.map((c) => (
+                        <option key={c.id_clinica} value={Number(c.id_clinica)}>
+                          {c.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <Etiqueta requerido>Duración de cada cita:</Etiqueta>
+                    <select
+                      className={inputClass}
+                      value={b.duracion}
+                      onChange={(e) => cambiarBloque(b.clave, { duracion: Number(e.target.value) })}
+                    >
+                      {DURACIONES.map((min) => (
+                        <option key={min} value={min}>
+                          {min} minutos
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <Etiqueta requerido>Días:</Etiqueta>
+                  <div className="flex flex-wrap gap-2">
+                    {DIAS.map((d) => {
+                      const activo = b.dias.includes(d.n);
+                      return (
+                        <button
+                          key={d.n}
+                          type="button"
+                          title={d.nombre}
+                          aria-label={d.nombre}
+                          aria-pressed={activo}
+                          onClick={() => toggleDia(b.clave, d.n)}
+                          className={`h-9 w-9 cursor-pointer rounded-full border text-sm font-semibold transition-colors ${
+                            activo
+                              ? 'border-teal-600 bg-teal-600 text-white'
+                              : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-100 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface dark:hover:bg-surface-container-high'
+                          }`}
+                        >
+                          {d.corto}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 md:gap-4">
+                  <div>
+                    <Etiqueta requerido>Desde:</Etiqueta>
+                    <input
+                      type="time"
+                      className={inputClass}
+                      value={b.hora_inicio}
+                      onChange={(e) => cambiarBloque(b.clave, { hora_inicio: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Etiqueta requerido>Hasta:</Etiqueta>
+                    <input
+                      type="time"
+                      className={inputClass}
+                      value={b.hora_fin}
+                      onChange={(e) => cambiarBloque(b.clave, { hora_fin: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => quitarBloque(b.clave)}
+                  className="inline-flex w-fit cursor-pointer items-center gap-1 text-xs font-semibold text-red-600 hover:text-red-700 dark:text-error"
+                >
+                  <Trash2 size={14} /> Quitar este horario
+                </button>
+              </div>
+            ))}
+
+          {perfilListo && form.bloques.length === 0 && (
+            <p className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-500 dark:bg-surface-container dark:text-on-surface-variant">
+              <Clock size={16} aria-hidden="true" /> Todavía no tiene horario.
+            </p>
+          )}
+
+          <button
+            type="button"
+            onClick={agregarBloque}
+            disabled={!perfilListo || clinicasSeleccionadas.length === 0}
+            className="inline-flex w-fit cursor-pointer items-center gap-1 rounded-lg border border-teal-600 px-3 py-2 text-sm font-semibold text-teal-700 transition-colors hover:bg-teal-50 disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400 disabled:hover:bg-transparent dark:text-teal-400 dark:hover:bg-teal-950"
+          >
+            <Plus size={16} /> Agregar horario
+          </button>
+          {clinicasSeleccionadas.length === 0 && (
+            <p className="text-xs text-slate-500 dark:text-on-surface-variant">
+              Primero selecciona la clínica donde trabaja.
+            </p>
+          )}
+
+          {erroresCampos.horarios && (
+            <p className="text-xs text-red-600 dark:text-error">{erroresCampos.horarios}</p>
+          )}
         </div>
       </Seccion>
 
@@ -706,7 +1118,7 @@ export default function OdontologosPage() {
   return (
     <CatalogoPage
       titulo="Odontólogos"
-      subtitulo="Gestiona el personal odontológico y las clínicas donde trabaja."
+      subtitulo="Gestiona el personal odontológico, sus clínicas, especialidades y horarios."
       textoBotonNuevo="Agregar odontólogo"
       placeholderBusqueda="Buscar por nombre, cédula, correo o clínica..."
       datos={odontologos.map(mapearOdontologo)}

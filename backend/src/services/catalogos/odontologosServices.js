@@ -3,10 +3,27 @@ import bcrypt from 'bcrypt';
 
 const SALT_ROUNDS = 12;
 
+// Odontólogo genérico de urgencias (se identifica por el correo de su usuario).
+// Es del sistema: no aparece en el listado y no se puede editar, desactivar ni reactivar.
+const CORREO_ODONTOLOGO_URGENCIA = 'urgencia@clinicware.com';
+
 const errorHttp = (status, mensaje) => {
     const error = new Error(mensaje);
     error.status = status;
     return error;
+};
+
+const verificarNoEsDelSistema = async (idOdontologo) => {
+    const { rows } = await conexion.query(
+        `SELECT 1
+         FROM odontologos o
+         JOIN usuarios u ON u.idUsuario = o.idUsuario
+         WHERE o.idOdontologo = $1::int AND u.correo = $2`,
+        [idOdontologo, CORREO_ODONTOLOGO_URGENCIA]
+    );
+    if (rows[0]) {
+        throw errorHttp(403, 'Ese odontólogo es del sistema (atiende las urgencias) y no se puede modificar');
+    }
 };
 
 const manejarErrorPg = (err) => {
@@ -98,12 +115,14 @@ export const obtenerOdontologos = async ({
         }
     }
 
-    // Una clínica ve a los odontólogos que trabajan en ella (aunque también trabajen en otras)
+    // Una clínica ve a los odontólogos que trabajan en ella (aunque también trabajen en otras).
+    // El odontólogo genérico de urgencias no se lista.
     const query = `
         SELECT ${COLUMNAS}
         FROM odontologos o
         ${JOINS}
         WHERE ($1::text = 'todos' OR u.activo = ($1::text = 'true'))
+          AND u.correo IS DISTINCT FROM $3::text
           AND (
                 $2::int IS NULL
                 OR EXISTS (
@@ -117,7 +136,11 @@ export const obtenerOdontologos = async ({
         ORDER BY o.ape_pat, o.ape_mat, o.nombre, o.idOdontologo;
     `;
 
-    const { rows } = await conexion.query(query, [filtroActivo, idClinicaFiltro]);
+    const { rows } = await conexion.query(query, [
+        filtroActivo,
+        idClinicaFiltro,
+        CORREO_ODONTOLOGO_URGENCIA,
+    ]);
     return rows;
 };
 
@@ -171,6 +194,7 @@ export const actualizarOdontologo = async (
     id,
     { nombre, ape_pat, ape_mat, telefono, cedula, idusuario, ids_clinicas }
 ) => {
+    await verificarNoEsDelSistema(id);
     const clinicas = normalizarIdsClinicas(ids_clinicas);
     const client = await conexion.connect();
 
@@ -232,6 +256,7 @@ export const actualizarOdontologo = async (
 
 // ---------- ELIMINAR (lógico) ----------
 export const eliminarOdontologo = async (idOdontologo) => {
+    await verificarNoEsDelSistema(idOdontologo);
     const { rowCount } = await conexion.query(
         `UPDATE usuarios u
          SET activo = false
@@ -247,6 +272,7 @@ export const eliminarOdontologo = async (idOdontologo) => {
 
 // ---------- REACTIVAR ----------
 export const reactivarOdontologo = async (id) => {
+    await verificarNoEsDelSistema(id);
     // 1. Reactiva la cuenta de usuario ligada al odontólogo
     const { rowCount } = await conexion.query(
         `UPDATE usuarios

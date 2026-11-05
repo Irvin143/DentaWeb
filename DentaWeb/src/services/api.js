@@ -195,6 +195,19 @@ export const odontologosApi = {
   reactivar(id) {
     return apiRequest(`/api/odontologos/${id}/reactivar`, { method: "PATCH" });
   },
+
+  // Especialidades disponibles para asignar
+  catalogoPerfil() {
+    return apiRequest("/api/odontologos/perfil/catalogo", { method: "GET" });
+  },
+  // { ids_especialidades: [...], horarios: [...] } de un odontólogo
+  obtenerPerfil(id) {
+    return apiRequest(`/api/odontologos/${id}/perfil`, { method: "GET" });
+  },
+  // payload: { ids_especialidades: [...], horarios: [...] }
+  guardarPerfil(id, payload) {
+    return apiRequest(`/api/odontologos/${id}/perfil`, { method: "PUT", body: payload });
+  },
 };
 
 export const especialidadesApi = {
