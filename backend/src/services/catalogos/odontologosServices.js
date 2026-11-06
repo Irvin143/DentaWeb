@@ -67,7 +67,9 @@ const COLUMNAS = `
     u.correo AS correo_usuario,
     COALESCE(cx.clinicas, '[]'::json) AS clinicas,
     COALESCE(cx.ids_clinicas, ARRAY[]::int[]) AS ids_clinicas,
-    cx.nombres_clinicas AS nombre_clinica
+    cx.nombres_clinicas AS nombre_clinica,
+    COALESCE(ex.especialidades, '[]'::json) AS especialidades,
+    ex.nombres_especialidades AS nombre_especialidades
 `;
 
 const JOINS = `
@@ -84,8 +86,18 @@ const JOINS = `
         JOIN clinicas cl ON cl.idClinica = oc.idClinica
         WHERE oc.idOdontologo = o.idOdontologo AND oc.activo
     ) cx ON true
+    LEFT JOIN LATERAL (
+        SELECT
+            json_agg(
+                json_build_object('id_especialidad', e.idEspecialidad, 'nombre', e.nombre)
+                ORDER BY e.nombre
+            ) AS especialidades,
+            string_agg(e.nombre, ', ' ORDER BY e.nombre) AS nombres_especialidades
+        FROM espe_odon eo
+        JOIN especialidades e ON e.idEspecialidad = eo.idEspecialidad
+        WHERE eo.idOdontologo = o.idOdontologo
+    ) ex ON true
 `;
-
 // ---------- LISTAR ----------
 // filtroActivo: 'true' | 'false' | 'todos' (default)
 // idUsuario / paquete: si es 'Clinica', obtiene su idClinica primero
