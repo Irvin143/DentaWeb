@@ -54,6 +54,15 @@ const validarBody = (body) => {
     const descripcion = body.descripcion ?? '';
     const categoria = body.categoria ?? 'consulta';
     const ids = body.idsClinicas ?? (body.idclinica ? [body.idclinica] : []);
+    const idEspecialidadRaw = body.idEspecialidad ?? body.idespecialidad ?? null;
+    
+    let idEspecialidad = null;
+    
+    if (idEspecialidadRaw !== null && idEspecialidadRaw !== '') {
+        idEspecialidad = Number(idEspecialidadRaw);
+        if (!Number.isInteger(idEspecialidad) || idEspecialidad <= 0)
+            return { error: 'idEspecialidad debe ser un entero positivo' };
+    }
 
     if (typeof nombre !== 'string' || !nombre.trim())
         return { error: 'El nombre es obligatorio' };
@@ -79,6 +88,7 @@ const validarBody = (body) => {
             nombre: nombre.trim(),
             descripcion: descripcion.trim() || null,
             categoria: catValida,
+            idEspecialidad,
             idsClinicas: [...new Set(idsClinicas)],
         },
     };

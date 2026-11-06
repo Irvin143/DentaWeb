@@ -11,7 +11,12 @@ const errorHttp = (status, mensaje) => {
 const manejarErrorPg = (err) => {
     // Solo se dispara si tienes un índice único (ej. sobre nombre WHERE activo)
     if (err.code === '23505') throw errorHttp(409, 'Ya existe un servicio activo con ese nombre');
-    if (err.code === '23503') throw errorHttp(400, 'La clínica indicada no existe');
+    if (err.code === '23503') {
+        // La violación puede venir de dos llaves foráneas: especialidad o clínica
+        const origen = `${err.constraint ?? ''} ${err.detail ?? ''}`.toLowerCase();
+        if (origen.includes('especialidad')) throw errorHttp(400, 'La especialidad indicada no existe');
+        throw errorHttp(400, 'La clínica indicada no existe');
+    }
     if (err.code === '23514') throw errorHttp(400, "La categoría debe ser 'consulta' o 'estudio'");
     throw err;
 };
@@ -27,6 +32,14 @@ const normalizarCategoria = (categoria, valorPorDefecto = null) => {
         throw errorHttp(400, "La categoría debe ser 'consulta' o 'estudio'");
     }
     return valor;
+};
+
+// undefined / null / '' → null (sin especialidad); si viene, debe ser entero positivo.
+const normalizarIdEspecialidad = (valor) => {
+    if (valor === undefined || valor === null || valor === '') return null;
+    const n = Number(valor);
+    if (!Number.isInteger(n) || n <= 0) throw errorHttp(400, 'idEspecialidad no es válido');
+    return n;
 };
 
 // Valida la lista de clínicas: arreglo de enteros positivos, sin repetir.
@@ -67,9 +80,12 @@ const SELECT_BASE = `
         s.descripcion,
         s.categoria,
         s.activo,
+        s.idEspecialidad AS id_especialidad,
+        e.nombre AS nombre_especialidad,
         cs.idClinica AS id_clinica,
         c.nombre AS nombre_clinica
     FROM Servicios s
+    LEFT JOIN Especialidades e ON e.idEspecialidad = s.idEspecialidad
     LEFT JOIN LATERAL (
         SELECT x.idClinica
         FROM Clinica_Servicio x
@@ -81,7 +97,7 @@ const SELECT_BASE = `
 `;
 
 const RETURNING_SERVICIO =
-    'RETURNING idServicio AS id_servicio, nombre, descripcion, categoria, activo';
+    'RETURNING idServicio AS id_servicio, nombre, descripcion, categoria, activo, idEspecialidad AS id_especialidad';
 
 // ---------- LISTAR ----------
 // categoria (opcional): 'consulta' | 'estudio'; si no se manda, devuelve todas
@@ -111,6 +127,8 @@ export const obtenerServicios = async ({
                s.descripcion,
                s.categoria,
                s.activo,
+               s.idEspecialidad AS id_especialidad,
+               e.nombre AS nombre_especialidad,
                COALESCE(
                  json_agg(
                    json_build_object('id_clinica', c.idClinica, 'nombre', c.nombre)
@@ -119,12 +137,13 @@ export const obtenerServicios = async ({
                  '[]'::json
                ) AS clinicas
         FROM Servicios s
+        LEFT JOIN Especialidades e ON e.idEspecialidad = s.idEspecialidad
         LEFT JOIN Clinica_Servicio cs ON cs.idServicio = s.idServicio
         LEFT JOIN Clinicas c ON c.idClinica = cs.idClinica
         WHERE ($1::text = 'todos' OR s.activo = ($1::text = 'true'))
           AND ($2::int IS NULL OR (cs.idClinica = $2::int AND cs.activo))
           AND ($3::text IS NULL OR s.categoria = $3::text)
-        GROUP BY s.idServicio
+        GROUP BY s.idServicio, e.idEspecialidad
         ORDER BY s.categoria, s.nombre, s.idServicio;
     `;
 
@@ -145,8 +164,11 @@ export const obtenerCatalogoServicios = async ({ categoria = null } = {}) => {
             s.idServicio AS id_servicio,
             s.nombre,
             s.descripcion,
-            s.categoria
+            s.categoria,
+            s.idEspecialidad AS id_especialidad,
+            e.nombre AS nombre_especialidad
         FROM Servicios s
+        LEFT JOIN Especialidades e ON e.idEspecialidad = s.idEspecialidad
         WHERE s.activo
           AND ($1::text IS NULL OR s.categoria = $1::text)
           AND EXISTS (
@@ -174,22 +196,25 @@ export const obtenerServicioPorId = async (id) => {
 // ---------- CREAR ----------
 // Crea el servicio y lo liga a las clínicas en una sola transacción.
 // categoria: 'consulta' (por defecto) | 'estudio'
+// idEspecialidad: opcional; null = sin especialidad
 export const crearServicio = async ({
     nombre,
     descripcion,
     categoria = 'consulta',
+    idEspecialidad = null,
     idsClinicas = [],
 }) => {
     const categoriaFinal = normalizarCategoria(categoria, 'consulta');
+    const especialidadFinal = normalizarIdEspecialidad(idEspecialidad);
     const clinicas = normalizarIdsClinicas(idsClinicas) ?? [];
 
     try {
         return await enTransaccion(async (cliente) => {
             const { rows } = await cliente.query(
-                `INSERT INTO Servicios (nombre, descripcion, categoria)
-                 VALUES ($1, $2, $3)
+                `INSERT INTO Servicios (nombre, descripcion, categoria, idEspecialidad)
+                 VALUES ($1, $2, $3, $4)
                  ${RETURNING_SERVICIO}`,
-                [nombre, descripcion, categoriaFinal]
+                [nombre, descripcion, categoriaFinal, especialidadFinal]
             );
             const servicio = rows[0];
 
@@ -210,16 +235,17 @@ export const crearServicio = async ({
 };
 
 // ---------- ACTUALIZAR ----------
-// Reemplaza nombre y descripción; si descripcion es null, se borra.
+// Reemplaza nombre, descripción y especialidad; si descripcion o idEspecialidad son null, se borran.
 // categoria: si no viene, se conserva la actual.
 // idsClinicas: si viene, sincroniza las clínicas del servicio (las nuevas se agregan, las que
 // ya no aparecen se dan de baja sin borrarlas, porque las citas dependen de esa relación).
 // Si no viene, las clínicas no se tocan. idclinica (una sola) se acepta por compatibilidad.
 export const actualizarServicio = async (
     id,
-    { nombre, descripcion, categoria, idsClinicas, idclinica }
+    { nombre, descripcion, categoria, idEspecialidad, idsClinicas, idclinica }
 ) => {
     const categoriaFinal = normalizarCategoria(categoria); // null = no cambiar
+    const especialidadFinal = normalizarIdEspecialidad(idEspecialidad); // null = quitar
     const clinicas = normalizarIdsClinicas(
         idsClinicas ?? (idclinica != null ? [idclinica] : undefined)
     );
@@ -233,10 +259,11 @@ export const actualizarServicio = async (
                 `UPDATE Servicios
                  SET nombre = $2,
                      descripcion = $3,
-                     categoria = COALESCE($4::text, categoria)
+                     categoria = COALESCE($4::text, categoria),
+                     idEspecialidad = $5::int
                  WHERE idServicio = $1
                  ${RETURNING_SERVICIO}`,
-                [id, nombre, descripcion, categoriaFinal]
+                [id, nombre, descripcion, categoriaFinal, especialidadFinal]
             );
             const servicio = rows[0];
             if (!servicio) return null; // no existe

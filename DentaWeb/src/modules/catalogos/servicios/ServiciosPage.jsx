@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { BriefcaseMedical } from 'lucide-react';
 import { CatalogoPage } from '../../../components/CatalogoPage';
 import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../../components/avisosFormulario';
-import { serviciosApi, clinicasApi } from '../../../services/api.js';
+import { serviciosApi, clinicasApi, especialidadesApi } from '../../../services/api.js';
 
 const inputClass =
   'w-full rounded-xl border border-slate-200 bg-white p-3 outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface dark:placeholder:text-on-surface-variant';
@@ -19,6 +19,7 @@ const FORM_INICIAL = {
   nombre: '',
   descripcion: '',
   categoria: CATEGORIA_POR_DEFECTO,
+  idEspecialidad: '', // '' = sin especialidad
   idsClinicas: [], // arreglo de IDs (números)
 };
 
@@ -48,6 +49,7 @@ const mapearServicio = (s) => ({
   nombre: s.nombre,
   descripcion: s.descripcion,
   categoria: etiquetaCategoria(s.categoria),
+  especialidad: s.nombre_especialidad ?? '—',
   clinica: clinicasDeServicio(s)
     .map((c) => c.nombre)
     .filter(Boolean)
@@ -58,6 +60,7 @@ const mapearServicio = (s) => ({
 export default function ServiciosPage() {
   const [servicios, setServicios] = useState([]); // datos crudos del backend
   const [clinicas, setClinicas] = useState([]); // para el selector de clínicas
+  const [especialidades, setEspecialidades] = useState([]); // para el selector de especialidad
   const [cargando, setCargando] = useState(true);
   const [form, setForm] = useState(FORM_INICIAL);
   const [editandoId, setEditandoId] = useState(null);
@@ -73,6 +76,7 @@ export default function ServiciosPage() {
       setErrorCarga(null);
       const data = await serviciosApi.listar();
       setServicios(comoLista(data, 'servicios'));
+      console.log('Servicios cargados:', data);
     } catch (err) {
       setErrorCarga(err.message || 'No se pudieron cargar los servicios.');
     } finally {
@@ -80,13 +84,21 @@ export default function ServiciosPage() {
     }
   }, []);
 
-  // Catálogo para el selector (si falla, la página sigue funcionando)
+  // Catálogos para los selectores (si fallan, la página sigue funcionando)
   const cargarCatalogos = useCallback(async () => {
-    const [resClinicas] = await Promise.allSettled([clinicasApi.listar()]);
+    const [resClinicas, resEspecialidades] = await Promise.allSettled([
+      clinicasApi.listar(),
+      especialidadesApi.listar(),
+    ]);
     if (resClinicas.status === 'fulfilled') {
       setClinicas(comoLista(resClinicas.value, 'clinicas'));
     } else {
       console.error('Error al cargar clínicas:', resClinicas.reason);
+    }
+    if (resEspecialidades.status === 'fulfilled') {
+      setEspecialidades(comoLista(resEspecialidades.value, 'especialidades'));
+    } else {
+      console.error('Error al cargar especialidades:', resEspecialidades.reason);
     }
   }, []);
 
@@ -104,6 +116,15 @@ export default function ServiciosPage() {
     [clinicas, form.idsClinicas]
   );
 
+  // Especialidades activas (más la ya asignada aunque esté inactiva)
+  const opcionesEspecialidad = useMemo(
+    () =>
+      especialidades.filter(
+        (e) => e.activo !== false || Number(e.id_especialidad) === Number(form.idEspecialidad)
+      ),
+    [especialidades, form.idEspecialidad]
+  );
+
   const ejemploNombre =
     CATEGORIAS.find((c) => c.valor === form.categoria)?.ejemplo ?? CATEGORIAS[0].ejemplo;
 
@@ -115,6 +136,11 @@ export default function ServiciosPage() {
   const seleccionarCategoria = (valor) => {
     setForm((prev) => ({ ...prev, categoria: valor }));
     setErroresCampos((prev) => ({ ...prev, categoria: undefined }));
+  };
+
+  // Sin mayúsculas, porque es un ID
+  const seleccionarEspecialidad = (e) => {
+    setForm((prev) => ({ ...prev, idEspecialidad: e.target.value }));
   };
 
   const toggleClinica = (id) => {
@@ -172,6 +198,7 @@ export default function ServiciosPage() {
         nombre: mayus(form.nombre),
         descripcion: form.descripcion.trim() ? mayus(form.descripcion) : null,
         categoria: form.categoria,
+        idEspecialidad: form.idEspecialidad === '' ? null : Number(form.idEspecialidad),
         idsClinicas: form.idsClinicas,
       };
       if (editandoId) {
@@ -202,6 +229,7 @@ export default function ServiciosPage() {
       nombre: (s.nombre ?? '').toLocaleUpperCase('es-MX'),
       descripcion: (s.descripcion ?? '').toLocaleUpperCase('es-MX'),
       categoria: s.categoria ?? CATEGORIA_POR_DEFECTO,
+      idEspecialidad: s.id_especialidad ?? '',
       idsClinicas: clinicasDeServicio(s).map((c) => Number(c.id_clinica)),
     });
   };
@@ -293,6 +321,24 @@ export default function ServiciosPage() {
           <AvisoCampo mensaje={erroresCampos.idsClinicas} />
         </div>
 
+        <div data-campo="idEspecialidad">
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-on-surface">
+            Especialidad:
+          </label>
+          <select
+            className={inputClass}
+            value={form.idEspecialidad}
+            onChange={seleccionarEspecialidad}
+          >
+            <option value="">Sin especialidad</option>
+            {opcionesEspecialidad.map((e) => (
+              <option key={e.id_especialidad} value={e.id_especialidad}>
+                {e.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div data-campo="nombre">
           <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-on-surface">
             Nombre:<span className="ml-0.5 text-red-500">*</span>
@@ -327,7 +373,7 @@ export default function ServiciosPage() {
       titulo="Servicios"
       subtitulo="Gestiona las consultas y estudios que ofrece cada clínica."
       textoBotonNuevo="Agregar servicio"
-      placeholderBusqueda="Buscar por nombre, descripción, tipo o clínica..."
+      placeholderBusqueda="Buscar por nombre, descripción, tipo, especialidad o clínica..."
       datos={servicios.map(mapearServicio)}
       cargando={cargando}
       errorCarga={errorCarga}
