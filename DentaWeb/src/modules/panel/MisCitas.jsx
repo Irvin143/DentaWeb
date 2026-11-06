@@ -33,7 +33,7 @@ const FILTROS = [
 const REGISTROS_POR_PAGINA = 10;
 
 const claseBotonAccion =
-  'flex cursor-pointer items-center gap-1.5 rounded-lg border border-outline-variant px-2.5 py-1.5 text-xs font-medium transition-colors';
+  'flex min-w-0 cursor-pointer items-center gap-1.5 rounded-lg border border-outline-variant px-2.5 py-1.5 text-xs font-medium whitespace-normal transition-colors';
 
 // Solo las citas pendientes se pueden reagendar o cancelar
 const ESTADOS_ACCIONABLES = ['Pendiente'];
@@ -141,14 +141,14 @@ function AccionesCita({ cita, onReagendar, onCancelar }) {
   }
 
   return (
-    <div className="flex justify-end gap-2">
+    <div className="flex flex-wrap justify-end gap-2">
       <button
         type="button"
         onClick={() => onReagendar(cita)}
         aria-label={`Reagendar cita de ${cita.motivo} del ${fechaCorta(cita.fecha)}`}
         className={`${claseBotonAccion} text-on-surface hover:bg-surface-container`}
       >
-        <CalendarClock size={14} className="text-teal-700 dark:text-teal-400" aria-hidden="true" />
+        <CalendarClock size={14} className="shrink-0 text-teal-700 dark:text-teal-400" aria-hidden="true" />
         Reagendar
       </button>
       <button
@@ -157,7 +157,7 @@ function AccionesCita({ cita, onReagendar, onCancelar }) {
         aria-label={`Cancelar cita de ${cita.motivo} del ${fechaCorta(cita.fecha)}`}
         className={`${claseBotonAccion} text-error hover:bg-error-container`}
       >
-        <X size={14} aria-hidden="true" />
+        <X size={14} className="shrink-0" aria-hidden="true" />
         Cancelar
       </button>
     </div>
@@ -434,7 +434,7 @@ export default function CitasTablaPage() {
           <table className="w-full table-fixed border-collapse text-left text-sm">
             <thead className="border-b border-outline-variant bg-surface text-xs font-semibold tracking-wider text-outline uppercase">
               <tr>
-                <th scope="col" className="w-[18%] p-0" aria-sort={descendente ? 'descending' : 'ascending'}>
+                <th scope="col" className="w-[16%] p-0" aria-sort={descendente ? 'descending' : 'ascending'}>
                   <button
                     type="button"
                     onClick={() => setDescendente((d) => !d)}
@@ -445,22 +445,19 @@ export default function CitasTablaPage() {
                     <IconoOrden size={13} aria-hidden="true" />
                   </button>
                 </th>
-                <th scope="col" className="w-[12%] px-5 py-3">
+                <th scope="col" className="w-[10%] px-5 py-3">
                   Hora
                 </th>
-                <th scope="col" className="w-[22%] px-5 py-3">
+                <th scope="col" className="w-[18%] min-w-0 px-5 py-3">
                   Motivo
                 </th>
-                <th scope="col" className="w-[20%] px-5 py-3">
+                <th scope="col" className="w-[16%] min-w-0 px-5 py-3">
                   Doctor
                 </th>
-                <th scope="col" className="w-[14%] px-5 py-3">
+                <th scope="col" className="w-[14%] min-w-0 px-5 py-3">
                   Estado
                 </th>
-                <th
-                  scope="col"
-                  className="sticky right-0 z-20 w-[14%] bg-surface py-3 pr-5 pl-2 text-right"
-                >
+                <th scope="col" className="w-[26%] min-w-0 px-5 py-3 text-right">
                   Acciones
                 </th>
               </tr>
@@ -491,10 +488,10 @@ export default function CitasTablaPage() {
                     <td className="px-5 py-3 whitespace-nowrap text-on-surface-variant">{hora(c.fecha)}</td>
                     <td className="min-w-0 px-5 py-3 break-words text-on-surface">{c.motivo}</td>
                     <td className="min-w-0 px-5 py-3 break-words text-on-surface-variant">{c.doctor}</td>
-                    <td className="px-5 py-3">
+                    <td className="min-w-0 px-5 py-3">
                       <BadgeEstado estado={c.estado} />
                     </td>
-                    <td className="sticky right-0 z-10 bg-on-primary py-3 pr-5 pl-2 whitespace-nowrap transition-colors group-hover:bg-surface-container">
+                    <td className="min-w-0 px-5 py-3">
                       <AccionesCita
                         cita={c}
                         onReagendar={setPorReagendar}
