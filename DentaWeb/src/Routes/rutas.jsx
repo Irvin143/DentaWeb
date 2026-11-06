@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 import ProtectedLayout from "../layouts/ProtectedLayout.jsx";
 import { getAuth, primeraRutaPermitida } from "../config/permisos.js";
 
@@ -64,6 +65,7 @@ export default function App() {
           <Route path="/usuarios" element={<UsuariosPage />} />
         </Route>
       </Routes>
+      <Analytics />
     </BrowserRouter>
   );
 }
