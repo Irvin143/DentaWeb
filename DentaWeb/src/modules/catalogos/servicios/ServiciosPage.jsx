@@ -247,7 +247,10 @@ export default function ServiciosPage() {
   const formularioServicio = (
     <>
       <AvisoGeneral mensaje={error} />
-      <div ref={formularioRef} className="flex flex-col gap-4">
+      <div
+        ref={formularioRef}
+        className="flex max-h-[65vh] flex-col gap-4 overflow-y-auto scroll-smooth pr-1 md:max-h-[72vh] md:px-1"
+      >
         <div data-campo="categoria">
           <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-on-surface">
             Tipo de servicio:<span className="ml-0.5 text-red-500">*</span>

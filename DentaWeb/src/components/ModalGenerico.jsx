@@ -34,9 +34,9 @@ export function ModalGenerico({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-      <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl dark:bg-on-primary">
+      <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-on-primary">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-outline-variant">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-outline-variant">
           <div className="flex items-center gap-3">
             {React.isValidElement(iconoCabecera) &&
               React.cloneElement(iconoCabecera, {
@@ -61,10 +61,10 @@ export function ModalGenerico({
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5 dark:text-on-surface">{children}</div>
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 dark:text-on-surface">{children}</div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4 dark:border-outline-variant">
+        <div className="flex shrink-0 items-center justify-end gap-3 border-t border-slate-200 px-6 py-4 dark:border-outline-variant">
           <div className="flex gap-2">
             <button
               onClick={onClose}
