@@ -38,7 +38,13 @@ const claseBotonAccion =
 // Solo las citas pendientes se pueden reagendar o cancelar
 const ESTADOS_ACCIONABLES = ['Pendiente'];
 
-const puedeActuar = (c) => c.fecha >= new Date() && ESTADOS_ACCIONABLES.includes(c.estado);
+const esPendienteFutura = (c) => c.fecha >= new Date() && ESTADOS_ACCIONABLES.includes(c.estado);
+
+// Cancelar: cualquier cita pendiente futura (incluidas las de urgencia)
+const puedeCancelar = (c) => esPendienteFutura(c);
+
+// Reagendar: pendiente futura y que NO sea de urgencia
+const puedeReagendar = (c) => esPendienteFutura(c) && !c.esUrgencia;
 
 const normalizar = (texto) =>
   String(texto ?? '')
@@ -59,6 +65,8 @@ function adaptarCita(c) {
     motivo: c.motivo ?? 'Consulta',
     doctor: c.doctor ?? '—',
     estado: etiquetaEstado(c.estado) || 'Sin estado',
+    // AJUSTA esto a tu backend: aquí se detecta por el campo `tipo` o, si no existe, por el motivo
+    esUrgencia: normalizar(c.tipo).includes('urgencia') || normalizar(c.motivo).includes('urgencia'),
   };
 }
 
@@ -132,7 +140,10 @@ function ResumenCitaCancelar({ cita }) {
 }
 
 function AccionesCita({ cita, onReagendar, onCancelar }) {
-  if (!puedeActuar(cita)) {
+  const reagendar = puedeReagendar(cita);
+  const cancelar = puedeCancelar(cita);
+
+  if (!reagendar && !cancelar) {
     return (
       <p className="text-right text-outline" aria-label="Sin acciones disponibles">
         —
@@ -142,24 +153,33 @@ function AccionesCita({ cita, onReagendar, onCancelar }) {
 
   return (
     <div className="flex flex-wrap justify-end gap-2">
-      <button
-        type="button"
-        onClick={() => onReagendar(cita)}
-        aria-label={`Reagendar cita de ${cita.motivo} del ${fechaCorta(cita.fecha)}`}
-        className={`${claseBotonAccion} text-on-surface hover:bg-surface-container`}
-      >
-        <CalendarClock size={14} className="shrink-0 text-teal-700 dark:text-teal-400" aria-hidden="true" />
-        Reagendar
-      </button>
-      <button
-        type="button"
-        onClick={() => onCancelar(cita)}
-        aria-label={`Cancelar cita de ${cita.motivo} del ${fechaCorta(cita.fecha)}`}
-        className={`${claseBotonAccion} text-error hover:bg-error-container`}
-      >
-        <X size={14} className="shrink-0" aria-hidden="true" />
-        Cancelar
-      </button>
+      {reagendar && (
+        <button
+          type="button"
+          onClick={() => onReagendar(cita)}
+          aria-label={`Reagendar cita de ${cita.motivo} del ${fechaCorta(cita.fecha)}`}
+          className={`${claseBotonAccion} text-on-surface hover:bg-surface-container`}
+        >
+          <CalendarClock size={14} className="shrink-0 text-teal-700 dark:text-teal-400" aria-hidden="true" />
+          Reagendar
+        </button>
+      )}
+      {cancelar && (
+        <button
+          type="button"
+          onClick={() => onCancelar(cita)}
+          aria-label={`Cancelar cita de ${cita.motivo} del ${fechaCorta(cita.fecha)}`}
+          className={`${claseBotonAccion} text-error hover:bg-error-container`}
+        >
+          <X size={14} className="shrink-0" aria-hidden="true" />
+          Cancelar
+        </button>
+      )}
+      {cita.esUrgencia && cancelar && (
+        <p className="w-full text-right text-xs text-on-surface-variant">
+          Las citas de urgencia no se pueden reagendar.
+        </p>
+      )}
     </div>
   );
 }
