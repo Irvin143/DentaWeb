@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { citasApi } from '../../services/api.js';
-import { BadgeEstado } from '../../utils/estadoCita.jsx';
+import { BadgeEstado, etiquetaEstado } from '../../utils/estadoCita.jsx';
 import ModalDetalleCita from './ModalDetalleCita.jsx';
+import { useToasts } from '../../hooks/useToasts.js';
+import { ToastContainer } from '../../components/Toast.jsx';
 
 const LOCALE = 'es-MX';
 const DIAS_CABECERA = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
@@ -438,6 +440,7 @@ function VistaDia({ dia, hoyYmd, citasDelDia }) {
 /* ---------- Página ---------- */
 
 export default function AgendaPage() {
+  const { toasts, exito, error: mostrarError, cerrar: cerrarToast } = useToasts();
   const [vista, setVista] = useState('mes');
   const [ancla, setAncla] = useState(() => inicioDia(new Date()));
   const [citas, setCitas] = useState([]);
@@ -696,13 +699,19 @@ export default function AgendaPage() {
                 Number(c.id_cita) === id ? { ...c, estado: estado ?? c.estado } : c
               )
             );
-            setCitaAbierta((abierta) =>
-              abierta ? { ...abierta, estado: estado ?? abierta.estado } : null
-            );
+            setCitaAbierta(null);
             cargar();
+            const etiqueta = etiquetaEstado(estado) || estado;
+            if (String(estado).toUpperCase() === 'CANCELADA') {
+              exito('La cita fue cancelada exitosamente.');
+            } else {
+              exito(`El estado de la cita se actualizó a «${etiqueta}» exitosamente.`);
+            }
           }}
         />
       ) : null}
+
+      <ToastContainer toasts={toasts} onCerrar={cerrarToast} />
     </section>
   );
 }

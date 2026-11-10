@@ -1,16 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, X } from 'lucide-react';
-import { BadgeEstado, OPCIONES_ESTADO_CITA, estadoParaApi } from '../../utils/estadoCita.jsx';
+import { AlertTriangle, ArrowRight, Calendar, Clock, Hospital, Stethoscope, User, X } from 'lucide-react';
+import { BadgeEstado, OPCIONES_ESTADO_CITA, etiquetaEstado, estadoParaApi, claseEstado } from '../../utils/estadoCita.jsx';
 import { citasApi } from '../../services/api.js';
+import ModalConfirmacion from '../../components/ModalConfirmacion.jsx';
 
 const LOCALE = 'es-MX';
 const ZONA = 'America/Mazatlan';
-
-const etiquetaClase = 'text-xs font-semibold uppercase tracking-wide text-on-surface-variant';
-
-const claseSelect =
-  'h-10 w-full cursor-pointer appearance-none rounded-xl border border-outline-variant bg-on-primary pr-9 pl-3 text-base leading-5 text-on-surface focus:ring-2 focus:ring-teal-500/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50';
 
 const horaCorta = (valor) => String(valor ?? '').slice(0, 5);
 
@@ -73,12 +69,34 @@ function citaYaOcurrio(cita) {
   return `${fecha}T${hora}` <= ahoraEnZona();
 }
 
-function Campo({ etiqueta, children }) {
-  if (!children) return null;
+// Clases de fondo de píldora por estado (para el selector visual)
+const CLASES_PILDORA = {
+  PENDIENTE:   'border-yellow-300 bg-yellow-50 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300 dark:border-yellow-800',
+  CONFIRMADA:  'border-yellow-300 bg-yellow-50 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300 dark:border-yellow-800',
+  ATENDIDA:    'border-teal-300 bg-teal-50 text-teal-800 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800',
+  CANCELADA:   'border-red-300 bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-300 dark:border-red-800',
+  NO_ASISTIO:  'border-red-300 bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-300 dark:border-red-800',
+};
+
+const CLASES_PILDORA_ACTIVA = {
+  PENDIENTE:   'ring-2 ring-yellow-400 ring-offset-1',
+  CONFIRMADA:  'ring-2 ring-yellow-400 ring-offset-1',
+  ATENDIDA:    'ring-2 ring-teal-400 ring-offset-1',
+  CANCELADA:   'ring-2 ring-red-400 ring-offset-1',
+  NO_ASISTIO:  'ring-2 ring-red-400 ring-offset-1',
+};
+
+const ES_DESTRUCTIVO = { CANCELADA: true, NO_ASISTIO: true };
+
+function InfoFila({ icono, etiqueta, valor }) {
+  if (!valor) return null;
   return (
-    <div>
-      <p className={etiquetaClase}>{etiqueta}</p>
-      <p className="mt-1 text-sm wrap-break-word text-on-surface">{children}</p>
+    <div className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 dark:border-outline-variant dark:bg-surface-container">
+      <span className="mt-0.5 shrink-0 text-on-surface-variant">{icono}</span>
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-wide text-on-surface-variant">{etiqueta}</p>
+        <p className="mt-0.5 text-sm text-on-surface">{valor}</p>
+      </div>
     </div>
   );
 }
@@ -96,6 +114,7 @@ export default function ModalDetalleCita({ cita, onCerrar, onGuardado }) {
   const [estadoElegido, setEstadoElegido] = useState(valorInicial);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState(null);
+  const [confirmacionAbierta, setConfirmacionAbierta] = useState(false);
 
   useEffect(() => {
     setEstadoElegido(valorInicial);
@@ -139,8 +158,12 @@ export default function ModalDetalleCita({ cita, onCerrar, onGuardado }) {
     estadoElegido !== estadoActual &&
     !(estadoElegido === 'NO_ASISTIO' && !yaOcurrio);
 
-  const guardar = async () => {
+  const confirmarGuardar = () => {
     if (!puedeGuardar || guardando) return;
+    setConfirmacionAbierta(true);
+  };
+
+  const ejecutarGuardar = async () => {
     const id = cita?.id_cita;
     if (id == null) return;
     try {
@@ -161,129 +184,223 @@ export default function ModalDetalleCita({ cita, onCerrar, onGuardado }) {
   const servicio = textoOpcional(cita.servicio);
   const tipo = textoOpcional(cita.tipo);
   const observaciones = textoOpcional(cita.observaciones);
+  const nombrePaciente = nombreCompleto(cita.paciente, 'Paciente');
+
+  // Texto del modal de confirmación
+  const etiquetaActual  = etiquetaEstado(estadoActual)  || estadoActual  || '—';
+  const etiquetaNueva   = etiquetaEstado(estadoElegido) || estadoElegido || '—';
+  const esDestructivo   = Boolean(ES_DESTRUCTIVO[estadoElegido]);
+  const esCancelacion   = estadoElegido === 'CANCELADA';
+  const palabraRequerida = esCancelacion ? 'CANCELAR' : '';
+  const textoConfirmar  =
+    estadoElegido === 'CANCELADA'  ? 'Confirmar cancelación' :
+    estadoElegido === 'NO_ASISTIO' ? 'Confirmar inasistencia' :
+    'Cambiar estado';
+
+  const mensajeConfirmacion = (
+    <span>
+      ¿Deseas cambiar el estado de la cita de{' '}
+      <strong>{etiquetaActual}</strong> a <strong>{etiquetaNueva}</strong> para el paciente{' '}
+      <strong>{nombrePaciente}</strong>?
+    </span>
+  );
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4"
-      onClick={onCerrar}
-    >
+    <>
       <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="titulo-detalle-cita"
-        onClick={(e) => e.stopPropagation()}
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-outline-variant bg-on-primary p-6 shadow-xl"
+        className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4"
+        onClick={onCerrar}
       >
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className={etiquetaClase}>Paciente</p>
-            <h2
-              id="titulo-detalle-cita"
-              className="mt-1 text-xl font-bold wrap-break-word text-on-surface"
-            >
-              {nombreCompleto(cita.paciente, 'Paciente')}
-            </h2>
-          </div>
-          <button
-            ref={botonCerrar}
-            type="button"
-            onClick={onCerrar}
-            aria-label="Cerrar"
-            className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container"
-          >
-            <X size={18} aria-hidden="true" />
-          </button>
-        </div>
-
-        {urgencia ? (
-          <p className="mb-4 inline-block rounded-full bg-error-container px-2.5 py-1 text-xs font-medium text-error">
-            Urgencia
-          </p>
-        ) : null}
-
-        <div className="flex flex-wrap items-center gap-2">
-          {cita.estado ? <BadgeEstado estado={cita.estado} /> : null}
-        </div>
-
-        <dl className="mt-5 grid gap-4 sm:grid-cols-2">
-          <Campo etiqueta="Horario">
-            {[horario, fecha].filter(Boolean).join(' · ') || null}
-          </Campo>
-          <Campo etiqueta="Odontólogo">{nombreCompleto(cita.odontologo, 'Odontólogo')}</Campo>
-          <Campo etiqueta="Clínica">{textoOpcional(cita.clinica?.nombre) || 'Clínica'}</Campo>
-          <Campo etiqueta="Servicio">{servicio}</Campo>
-          <Campo etiqueta="Tipo">{tipo}</Campo>
-          {observaciones ? (
-            <div className="sm:col-span-2">
-              <p className={etiquetaClase}>Observaciones</p>
-              <p className="mt-1 text-sm wrap-break-word text-on-surface">{observaciones}</p>
-            </div>
-          ) : null}
-        </dl>
-
-        <div className="mt-5">
-          <label htmlFor="estado-cita" className={etiquetaClase}>
-            Estado
-          </label>
-          <div className="relative mt-1">
-            <select
-              id="estado-cita"
-              value={estadoElegido}
-              onChange={(e) => {
-                setEstadoElegido(e.target.value);
-                setError(null);
-              }}
-              className={claseSelect}
-            >
-              {!estadoElegido ? (
-                <option value="" disabled>
-                  Cambiar estado
-                </option>
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="titulo-detalle-cita"
+          onClick={(e) => e.stopPropagation()}
+          className="flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-outline-variant bg-on-primary shadow-xl"
+        >
+          {/* ── Header ───────────────────────────────── */}
+          <div className="flex shrink-0 items-start justify-between gap-3 border-b border-outline-variant px-6 py-5">
+            <div className="min-w-0">
+              {urgencia && (
+                <span className="mb-1.5 inline-flex items-center gap-1 rounded-full bg-error-container px-2.5 py-0.5 text-xs font-semibold text-error">
+                  <AlertTriangle size={11} aria-hidden="true" />
+                  Urgencia
+                </span>
+              )}
+              <p className="text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
+                Paciente
+              </p>
+              <h2
+                id="titulo-detalle-cita"
+                className="mt-0.5 text-xl font-bold text-on-surface"
+              >
+                {nombrePaciente}
+              </h2>
+              {cita.estado ? (
+                <div className="mt-2">
+                  <BadgeEstado estado={cita.estado} />
+                </div>
               ) : null}
-              {opciones.map((opcion) => (
-                <option
-                  key={opcion.valor}
-                  value={opcion.valor}
-                  disabled={opcion.deshabilitada}
-                  title={opcion.titulo}
-                >
-                  {opcion.etiqueta}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              size={16}
-              aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-outline"
-            />
+            </div>
+            <button
+              ref={botonCerrar}
+              type="button"
+              onClick={onCerrar}
+              aria-label="Cerrar"
+              className="mt-0.5 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container"
+            >
+              <X size={18} aria-hidden="true" />
+            </button>
           </div>
-          {!yaOcurrio ? (
-            <p className="mt-1 text-xs text-on-surface-variant">
-              «No asistió» solo cuando ya pasó la hora de la cita.
-            </p>
-          ) : null}
-          {error ? <p className="mt-2 text-sm text-error">{error}</p> : null}
-        </div>
 
-        <div className="mt-6 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onCerrar}
-            className="cursor-pointer rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container"
-          >
-            Cerrar
-          </button>
-          <button
-            type="button"
-            onClick={guardar}
-            disabled={!puedeGuardar || guardando}
-            className="cursor-pointer rounded-xl bg-primary px-4 py-2 text-sm font-medium text-on-primary transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {guardando ? 'Guardando…' : 'Guardar'}
-          </button>
+          {/* ── Body (scrollable) ─────────────────────── */}
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 py-5">
+            {/* Info de la cita */}
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(horario || fecha) && (
+                <InfoFila
+                  icono={<Clock size={15} />}
+                  etiqueta="Horario"
+                  valor={[horario, fecha].filter(Boolean).join(' · ')}
+                />
+              )}
+              <InfoFila
+                icono={<Calendar size={15} />}
+                etiqueta="Fecha"
+                valor={fecha}
+              />
+              <InfoFila
+                icono={<User size={15} />}
+                etiqueta="Odontólogo"
+                valor={nombreCompleto(cita.odontologo, null)}
+              />
+              <InfoFila
+                icono={<Hospital size={15} />}
+                etiqueta="Clínica"
+                valor={textoOpcional(cita.clinica?.nombre)}
+              />
+              {servicio && (
+                <InfoFila
+                  icono={<Stethoscope size={15} />}
+                  etiqueta="Servicio"
+                  valor={servicio}
+                />
+              )}
+              {tipo && (
+                <InfoFila
+                  icono={<Stethoscope size={15} />}
+                  etiqueta="Tipo"
+                  valor={tipo}
+                />
+              )}
+            </div>
+
+            {observaciones && (
+              <div className="mt-3 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 dark:border-outline-variant dark:bg-surface-container">
+                <p className="text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
+                  Observaciones
+                </p>
+                <p className="mt-0.5 text-sm text-on-surface">{observaciones}</p>
+              </div>
+            )}
+
+            {/* Selector visual de estado */}
+            <div className="mt-5">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
+                Cambiar estado
+              </p>
+
+              {/* Flecha de transición si hay selección diferente al actual */}
+              {puedeGuardar && (
+                <div className="mb-3 flex items-center gap-2 text-xs text-on-surface-variant">
+                  <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium ${CLASES_PILDORA[estadoActual] ?? 'border-slate-200 bg-slate-100 text-slate-700'}`}>
+                    {etiquetaActual}
+                  </span>
+                  <ArrowRight size={14} className="shrink-0" aria-hidden="true" />
+                  <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium ${CLASES_PILDORA[estadoElegido] ?? 'border-slate-200 bg-slate-100 text-slate-700'}`}>
+                    {etiquetaNueva}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Seleccionar nuevo estado de la cita">
+                {opciones.map((opcion) => {
+                  const activa = estadoElegido === opcion.valor;
+                  const clasePildora = CLASES_PILDORA[opcion.valor] ?? 'border-slate-200 bg-slate-50 text-slate-700';
+                  const claseActiva  = activa ? (CLASES_PILDORA_ACTIVA[opcion.valor] ?? 'ring-2 ring-slate-400 ring-offset-1') : '';
+                  return (
+                    <button
+                      key={opcion.valor}
+                      type="button"
+                      disabled={opcion.deshabilitada}
+                      title={opcion.titulo}
+                      aria-pressed={activa}
+                      onClick={() => {
+                        if (!opcion.deshabilitada) {
+                          setEstadoElegido(opcion.valor);
+                          setError(null);
+                        }
+                      }}
+                      className={`cursor-pointer rounded-full border px-3 py-1.5 text-xs font-semibold transition-all focus:outline-none focus-visible:ring-2
+                        ${clasePildora}
+                        ${claseActiva}
+                        ${opcion.deshabilitada ? 'cursor-not-allowed opacity-40' : 'hover:opacity-90'}
+                      `}
+                    >
+                      {opcion.etiqueta}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {!yaOcurrio && (
+                <p className="mt-2 flex items-center gap-1 text-xs text-on-surface-variant">
+                  <AlertTriangle size={11} className="shrink-0 text-yellow-600" aria-hidden="true" />
+                  «No asistió» solo estará disponible cuando haya pasado la hora de la cita.
+                </p>
+              )}
+
+              {error && (
+                <p className="mt-2 rounded-lg bg-error-container px-3 py-2 text-sm text-error" role="alert">
+                  {error}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* ── Footer ───────────────────────────────── */}
+          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-outline-variant px-6 py-4">
+            <button
+              type="button"
+              onClick={onCerrar}
+              className="cursor-pointer rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container"
+            >
+              Cerrar
+            </button>
+            <button
+              type="button"
+              onClick={confirmarGuardar}
+              disabled={!puedeGuardar || guardando}
+              className="cursor-pointer rounded-xl bg-primary px-4 py-2 text-sm font-medium text-on-primary transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {guardando ? 'Guardando…' : 'Aplicar cambio'}
+            </button>
+          </div>
         </div>
       </div>
-    </div>,
+
+      {/* Modal de confirmación (z-[70] para superponerse) */}
+      <ModalConfirmacion
+        isOpen={confirmacionAbierta}
+        onClose={() => setConfirmacionAbierta(false)}
+        onConfirm={ejecutarGuardar}
+        titulo={esCancelacion ? 'Cancelar cita' : '¿Confirmar cambio de estado?'}
+        mensaje={mensajeConfirmacion}
+        textoConfirmar={textoConfirmar}
+        esPeligro={esDestructivo}
+        palabraRequerida={palabraRequerida}
+      />
+    </>,
     document.body
   );
 }

@@ -35,7 +35,7 @@ export default function ModalConfirmacion({
   const botonDeshabilitado = requierePalabra && input !== palabraRequerida;
 
   return (
-    <div className="fixed inset-0 z-50 flex animate-modal-overlay-in items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm motion-reduce:animate-none">
+    <div className="fixed inset-0 z-[70] flex animate-modal-overlay-in items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm motion-reduce:animate-none">
       <div className={`w-full max-w-md animate-modal-panel-in overflow-hidden rounded-2xl bg-white shadow-xl motion-reduce:animate-none dark:bg-on-primary ${esPeligro ? '' : 'p-6'}`}>
         <h3 className={esPeligro ? 'bg-red-600 px-6 py-4 text-lg font-bold text-white' : 'mb-2 text-lg font-bold text-slate-800 dark:text-on-surface'}>{titulo}</h3>
         <div className={esPeligro ? 'px-6 pb-6 pt-4' : undefined}>
