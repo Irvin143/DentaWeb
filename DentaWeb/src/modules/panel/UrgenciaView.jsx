@@ -103,7 +103,10 @@ export default function UrgenciaView({ onVolver }) {
   const [cargandoSedes, setCargandoSedes] = useState(true);
   const [errorSedes, setErrorSedes] = useState(false);
   const [intentoSedes, setIntentoSedes] = useState(0);
+const [confirmada, setConfirmada] = useState(false);
+const temporizadorRef = useRef(null);
 
+useEffect(() => () => clearTimeout(temporizadorRef.current), []);
   useEffect(() => {
     let cancelado = false;
 
@@ -180,25 +183,27 @@ export default function UrgenciaView({ onVolver }) {
     window.scrollTo({ top: 0 });
   };
 
-  const confirmarCita = async () => {
-    if (cargando) return;
-    setCargando(true);
-    try {
-      const urgencia = await urgenciasApi.crear({
-        id_sede: Number(form.sede),
-        motivo: form.motivo,
-        sintomas: form.sintomas.trim(),
-        hora_llegada: form.llegada === 'hora' ? form.hora : null,
-      });
-      setResultado(urgencia);
-      toasts.exito(`Urgencia registrada: te esperamos hoy a las ${hhmmA12(urgencia.hora)}.`);
-      onVolver();
-    } catch (err) {
-      toasts.error(err.message || 'No pudimos registrar tu urgencia. Intenta de nuevo o llama a la clínica.');
-    } finally {
-      setCargando(false);
-    }
-  };
+const confirmarCita = async () => {
+  if (cargando || confirmada) return;
+  setCargando(true);
+  try {
+    const urgencia = await urgenciasApi.crear({
+      id_sede: Number(form.sede),
+      motivo: form.motivo,
+      sintomas: form.sintomas.trim(),
+      hora_llegada: form.llegada === 'hora' ? form.hora : null,
+    });
+    setResultado(urgencia);
+    setConfirmada(true);
+    toasts.exito(`Urgencia registrada: te esperamos hoy a las ${hhmmA12(urgencia.hora)}.`);
+    // Damos tiempo a que se vea el toast antes de volver al panel
+    temporizadorRef.current = setTimeout(onVolver, 2500);
+  } catch (err) {
+    toasts.error(err.message || 'No pudimos registrar tu urgencia. Intenta de nuevo o llama a la clínica.');
+  } finally {
+    setCargando(false);
+  }
+};
 
   const claseCampo = (campo) =>
     `w-full rounded-xl border bg-on-primary p-3 text-base leading-5 text-on-surface outline-none focus:ring-2 ${
@@ -284,7 +289,7 @@ export default function UrgenciaView({ onVolver }) {
             <button
               type="button"
               onClick={confirmarCita}
-              disabled={cargando}
+              disabled={cargando || confirmada}
               className={`${botonPrimario} w-full`}
             >
               {cargando ? (
@@ -293,15 +298,15 @@ export default function UrgenciaView({ onVolver }) {
                 </>
               ) : (
                 <>
-                  <CheckCircle2 size={18} /> Confirmar cita
+                  <CheckCircle2 size={18} /> {confirmada ? 'Cita confirmada' : 'Confirmar cita'}
                 </>
               )}
             </button>
             <button
               type="button"
               onClick={() => setConfirmando(false)}
-              disabled={cargando}
-              className="cursor-pointer rounded-xl border border-outline-variant px-5 py-3.5 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={cargando || confirmada}
+              className="..."
             >
               Editar datos
             </button>
