@@ -266,7 +266,7 @@ export default function PacientesPage() {
   const formularioPaciente = (
     <>
     <AvisoGeneral mensaje={error} />
-    <div ref={formularioRef} className="flex max-h-[65vh] flex-col gap-3 overflow-y-auto pr-1 md:max-h-[72vh] md:gap-7 md:px-2">
+    <div ref={formularioRef} className="flex flex-col gap-3 md:gap-7 md:px-2">
 
       {/* Datos personales */}
       <Seccion titulo="Datos personales">

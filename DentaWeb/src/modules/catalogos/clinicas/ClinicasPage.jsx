@@ -501,7 +501,7 @@ export default function ClinicasPage() {
     <>
     <CargarSepomexAlAbrir onCargado={alCargarCatalogo} />
     <AvisoGeneral mensaje={error} />
-    <div ref={formularioRef} className="flex max-h-[65vh] flex-col gap-3 overflow-y-auto pr-1 md:max-h-[72vh] md:gap-7 md:px-2">
+    <div ref={formularioRef} className="flex flex-col gap-3 md:gap-7 md:px-2">
 
       <Seccion titulo="Datos de la clínica">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">

@@ -247,10 +247,7 @@ export default function ServiciosPage() {
   const formularioServicio = (
     <>
       <AvisoGeneral mensaje={error} />
-      <div
-        ref={formularioRef}
-        className="flex max-h-[65vh] flex-col gap-4 overflow-y-auto scroll-smooth pr-1 md:max-h-[72vh] md:px-1"
-      >
+      <div ref={formularioRef} className="flex flex-col gap-4">
         <div data-campo="categoria">
           <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-on-surface">
             Tipo de servicio:<span className="ml-0.5 text-red-500">*</span>
@@ -293,7 +290,7 @@ export default function ServiciosPage() {
               </button>
             )}
           </div>
-          <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 dark:border-outline-variant dark:bg-surface-container">
+          <div className="rounded-xl border border-slate-200 bg-white p-2 dark:border-outline-variant dark:bg-surface-container">
             {opcionesClinica.length === 0 ? (
               <p className="p-2 text-sm text-slate-500 dark:text-on-surface-variant">No hay clínicas disponibles.</p>
             ) : (
