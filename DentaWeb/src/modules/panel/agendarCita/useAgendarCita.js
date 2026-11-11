@@ -196,9 +196,9 @@ function useDiasDisponibles(idSede, idServicio) {
 
     let cancelado = false;
     setCargando(true);
-
+    
     agendarCitasApi
-      .dias(idSede, DIAS_A_CONSULTAR, idServicio)
+      .dias(idSede, DIAS_A_CONSULTAR, null, idServicio)
       .then((res) => {
         if (cancelado) return;
         setDias(res?.dias ?? []);
@@ -226,7 +226,7 @@ function useDiasDisponibles(idSede, idServicio) {
    Horarios libres de la sede en la fecha elegida.
    Si ese día no hay ninguno, el backend también devuelve el próximo día con espacio.
    ============================================================ */
-function useHorarios(idSede, fecha, idServicio) {
+function  useHorarios(idSede, fecha, idServicio) {
   const [horas, setHoras] = useState([]); // ['09:00', '09:30', ...]
   const [proximoDia, setProximoDia] = useState(null); // 'AAAA-MM-DD' | null
   const [cargando, setCargando] = useState(false);
@@ -237,6 +237,7 @@ function useHorarios(idSede, fecha, idServicio) {
     setHoras([]);
     setProximoDia(null);
     setError(false);
+    console.log('useHorarios', { idSede, fecha, idServicio });
 
     if (!idSede || !fecha) {
       setCargando(false);
@@ -245,7 +246,6 @@ function useHorarios(idSede, fecha, idServicio) {
 
     let cancelado = false;
     setCargando(true);
-
     agendarCitasApi
       .horarios(idSede, fecha, idServicio)
       .then((res) => {

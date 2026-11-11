@@ -54,18 +54,19 @@ const normalizar = (texto) =>
     .trim();
 
 function adaptarCita(c) {
-  // El backend manda fecha ('AAAA-MM-DD') y hora ('HH:mm') por separado
   const fecha = new Date(`${c.fecha}T${c.hora}`);
   if (Number.isNaN(fecha.getTime())) return null;
+  console.log('adaptarCita', { c, fecha });
 
   return {
     id: c.id,
     idSede: c.id_sede,
+    idOdontologo: c.id_odontologo ?? c.odontologo?.id_odontologo ?? null,
+    idServicio: c.id_servicio ?? c.servicio?.id_servicio ?? null,
     fecha,
     motivo: c.motivo ?? 'Consulta',
     doctor: c.doctor ?? '—',
     estado: etiquetaEstado(c.estado) || 'Sin estado',
-    // AJUSTA esto a tu backend: aquí se detecta por el campo `tipo` o, si no existe, por el motivo
     esUrgencia: normalizar(c.tipo).includes('urgencia') || normalizar(c.motivo).includes('urgencia'),
   };
 }

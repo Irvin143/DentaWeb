@@ -84,7 +84,7 @@ function Turno({ titulo, horas, horaElegida, disabled, onElegir }) {
 
 /**
  * Props:
- *  - cita: { id, idSede, fecha: Date, motivo, doctor }
+ *  - cita: { id, idSede, idOdontologo, idServicio, fecha: Date, motivo, doctor }
  *  - onReagendada({ fecha: 'AAAA-MM-DD', hora: 'HH:mm' }): el backend confirmó el cambio
  *  - onCerrar(): el usuario cerró el modal sin cambiar nada
  */
@@ -150,12 +150,13 @@ export default function ReagendarCitaModal({ cita, onReagendada, onCerrar }) {
 
   useEffect(() => {
     let cancelado = false;
-
+    console.log('useDias', { idSede: cita.idSede, idOdontologo: cita.idOdontologo, idServicio: cita.idServicio });
     agendarCitasApi
-      .dias(cita.idSede, DIAS_A_CONSULTAR)
+      .dias(cita.idSede, DIAS_A_CONSULTAR, cita.idOdontologo, cita.idServicio)
       .then((datos) => {
         if (cancelado) return;
         setDiasLibres(extraerDias(datos));
+        console.log(cita.idOdontologo)
         setErrorDias('');
       })
       .catch((e) => {
@@ -170,7 +171,7 @@ export default function ReagendarCitaModal({ cita, onReagendada, onCerrar }) {
     return () => {
       cancelado = true;
     };
-  }, [cita.idSede, intentoDias]);
+  }, [cita.idSede, cita.idOdontologo, cita.idServicio, intentoDias]);
 
   useEffect(() => {
     if (cargandoDias || yaEnfoco.current) return;
@@ -205,7 +206,7 @@ export default function ReagendarCitaModal({ cita, onReagendada, onCerrar }) {
     setHoraElegida('');
     setProximoDia(null);
     try {
-      const datos = await agendarCitasApi.horarios(cita.idSede, dia);
+      const datos = await agendarCitasApi.horarios(cita.idSede, dia, cita.idOdontologo, cita.idServicio);
       if (id !== solicitud.current) return;
       setHorarios(soloFuturos(normalizarHorarios(datos), dia));
       setProximoDia(extraerProximoDia(datos));

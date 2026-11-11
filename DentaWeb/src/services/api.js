@@ -379,10 +379,10 @@ export const agendarCitasApi = {
       query: { idsede: idSede, fecha, idservicio: idServicio },
     });
   },
-  dias(idSede, dias, idServicio) {
+  dias(idSede, dias, idOdontologo, idServicio) {
     return apiRequest("/api/agendar/dias-disponibles", {
       method: "GET",
-      query: { idsede: idSede, dias, idservicio: idServicio },
+      query: { idsede: idSede, dias, idodontologo: idOdontologo, idservicio: idServicio },
     });
   },
   odontologoPropuesto(idSede, fecha, hora, idServicio) {

@@ -207,6 +207,7 @@ export const obtenerDiasDisponibles = async ({
          ORDER BY d`,
         [idClinica, dias, idOdontologo, idServicio]
     );
+    console.log('obtenerDiasDisponibles', { idClinica, dias, idOdontologo, idServicio, rows });
     return { dias: rows.map((r) => r.dia) };
 };
 

@@ -44,7 +44,9 @@ export const obtenerCitasPaciente = async (idPaciente) => {
                 NULLIF(CONCAT_WS(' ', o.nombre, o.ape_pat, o.ape_mat), '') AS doctor,
                 c.estado                                    AS estado,
                 cl.nombre                                   AS sede,
-                cs.idClinica                                AS id_sede
+                cs.idClinica                                AS id_sede,
+                o.idOdontologo                              AS id_odontologo,
+                s.idServicio                                AS id_servicio
          FROM citas c
          JOIN clinica_servicio cs ON cs.idClinica_Servicio = c.idClinica_Servicio
          LEFT JOIN servicios   s  ON s.idServicio   = cs.idServicio

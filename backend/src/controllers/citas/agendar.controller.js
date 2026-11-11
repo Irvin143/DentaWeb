@@ -84,7 +84,7 @@ export const listar = async (req, res) => {
     if (idServicioInvalido(idservicio)) {
         return res.status(400).json({ error: 'idservicio debe ser un entero positivo' });
     }
-
+    console.log('listar disponibilidad', { idsede, fecha, idservicio });
     try {
         const fijo = await odontologoFijoDe(req, idservicio);
         const disponibilidad = await agendarService.obtenerHorariosDisponibles({
@@ -101,7 +101,7 @@ export const listar = async (req, res) => {
 // GET /agendar/dias-disponibles?idsede=1&dias=30&idservicio=1
 // Días con al menos un horario libre en la sede. Responde { dias: ['AAAA-MM-DD', ...] }
 export const listarDias = async (req, res) => {
-    const { idsede, idservicio } = req.query;
+    const { idsede, idservicio, idodontologo } = req.query;
     const dias = req.query.dias === undefined ? 30 : Number(req.query.dias);
 
     if (!idValido(idsede)) {
@@ -113,14 +113,21 @@ export const listarDias = async (req, res) => {
     if (idServicioInvalido(idservicio)) {
         return res.status(400).json({ error: 'idservicio debe ser un entero positivo' });
     }
-
+    if (idodontologo !== undefined && !idValido(idodontologo)) {
+        return res.status(400).json({ error: 'idodontologo debe ser un entero positivo' });
+    }
     try {
         const fijo = await odontologoFijoDe(req, idservicio);
+        // El de cabecera del paciente manda; si no hay (admin reagendando), se usa el que viene en la URL
+        const idOdontologo =
+            fijo?.id_odontologo ?? (idodontologo !== undefined ? Number(idodontologo) : null);
+        console.log('listarDias', { idsede, dias, idOdontologo, idservicio });
         res.json(
             await agendarService.obtenerDiasDisponibles({
                 idClinica: Number(idsede),
                 dias,
-                idOdontologo: fijo?.id_odontologo ?? null,
+                idOdontologo,
+                idServicio: idservicio !== undefined ? Number(idservicio) : null,
             })
         );
     } catch (err) {

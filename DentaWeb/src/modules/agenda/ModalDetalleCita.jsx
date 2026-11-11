@@ -212,13 +212,17 @@ export default function ModalDetalleCita({ cita, onCerrar, onGuardado, onReagend
     const fechaActual = new Date(
       `${String(cita.fecha ?? '').slice(0, 10)}T${horaCorta(cita.hora)}`
     );
+    console.log('citaParaReagendar', { fechaActual, cita }, cita.odontologo?.id_odontologo);
     return {
       id: cita.id_cita,
       idSede,
+      idOdontologo: cita.odontologo?.id_odontologo ?? null,
+      idServicio: cita.id_servicio ?? null,
       fecha: Number.isNaN(fechaActual.getTime()) ? parseYmd(cita.fecha) : fechaActual,
       motivo: textoOpcional(cita.servicio) ?? textoOpcional(cita.tipo) ?? 'Cita',
       doctor: nombreCompleto(cita.odontologo, 'el odontólogo'),
     };
+
   }, [cita, idSede]);
 
   // Texto del modal de confirmación
