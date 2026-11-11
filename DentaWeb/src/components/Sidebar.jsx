@@ -112,7 +112,7 @@ function Marca() {
         <img src="/logo.svg" alt="Logo DentalWeb" className="h-7 w-7" />
       </figure>
       <hgroup className="flex flex-col">
-        <p className="text-lg font-bold leading-tight text-primary-container">ClinicWare</p>
+        <p className="text-lg font-bold leading-tight text-primary-container dark:text-teal-400">ClinicWare</p>
       </hgroup>
     </Link>
   );

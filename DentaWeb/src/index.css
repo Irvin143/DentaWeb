@@ -207,4 +207,14 @@ html.dark {
   textarea {
     font: inherit;
   }
+
+  html.dark
+    :where(button, select, a, tr, [role='button'], [role='option'], [class*='cursor-pointer']):hover:not(
+      :disabled
+    ) {
+    background-image: linear-gradient(
+      rgb(42 157 143 / 14%),
+      rgb(42 157 143 / 14%)
+    );
+  }
 }

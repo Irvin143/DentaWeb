@@ -31,6 +31,7 @@ const FILTROS = [
 ];
 
 const REGISTROS_POR_PAGINA = 10;
+const MOSTRAR_ACCIONES_PACIENTE = false;
 
 const claseBotonAccion =
   'flex min-w-0 cursor-pointer items-center gap-1.5 rounded-lg border border-outline-variant px-2.5 py-1.5 text-xs font-medium whitespace-normal transition-colors';
@@ -224,7 +225,7 @@ function EstadoLista({ errorCarga, hayBusqueda, filtro, onReintentar }) {
   );
 }
 
-function TarjetaCita({ cita, onReagendar, onCancelar }) {
+function TarjetaCita({ cita, onReagendar, onCancelar, mostrarAcciones }) {
   return (
     <li className="px-4 py-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -236,9 +237,11 @@ function TarjetaCita({ cita, onReagendar, onCancelar }) {
       <div className="mt-2">
         <BadgeEstado estado={cita.estado} />
       </div>
-      <div className="mt-3">
-        <AccionesCita cita={cita} onReagendar={onReagendar} onCancelar={onCancelar} />
-      </div>
+      {mostrarAcciones && (
+        <div className="mt-3">
+          <AccionesCita cita={cita} onReagendar={onReagendar} onCancelar={onCancelar} />
+        </div>
+      )}
     </li>
   );
 }
@@ -478,9 +481,11 @@ export default function CitasTablaPage() {
                 <th scope="col" className="w-[14%] min-w-0 px-5 py-3">
                   Estado
                 </th>
-                <th scope="col" className="w-[26%] min-w-0 px-5 py-3 text-right">
-                  Acciones
-                </th>
+                {MOSTRAR_ACCIONES_PACIENTE && (
+                  <th scope="col" className="w-[26%] min-w-0 px-5 py-3 text-right">
+                    Acciones
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -488,7 +493,7 @@ export default function CitasTablaPage() {
                 <FilasCargando />
               ) : listaVacia ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-12">
+                    <td colSpan={MOSTRAR_ACCIONES_PACIENTE ? 6 : 5} className="px-5 py-12">
                     <EstadoLista
                       errorCarga={errorCarga}
                       hayBusqueda={hayBusqueda}
@@ -512,13 +517,15 @@ export default function CitasTablaPage() {
                     <td className="min-w-0 px-5 py-3">
                       <BadgeEstado estado={c.estado} />
                     </td>
-                    <td className="min-w-0 px-5 py-3">
-                      <AccionesCita
-                        cita={c}
-                        onReagendar={setPorReagendar}
-                        onCancelar={setPorCancelar}
-                      />
-                    </td>
+                    {MOSTRAR_ACCIONES_PACIENTE && (
+                      <td className="min-w-0 px-5 py-3">
+                        <AccionesCita
+                          cita={c}
+                          onReagendar={setPorReagendar}
+                          onCancelar={setPorCancelar}
+                        />
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -545,6 +552,7 @@ export default function CitasTablaPage() {
                 cita={c}
                 onReagendar={setPorReagendar}
                 onCancelar={setPorCancelar}
+                mostrarAcciones={MOSTRAR_ACCIONES_PACIENTE}
               />
             ))
           )}
