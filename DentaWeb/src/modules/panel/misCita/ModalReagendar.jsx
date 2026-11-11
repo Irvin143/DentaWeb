@@ -218,6 +218,7 @@ export default function ReagendarCitaModal({ cita, onReagendada, onCerrar }) {
   }
 
   function elegirFecha(valor) {
+    if (valor && !disponibles.has(valor)) return; // día no disponible: se ignora
     setFecha(valor);
     setError('');
     if (valor) {
@@ -248,7 +249,10 @@ export default function ReagendarCitaModal({ cita, onReagendada, onCerrar }) {
     } catch (e) {
       setConfirmando(false); // regresa al modal principal para mostrar el error
       setError(e.message || 'No se pudo reagendar la cita.');
-      if (e.status === 409) cargarHorarios(fecha);
+      if (e.status === 409) {
+        cargarHorarios(fecha);
+        setIntentoDias((n) => n + 1); // vuelve a pedir los días disponibles
+      }
       setGuardando(false);
     }
   }
