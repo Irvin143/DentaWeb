@@ -16,6 +16,7 @@ import {
 
 import { citasApi } from '../../services/api.js';
 import AgendarCitaView from './AgendarCitaView';
+import UrgenciaView from './UrgenciaView';
 import ModalConfirmacion from '../../components/ModalConfirmacion.jsx';
 import ReagendarCitaModal from './misCita/ModalReagendar.jsx';
 import { ToastContainer } from '../../components/Toast.jsx';
@@ -396,6 +397,11 @@ export default function CitasTablaPage() {
     cargar();
   }
 
+    function volverALista() {
+    setVista('lista');
+    reintentar();
+  }
+
   async function confirmarCancelacion() {
     const cita = porCancelar;
     if (!cita) return;
@@ -421,14 +427,16 @@ export default function CitasTablaPage() {
   const listaVacia = !cargando && (errorCarga || totalFilas === 0);
 
   if (vista === 'agendar') {
-    return (
-      <AgendarCitaView
-        onVolver={() => {
-          setVista('lista');
-          reintentar();
-        }}
-      />
-    );
+  return (
+    <AgendarCitaView
+      onVolver={volverALista}
+      onAbrirUrgencia={() => setVista('urgencia')}
+    />
+  );
+  }
+
+  if (vista === 'urgencia') {
+  return <UrgenciaView onVolver={volverALista} />;
   }
 
   return (
