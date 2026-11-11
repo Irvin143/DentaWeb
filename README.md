@@ -1,46 +1,102 @@
-<img src="DentaWeb/public/logo.svg" alt="ClinicWare" width="96">
+![ClinicWare - Plataforma odontológica](.github/assets/readme_banner.jpeg)
+---
 
-# ClinicWare
+Plataforma web para la gestión de clínicas odontológicas, pacientes, odontólogos, citas y catálogos administrativos.
 
-ClinicWare es el software de DentalWeb Medical Systems para la gestión de clínicas odontológicas. El sitio publicado está en https://clinicware.tech. Este repositorio tiene el frontend, el API y los catálogos que hoy están en uso.
+Estado actual: **desarrollo funcional e integración**. El flujo principal de autenticación, permisos por rol, catálogos, agenda y citas ya está implementado; continúan el endurecimiento de seguridad, la cobertura de pruebas y el refinamiento de algunos módulos.
 
-## Qué hace ahora
+## Funcionalidades actuales
 
-- Inicio de sesión, registro y cambio de la propia contraseña. La recuperación de contraseña existe como pantalla y dice que todavía no está disponible.
-- Catálogos de pacientes, odontólogos, clínicas, consultorios, servicios, especialidades, estudios, tipos de cita, paquetes, roles, tipos de usuario y usuarios.
-- El paquete o el rol deciden el menú: admin, clinica, odontologo y paciente.
-- La sesión dura una hora. Si la persona marca "Mantener sesión iniciada" queda en localStorage; si no, en sessionStorage. No se usan cookies para la sesión.
-- Las rutas de catálogo del API exigen un JWT HS256 y el mismo paquete o rol que el menú. Las contraseñas se guardan con bcrypt y la regla de complejidad es la misma al registrarse, al cambiar la propia y al crear usuario, clínica, odontólogo o paciente.
-- CORS solo acepta https://clinicware.tech, https://www.clinicware.tech, http://localhost:5173, http://127.0.0.1:5173, https://denta-web-three.vercel.app y https://denta-web-inky.vercel.app.
-- /panel no muestra el tablero inventado: redirige a la primera pantalla permitida. La pantalla del paciente es un placeholder a propósito.
-- El frontend vive en DentaWeb/ y se arranca con `npm run dev`. El backend vive en backend/, escucha en el puerto 3001 y necesita `DATABASE_URL` y `JWT_SECRET`. El frontend toma el API de `VITE_API_URL`.
+- Autenticación, registro y cambio de contraseña.
+- Acceso protegido por paquete y rol: administrador, clínica, odontólogo y paciente.
+- Catálogos de pacientes, odontólogos, clínicas, consultorios, servicios, especialidades y estudios.
+- Catálogos administrativos de tipos de cita, paquetes, roles, tipos de usuario y usuarios.
+- Agenda, disponibilidad, agendamiento, consulta de citas y atención de urgencias.
+- Interfaz responsive con tema claro/oscuro y componentes reutilizables.
 
-## Pendiente
+## Arquitectura
 
-- El token está en el almacenamiento del navegador y un script de la página podría leerlo. Posible solución: una cookie que JavaScript no pueda leer. El sitio y el API están en dominios distintos, así que no es un cambio pequeño.
-- Cerrar sesión no anula el token: sigue valiendo hasta que cumple la hora. Posible solución: una lista de tokens revocados en la base. No sirve un contador en la memoria del servidor, porque cada petición puede caer en una instancia distinta.
-- Desactivar una cuenta o cambiarle el paquete no corta el token ya emitido. El API confía en el paquete y los roles que iban dentro. Posible solución: volver a leer en la base si la cuenta sigue activa y cuál es su paquete y sus roles.
-- Quien tiene permiso sobre un catálogo ve todos los registros, no solo los de su clínica o sus pacientes. Es el mismo alcance del menú. Posible solución: filtrar las filas con la clínica o el odontólogo del token.
-- El inicio de sesión y el registro no tienen un tope de intentos. Posible solución: un conteo en la base, no en memoria.
-- El menú lee el objeto usuario guardado en el navegador. Cambiarlo solo cambia las pantallas que se dibujan; el API ya rechaza los datos. Posible solución: armar el menú desde el token. Es lo menos urgente.
+```text
+DentaWeb/
+	Frontend React + Vite + Tailwind CSS
+	src/modules/       Funcionalidades por dominio
+	src/components/    Componentes compartidos
+	src/services/api.js Cliente HTTP centralizado
 
-## Información académica
+backend/
+	API Node.js + Express
+	src/routes/        Rutas HTTP
+	src/controllers/   Validacion y control de flujo
+	src/services/      Logica de datos y PostgreSQL
+```
 
-Este sistema fue diseñado como parte de las asignaturas de **Ingeniería Web** y **Proyecto Integrador** en el **Instituto Tecnológico de Culiacán**, para el periodo Agosto - Diciembre 2026.
+El frontend se publica como una SPA y el backend expone rutas bajo `/api`. La persistencia usa PostgreSQL; la autenticación usa JWT con `HS256` y las contraseñas se protegen con `bcrypt`.
 
-## Equipo de desarrollo
+## Requisitos
 
-**Programadores**
-- Carrillo Beltran Irvin Jair
-- Cazarez Ibarra Francisco Javier
-- Cruz Cebreros Jose Javier
+- Node.js 20 o superior.
+- pnpm.
+- PostgreSQL accesible mediante una cadena de conexión.
 
-**Testers**
-- Amezola Chaidez Manuel Alejandro
+## Instalación y desarrollo
 
-**Analistas**
-- Cervantes Alfaro Edgar Abraham
-- Ibarra Ibarra Joel Arturo
+Instalar dependencias del frontend:
 
-**Project Manager**
-- Beltrán Beltrán Isaac David
+```bash
+cd DentaWeb
+pnpm install
+pnpm dev
+```
+
+En otra terminal, instalar y ejecutar el backend:
+
+```bash
+cd backend
+pnpm install
+pnpm dev
+```
+
+El frontend se inicia normalmente en `http://localhost:5173` y el backend en `http://localhost:3001`.
+
+## Variables de entorno
+
+Crear `backend/.env` con:
+
+```env
+DATABASE_URL=postgresql://usuario:contrasena@host:5432/base_de_datos
+JWT_SECRET=clave_secreta
+```
+
+Crear `DentaWeb/.env` con:
+
+```env
+VITE_API_URL=http://localhost:3001
+```
+
+Para el envío de correos pueden configurarse también `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` y `MAIL_DESTINO_PRUEBA`.
+
+## Comandos principales
+
+Desde `DentaWeb/`:
+
+```bash
+pnpm dev       # Desarrollo
+pnpm lint      # ESLint
+pnpm build     # Compilacion de produccion
+pnpm preview   # Previsualizacion del build
+```
+
+Desde `backend/`:
+
+```bash
+pnpm dev       # Desarrollo con nodemon
+```
+
+## Siguiente etapa
+
+- Incorporar pruebas automatizadas para autenticación, permisos, alcance de datos y contratos API.
+- Completar la recuperación de contraseña.
+- Reforzar el manejo de sesiones, límites de intentos y alcance de datos por clínica o paciente.
+- Continuar el refinamiento visual y funcional de los módulos pendientes.
+
+Proyecto académico desarrollado para Ingeniería Web y Proyecto Integrador, Instituto Tecnológico de Culiacán, agosto-diciembre de 2026.
