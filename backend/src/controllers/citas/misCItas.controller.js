@@ -197,6 +197,14 @@ export const reagendarMiCita = async (req, res) => {
             return res.status(400).json({ error: 'Indica la nueva fecha (AAAA-MM-DD) y hora (HH:mm)' });
         }
 
+        // Personal: usa su alcance (admin / odontólogo / clínica)
+        if (esPersonal(req.usuario)) {
+            const alcance = await alcancePersonal(req.usuario);
+            const cita = await agendaPersonal.reagendarCitaPersonal({ idCita, fecha, hora, ...alcance });
+            return res.json(cita);
+        }
+
+        // Paciente: solo puede mover sus propias citas
         const idPaciente = await obtenerIdPaciente(idUsuarioDe(req));
         const cita = await reagendarCita({ idCita, idPaciente, fecha, hora });
         res.json(cita);

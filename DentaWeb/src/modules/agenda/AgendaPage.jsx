@@ -708,6 +708,11 @@ export default function AgendaPage() {
               exito(`El estado de la cita se actualizó a «${etiqueta}» exitosamente.`);
             }
           }}
+          onReagendada={({ fecha, hora }) => {
+            setCitaAbierta(null);
+            cargar();
+            exito(`La cita se reagendó para el ${fechaLarga(fecha)} a las ${hora}.`);
+          }}
         />
       ) : null}
 

@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AlertTriangle, ArrowRight, Calendar, Clock, Hospital, Stethoscope, User, X } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Calendar, CalendarClock, Clock, Hospital, Stethoscope, User, X } from 'lucide-react';
 import { BadgeEstado, OPCIONES_ESTADO_CITA, etiquetaEstado, estadoParaApi, claseEstado } from '../../utils/estadoCita.jsx';
 import { citasApi } from '../../services/api.js';
 import ModalConfirmacion from '../../components/ModalConfirmacion.jsx';
+// AJUSTA esta ruta a donde tengas ReagendarCitaModal en tu proyecto
+import ReagendarCitaModal from '../panel/misCita/ModalReagendar.jsx';
 
 const LOCALE = 'es-MX';
 const ZONA = 'America/Mazatlan';
@@ -91,6 +93,9 @@ const ES_DESTRUCTIVO = { CANCELADA: true, NO_ASISTIO: true };
 // Estados que solo se pueden aplicar cuando ya pasó la hora de la cita
 const SOLO_DESPUES_DE_LA_CITA = { ATENDIDA: true, NO_ASISTIO: true };
 
+// Estados en los que todavía tiene sentido cambiar la fecha u hora
+const REAGENDABLES = { PENDIENTE: true, CONFIRMADA: true };
+
 function InfoFila({ icono, etiqueta, valor }) {
   if (!valor) return null;
   return (
@@ -104,9 +109,10 @@ function InfoFila({ icono, etiqueta, valor }) {
   );
 }
 
-export default function ModalDetalleCita({ cita, onCerrar, onGuardado }) {
+export default function ModalDetalleCita({ cita, onCerrar, onGuardado, onReagendada }) {
   const cerrarRef = useRef(onCerrar);
   const botonCerrar = useRef(null);
+  const reagendandoRef = useRef(false);
   cerrarRef.current = onCerrar;
 
   const yaOcurrio = citaYaOcurrio(cita);
@@ -118,6 +124,8 @@ export default function ModalDetalleCita({ cita, onCerrar, onGuardado }) {
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState(null);
   const [confirmacionAbierta, setConfirmacionAbierta] = useState(false);
+  const [reagendando, setReagendando] = useState(false);
+  reagendandoRef.current = reagendando;
 
   useEffect(() => {
     setEstadoElegido(valorInicial);
@@ -131,6 +139,8 @@ export default function ModalDetalleCita({ cita, onCerrar, onGuardado }) {
 
     const alPresionar = (e) => {
       if (e.key === 'Escape') {
+        // Si el modal de reagendar está abierto, él maneja el Escape
+        if (reagendandoRef.current) return;
         e.preventDefault();
         cerrarRef.current();
       }
@@ -187,6 +197,29 @@ export default function ModalDetalleCita({ cita, onCerrar, onGuardado }) {
   const tipo = textoOpcional(cita.tipo);
   const observaciones = textoOpcional(cita.observaciones);
   const nombrePaciente = nombreCompleto(cita.paciente, 'Paciente');
+
+  // Reagendar: solo citas normales, futuras y todavía vigentes
+  const idSede = cita.clinica?.id_clinica ?? null;
+  const puedeReagendar =
+    !urgencia &&
+    !yaOcurrio &&
+    Boolean(REAGENDABLES[estadoActual]) &&
+    idSede != null &&
+    cita.id_cita != null;
+
+  // Adapta la cita al formato que espera ReagendarCitaModal
+  const citaParaReagendar = useMemo(() => {
+    const fechaActual = new Date(
+      `${String(cita.fecha ?? '').slice(0, 10)}T${horaCorta(cita.hora)}`
+    );
+    return {
+      id: cita.id_cita,
+      idSede,
+      fecha: Number.isNaN(fechaActual.getTime()) ? parseYmd(cita.fecha) : fechaActual,
+      motivo: textoOpcional(cita.servicio) ?? textoOpcional(cita.tipo) ?? 'Cita',
+      doctor: nombreCompleto(cita.odontologo, 'el odontólogo'),
+    };
+  }, [cita, idSede]);
 
   // Texto del modal de confirmación
   const etiquetaActual  = etiquetaEstado(estadoActual)  || estadoActual  || '—';
@@ -297,6 +330,18 @@ export default function ModalDetalleCita({ cita, onCerrar, onGuardado }) {
               )}
             </div>
 
+            {puedeReagendar && (
+              <button
+                type="button"
+                onClick={() => setReagendando(true)}
+                disabled={guardando}
+                className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-outline-variant px-3 py-2 text-sm font-medium text-on-surface transition-colors hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <CalendarClock size={16} aria-hidden="true" />
+                Reagendar cita
+              </button>
+            )}
+
             {observaciones && (
               <div className="mt-3 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 dark:border-outline-variant dark:bg-surface-container">
                 <p className="text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
@@ -402,6 +447,20 @@ export default function ModalDetalleCita({ cita, onCerrar, onGuardado }) {
         esPeligro={esDestructivo}
         palabraRequerida={palabraRequerida}
       />
+
+      {/* Reagendar. El contenedor crea su propio nivel de apilado para quedar sobre este modal (z-[60]) */}
+      {reagendando && (
+        <div className="relative z-[70]">
+          <ReagendarCitaModal
+            cita={citaParaReagendar}
+            onCerrar={() => setReagendando(false)}
+            onReagendada={(nuevo) => {
+              setReagendando(false);
+              onReagendada?.(nuevo);
+            }}
+          />
+        </div>
+      )}
     </>,
     document.body
   );
