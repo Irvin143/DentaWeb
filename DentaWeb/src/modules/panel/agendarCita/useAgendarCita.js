@@ -14,6 +14,9 @@ import {
   normalizarTexto,
 } from './utilidades.js';
 
+// Arriba del archivo, fuera del componente
+const esServicioUrgencia = (s) => /urgenc/i.test(String(s?.nombre ?? ''));
+
 /* ============================================================
    Catálogo de servicios: carga, filtro por categoría y búsqueda
    ============================================================ */
@@ -25,6 +28,8 @@ function useServicios() {
 
   const [filtroCategoria, setFiltroCategoria] = useState('todos');
   const [busqueda, setBusqueda] = useState('');
+  // Servicio genérico de urgencias: se agenda desde su propio flujo, no desde aquí
+
 
   useEffect(() => {
     let cancelado = false;
@@ -37,7 +42,11 @@ function useServicios() {
         if (cancelado) return;
         // Acepta un arreglo directo o { data: [...] } / { servicios: [...] }
         const lista = Array.isArray(res) ? res : res?.data ?? res?.servicios ?? [];
-        setServicios(lista.map(normalizarServicio).filter((s) => s.activo));
+        setServicios(
+          lista
+            .map(normalizarServicio)
+            .filter((s) => s.activo && !esServicioUrgencia(s))
+        );
       })
       .catch((err) => {
         if (cancelado) return;

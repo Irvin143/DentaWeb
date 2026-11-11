@@ -113,6 +113,7 @@ export const obtenerSedesParaAgendar = async ({ idServicio, idPaciente = null })
                 c.nombre,
                 ${DIRECCION_COMPLETA} AS direccion
          FROM clinicas c
+         JOIN usuarios uc         ON uc.idUsuario = c.idUsuario AND uc.activo
          JOIN clinica_servicio cs ON cs.idClinica = c.idClinica AND cs.activo
          JOIN servicios s         ON s.idServicio = cs.idServicio AND s.activo
          LEFT JOIN direcciones d  ON d.idDireccion = c.idDireccion
