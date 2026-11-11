@@ -116,7 +116,7 @@ export function CitaConfirmada({ resumen, odontologo, cabeceraNueva = false, onV
       <div className="text-center">
         <h1 className="text-2xl font-bold text-slate-800">¡Tu cita está agendada!</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Te enviaremos la confirmación por WhatsApp y correo.
+          Te enviaremos la confirmación por correo.
         </p>
       </div>
       <div className="w-full">

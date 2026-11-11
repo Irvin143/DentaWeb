@@ -144,7 +144,7 @@ function PasoConfirmar({ propuesta, odontologoAsignado, seraCabecera, onElegirOt
           <div>
             <p className="text-sm font-bold text-teal-800">RECORDATORIO AUTOMÁTICO</p>
             <p className="text-xs text-teal-700">
-              Recibirás confirmación y aviso por WhatsApp y correo 24 horas antes.
+              Recibirás confirmación y aviso por correo 24 horas antes.
             </p>
           </div>
         </div>
