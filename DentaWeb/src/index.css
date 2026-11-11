@@ -208,8 +208,17 @@ html.dark {
     font: inherit;
   }
 
+  html.theme-transitioning,
+  html.theme-transitioning *:not(.theme-switch-thumb),
+  html.theme-transitioning *:not(.theme-switch-thumb)::before,
+  html.theme-transitioning *:not(.theme-switch-thumb)::after {
+    transition-property: background-color, color, border-color, box-shadow, fill, stroke;
+    transition-duration: 180ms;
+    transition-timing-function: ease;
+  }
+
   html.dark
-    :where(button, select, a, tr, .sede-opcion, [role='button'], [role='option'], [class*='cursor-pointer']):hover:not(
+    :where(button, select, a, .sede-opcion, .catalogo-buscador-input, [role='button'], [role='option'], [class*='cursor-pointer']):hover:not(
       :disabled
     ) {
     background-image: linear-gradient(
@@ -220,5 +229,26 @@ html.dark {
 
   html.dark .sede-opcion:hover > :where(button, a) {
     background-image: none;
+  }
+
+  html.dark .catalogo-buscador-input:hover,
+  html.dark .catalogo-fila:hover > td {
+    background-image: linear-gradient(
+      rgb(42 157 143 / 14%),
+      rgb(42 157 143 / 14%)
+    );
+  }
+
+  html.dark .catalogo-accion:hover {
+    background-image: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-transitioning,
+  html.theme-transitioning *:not(.theme-switch-thumb),
+  html.theme-transitioning *:not(.theme-switch-thumb)::before,
+  html.theme-transitioning *:not(.theme-switch-thumb)::after {
+    transition-duration: 0ms !important;
   }
 }
