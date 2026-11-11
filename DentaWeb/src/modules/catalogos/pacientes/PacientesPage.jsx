@@ -5,6 +5,7 @@ import { ChecklistContrasena, errorContrasena } from '../../../components/Checkl
 import { AvisoCampo, AvisoGeneral, scrollAlPrimerCampo } from '../../../components/avisosFormulario.jsx';
 import { avisoTelefonoOcupado } from '../../../utils/telefonoCompartido.js';
 import { pacientesApi, odontologosApi } from '../../../services/api.js';
+import { getAuth, identidades } from '../../../config/permisos.js';
 import { CampoContrasena } from '../../../utils/utils.jsx'; // ajusta la ruta
 
 
@@ -92,6 +93,7 @@ export default function PacientesPage() {
   const [verContrasena, setVerContrasena] = useState(false);
   const [verConfirmar, setVerConfirmar] = useState(false);
 
+  const esOdontologo = identidades(getAuth()?.usuario).includes('odontologo');
   const creando = editandoId === null;
 
   const cargar = useCallback(async () => {
@@ -397,15 +399,15 @@ export default function PacientesPage() {
     <CatalogoPage
       titulo="Pacientes"
       subtitulo="Gestiona el registro de pacientes de la red médica."
-      textoBotonNuevo="Agregar paciente"
+      textoBotonNuevo={esOdontologo ? undefined : 'Agregar paciente'}
       placeholderBusqueda="Buscar por nombre, teléfono o correo..."
       datos={pacientes.map(mapearPaciente)}
       cargando={cargando}
       errorCarga={errorCarga}
       onEditar={handleEditar}
-      onEliminar={handleEliminar}
-      onReactivar={handleReactivar}
-      onBorrar={handleBorrar}
+      onEliminar={esOdontologo ? undefined : handleEliminar}
+      onReactivar={esOdontologo ? undefined : handleReactivar}
+      onBorrar={esOdontologo ? undefined : handleBorrar}
       modal={{
         icono: <Users />,
         titulo: editandoId ? 'Editar Paciente' : 'Nuevo Paciente',
