@@ -7,6 +7,7 @@ import {
   Calendar as CalendarIcon,
   CheckCircle2,
   Loader2,
+  Siren,
   User,
 } from 'lucide-react';
 import { useAgendarCita } from './agendarCita/useAgendarCita.js';
@@ -221,7 +222,7 @@ function NavegacionPasos({
    La lógica vive en agendarCita/useAgendarCita.js
    ============================================================ */
 
-export default function AgendarCitaView({ onVolver }) {
+export default function AgendarCitaView({ onVolver, onAbrirUrgencia }) {
   const cita = useAgendarCita();
   const { paso, confirmada, form } = cita;
 
@@ -301,6 +302,22 @@ export default function AgendarCitaView({ onVolver }) {
         >
           {paso === 1 && (
             <>
+              <button
+                type="button"
+                onClick={onAbrirUrgencia}
+                className="flex w-full cursor-pointer items-center gap-4 rounded-2xl border border-error bg-error-container p-4 text-left transition-colors hover:bg-error-container/80 focus:outline-none focus:ring-2 focus:ring-error/30"
+              >
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-error text-on-primary">
+                  <Siren size={22} aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold text-error">Cita de emergencia</span>
+                  <span className="mt-1 block text-xs text-error/80">
+                    Dirígete al flujo de atención urgente para registrar tu situación.
+                  </span>
+                </span>
+                <ArrowRight size={20} aria-hidden="true" className="shrink-0 text-error" />
+              </button>
               <SelectorServicio
                 catalogo={cita.catalogo}
                 servicioActivo={cita.servicioActivo}
