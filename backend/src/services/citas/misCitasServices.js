@@ -25,6 +25,21 @@ export const obtenerIdPaciente = async (idUsuario) => {
 };
 
 /* ============================================================
+   RECONCILIAR ESTADOS VENCIDOS
+   ============================================================ */
+
+// Una cita pendiente que ya pasó se convierte en no asistida al consultar las citas.
+// La condición completa hace que la operación sea idempotente y segura ante carreras.
+export const marcarPendientesVencidasComoNoAsistio = async () => {
+    await conexion.query(
+        `UPDATE citas
+         SET estado = 'NO_ASISTIO'
+         WHERE lower(trim(estado)) = 'pendiente'
+           AND (fecha + hora) <= (now() AT TIME ZONE '${ZONA}')`
+    );
+};
+
+/* ============================================================
    LISTAR MIS CITAS
    ============================================================ */
 

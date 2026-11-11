@@ -13,7 +13,7 @@ export function EnlaceMapa({ sede, className = '' }) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`Ver ${sede.nombre} en Google Maps`}
-      className={`inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700 ${className}`}
+      className={`inline-flex shrink-0 items-center gap-1 rounded-md text-xs font-semibold text-teal-600 hover:text-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/70 dark:text-teal-400 dark:hover:text-teal-300 ${className}`}
     >
       <MapPin size={14} /> Ver en mapa
     </a>
@@ -34,22 +34,22 @@ export default function SelectorSede({
   return (
     <section className={CLASE_TARJETA}>
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500">
+        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-on-surface-variant">
           <Building2 size={18} /> Sede de atención
         </h2>
-        <span className="text-xs text-slate-400">Según el servicio</span>
+        <span className="text-xs text-outline">Según el servicio</span>
       </div>
 
       {!idServicio && (
-        <p className="py-2 text-sm text-slate-500">Elige un servicio para ver las sedes disponibles.</p>
+        <p className="py-2 text-sm text-on-surface-variant">Elige un servicio para ver las sedes disponibles.</p>
       )}
       {cargando && (
-        <p className="flex items-center gap-2 py-2 text-sm text-slate-500">
+        <p className="flex items-center gap-2 py-2 text-sm text-on-surface-variant">
           <Loader2 size={16} className="animate-spin" /> Buscando sedes...
         </p>
       )}
       {error && (
-        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl bg-error-container p-3 text-sm text-error">
           <p className="flex items-center gap-2 font-semibold">
             <AlertCircle size={16} /> No pudimos cargar las sedes
           </p>
@@ -63,14 +63,14 @@ export default function SelectorSede({
         </div>
       )}
       {idServicio && !cargando && !error && sedes.length === 0 && (
-        <p className="py-2 text-sm text-slate-500">
+        <p className="py-2 text-sm text-on-surface-variant">
           {odontologoFijo
             ? `${odontologoFijo.nombre}, tu odontólogo, no atiende este servicio en ninguna sede por ahora.`
             : 'Por ahora ninguna sede ofrece este servicio.'}
         </p>
       )}
       {odontologoFijo && sedes.length > 0 && (
-        <p className="mb-3 text-xs text-slate-500">
+        <p className="mb-3 text-xs text-on-surface-variant">
           Solo se muestran las sedes donde atiende {odontologoFijo.nombre}, tu odontólogo.
         </p>
       )}
@@ -82,23 +82,23 @@ export default function SelectorSede({
             // El enlace al mapa va fuera del botón de selección: un enlace dentro de un botón no es HTML válido
             <div
               key={sede.id}
-              className={`flex items-center gap-2 rounded-xl border pr-3 transition-colors ${
-                activa ? 'border-teal-600 bg-teal-50' : 'border-slate-200 hover:bg-slate-50'
+              className={`sede-opcion flex items-center gap-2 rounded-xl border pr-3 transition-colors ${
+                activa ? 'sede-opcion-activa border-teal-600 bg-teal-50 dark:bg-teal-950' : 'border-outline-variant hover:bg-surface-container'
               }`}
             >
               <button
                 type="button"
                 aria-pressed={activa}
                 onClick={() => onSeleccionar(sede.id)}
-                className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 p-3 text-left"
+                className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-xl p-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/70"
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-bold text-slate-800">{sede.nombre}</span>
+                  <span className="block text-sm font-bold text-on-surface">{sede.nombre}</span>
                   {sede.direccion && (
-                    <span className="block truncate text-xs text-slate-500">{sede.direccion}</span>
+                    <span className="block truncate text-xs text-on-surface-variant">{sede.direccion}</span>
                   )}
                 </span>
-                {activa && <CheckCircle2 size={18} className="shrink-0 text-teal-600" />}
+                {activa && <CheckCircle2 size={18} className="shrink-0 text-teal-600 dark:text-teal-400" />}
               </button>
               <EnlaceMapa sede={sede} />
             </div>

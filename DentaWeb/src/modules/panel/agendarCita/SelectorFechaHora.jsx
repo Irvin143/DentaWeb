@@ -51,23 +51,23 @@ function SeccionFecha({ fecha, diasData, onSeleccionar }) {
   };
 
   const claseFlecha =
-    'hidden h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 sm:flex';
+    'hidden h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-outline-variant bg-on-primary text-on-surface-variant transition-colors hover:bg-surface-container sm:flex';
 
   return (
     <section className={CLASE_TARJETA}>
-      <h2 className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-800">
-        <CalendarIcon size={18} className="text-teal-600" />{' '}
+      <h2 className="mb-4 flex items-center gap-2 text-sm font-bold text-on-surface">
+        <CalendarIcon size={18} className="text-teal-600 dark:text-teal-400" />{' '}
         {dias.length > 0 ? etiquetaMeses(dias) : 'Elige un día'}
       </h2>
 
       {cargando && (
-        <p className="flex items-center gap-2 py-2 text-sm text-slate-500">
+        <p className="flex items-center gap-2 py-2 text-sm text-on-surface-variant">
           <Loader2 size={16} className="animate-spin" /> Buscando días disponibles...
         </p>
       )}
 
       {error && (
-        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl bg-error-container p-3 text-sm text-error">
           <p className="flex items-center gap-2 font-semibold">
             <AlertCircle size={16} /> No pudimos cargar los días disponibles
           </p>
@@ -82,7 +82,7 @@ function SeccionFecha({ fecha, diasData, onSeleccionar }) {
       )}
 
       {!cargando && !error && dias.length === 0 && (
-        <p className="py-2 text-sm text-slate-500">
+        <p className="py-2 text-sm text-on-surface-variant">
           Esta sede no tiene días con horarios libres en los próximos {DIAS_A_CONSULTAR} días. Intenta
           con otra sede.
         </p>
@@ -115,7 +115,7 @@ function SeccionFecha({ fecha, diasData, onSeleccionar }) {
                   className={`flex w-14 shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl py-2 transition-colors ${
                     activo
                       ? 'bg-teal-600 text-white shadow-md'
-                      : 'border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                      : 'border border-outline-variant bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
                   }`}
                 >
                   <span className="text-[11px] leading-tight">{dia.diaSemana}</span>
@@ -165,7 +165,7 @@ function SeccionHorario({ fecha, hora, horariosData, onSeleccionar, onProximoDia
       type="button"
       onClick={() => seleccionar(h)}
       className={`rounded-xl py-2.5 text-sm font-semibold transition-colors ${
-        hora === h ? 'bg-teal-600 text-white shadow-md' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+        hora === h ? 'bg-teal-600 text-white shadow-md' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
       }`}
     >
       {hora === h && <CheckCircle2 size={14} className="mr-1 inline" />}
@@ -175,11 +175,11 @@ function SeccionHorario({ fecha, hora, horariosData, onSeleccionar, onProximoDia
 
   const turno = (titulo, lista) => (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase text-slate-500">{titulo}</p>
+      <p className="mb-2 text-xs font-semibold uppercase text-on-surface-variant">{titulo}</p>
       {lista.length > 0 ? (
         <div className="grid grid-cols-3 gap-3">{lista.map(botonHora)}</div>
       ) : (
-        <p className="text-sm text-slate-400">Sin horarios en este turno</p>
+        <p className="text-sm text-outline">Sin horarios en este turno</p>
       )}
     </div>
   );
@@ -187,22 +187,22 @@ function SeccionHorario({ fecha, hora, horariosData, onSeleccionar, onProximoDia
   return (
     <section className={CLASE_TARJETA}>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-sm font-bold text-slate-800">
-          <Clock size={18} className="text-teal-600" />{' '}
+        <h2 className="flex items-center gap-2 text-sm font-bold text-on-surface">
+          <Clock size={18} className="text-teal-600 dark:text-teal-400" />{' '}
           {horaElegida && horas.length > 0 ? 'Horario seleccionado' : 'Horarios disponibles'}
         </h2>
       </div>
 
-      {!fecha && <p className="py-2 text-sm text-slate-500">Elige un día para ver los horarios.</p>}
+      {!fecha && <p className="py-2 text-sm text-on-surface-variant">Elige un día para ver los horarios.</p>}
 
       {fecha && cargando && (
-        <p className="flex items-center gap-2 py-2 text-sm text-slate-500">
+        <p className="flex items-center gap-2 py-2 text-sm text-on-surface-variant">
           <Loader2 size={16} className="animate-spin" /> Buscando horarios...
         </p>
       )}
 
       {fecha && error && (
-        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl bg-error-container p-3 text-sm text-error">
           <p className="flex items-center gap-2 font-semibold">
             <AlertCircle size={16} /> No pudimos cargar los horarios
           </p>
@@ -218,13 +218,13 @@ function SeccionHorario({ fecha, hora, horariosData, onSeleccionar, onProximoDia
 
       {/* Día sin espacios: se ofrece saltar al próximo día disponible */}
       {fecha && !cargando && !error && horas.length === 0 && (
-        <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
-          <p className="font-semibold text-slate-800">No hay horarios disponibles este día.</p>
+        <div className="rounded-xl bg-surface-container p-4 text-sm text-on-surface-variant">
+          <p className="font-semibold text-on-surface">No hay horarios disponibles este día.</p>
           {proximoDia ? (
             <button
               type="button"
               onClick={onProximoDia}
-              className="mt-2 cursor-pointer font-semibold text-teal-600 hover:text-teal-700"
+              className="mt-2 cursor-pointer font-semibold text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
             >
               Ver próximo día disponible: {formatearFecha(proximoDia)} →
             </button>
@@ -238,14 +238,14 @@ function SeccionHorario({ fecha, hora, horariosData, onSeleccionar, onProximoDia
 
       {/* Hora elegida: se quitan las demás y queda solo esta, con opción de cambiarla */}
       {fecha && !cargando && !error && horas.length > 0 && horaElegida && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-teal-600 bg-teal-50 p-3">
-          <span className="flex items-center gap-2 text-base font-bold text-teal-800">
-            <CheckCircle2 size={20} className="text-teal-600" /> {formatearHora(hora)}
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-teal-600 bg-teal-50 p-3 dark:bg-teal-950">
+          <span className="flex items-center gap-2 text-base font-bold text-teal-800 dark:text-teal-200">
+            <CheckCircle2 size={20} className="text-teal-600 dark:text-teal-400" /> {formatearHora(hora)}
           </span>
           <button
             type="button"
             onClick={() => setCambiando(true)}
-            className="shrink-0 cursor-pointer text-xs font-semibold text-teal-600 hover:text-teal-700"
+            className="shrink-0 cursor-pointer text-xs font-semibold text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
           >
             Cambiar
           </button>
@@ -270,15 +270,15 @@ function SeccionMotivo({ valor, onChange, esEstudio }) {
   return (
     <section className={CLASE_TARJETA}>
       <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500">
+        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-on-surface-variant">
           <MapPin size={18} /> Motivo o molestia
         </h2>
-        <span className="text-xs text-slate-400">Opcional</span>
+        <span className="text-xs text-outline">Opcional</span>
       </div>
 
       {mostrar || valor ? (
         <textarea
-          className="mt-3 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+          className="mt-3 w-full resize-none rounded-xl border border-outline-variant bg-surface-container p-3 text-sm text-on-surface outline-none placeholder:text-on-surface-variant focus:border-primary focus:ring-1 focus:ring-primary/30"
           rows="4"
           maxLength={MAX_MOTIVO}
           placeholder={
@@ -293,7 +293,7 @@ function SeccionMotivo({ valor, onChange, esEstudio }) {
         <button
           type="button"
           onClick={() => setMostrar(true)}
-          className="mt-3 inline-flex cursor-pointer items-center gap-1 text-sm font-semibold text-teal-600 hover:text-teal-700"
+          className="mt-3 inline-flex cursor-pointer items-center gap-1 text-sm font-semibold text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
         >
           <Plus size={16} /> Agregar motivo o molestia
         </button>
@@ -320,8 +320,8 @@ export default function SelectorFechaHora({
     <>
       {/* Con odontólogo de cabecera solo se muestran sus días y horarios */}
       {odontologoFijo && (
-        <div className="flex items-start gap-3 rounded-2xl border border-teal-100 bg-teal-50 p-4 text-sm text-teal-800">
-          <User size={18} className="mt-0.5 shrink-0 text-teal-600" />
+        <div className="flex items-start gap-3 rounded-2xl border border-teal-100 bg-teal-50 p-4 text-sm text-teal-800 dark:border-teal-900 dark:bg-teal-950 dark:text-teal-200">
+          <User size={18} className="mt-0.5 shrink-0 text-teal-600 dark:text-teal-400" />
           <p>
             Tu odontólogo: <span className="font-bold">{odontologoFijo.nombre}</span>. Solo se muestran
             los días y horarios en los que atiende.

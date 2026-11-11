@@ -8,7 +8,6 @@ import {
   ChevronRight,
   MapPin,
   Plus,
-  Siren,
   User,
 } from 'lucide-react';
 import { getAuth } from '../../config/permisos.js';
@@ -171,7 +170,7 @@ export default function PanelPacientePage() {
   }, [vigentes, ahoraMs]);
 
   if (vista === 'agendar') {
-    return <AgendarCitaView onVolver={volverAlPanel} />;
+    return <AgendarCitaView onVolver={volverAlPanel} onAbrirUrgencia={() => setVista('urgencia')} />;
   }
 
   if (vista === 'urgencia') {
@@ -330,27 +329,7 @@ export default function PanelPacientePage() {
 
       <div>
         <h2 className="mb-3 text-xs font-semibold tracking-wider text-outline uppercase">Accesos directos</h2>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <button
-            type="button"
-            onClick={() => setVista('urgencia')}
-            className="flex cursor-pointer items-center justify-between rounded-2xl border border-outline-variant bg-on-primary p-5 text-left transition-colors hover:border-error hover:bg-surface-container"
-          >
-            <span className="flex items-center gap-3.5">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-error-container text-error">
-                <Siren size={20} aria-hidden="true" />
-              </span>
-              <span>
-                <span className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-on-surface">Urgencia dental</span>
-                  <span className="rounded bg-error-container px-1.5 text-xs font-bold text-error uppercase">24/7</span>
-                </span>
-                <span className="block text-xs text-on-surface-variant">Dolor agudo o bracket suelto</span>
-              </span>
-            </span>
-            <ChevronRight size={20} aria-hidden="true" className="shrink-0 text-outline" />
-          </button>
-
+        <div className="grid grid-cols-1 gap-4">
           <button type="button" onClick={() => navigate('/mis-citas')} className={claseAtajo}>
             <span className="flex items-center gap-3.5">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-container text-on-surface-variant">

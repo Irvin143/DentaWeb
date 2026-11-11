@@ -13,7 +13,7 @@ export default function ControlTema() {
       className="relative h-8 w-14 shrink-0 cursor-pointer rounded-full bg-slate-200 p-1 transition-colors dark:bg-surface-container-high"
     >
       <span
-        className={`flex h-6 w-6 items-center justify-center rounded-full bg-white text-teal-600 shadow-sm transition-transform ${
+        className={`theme-switch-thumb flex h-6 w-6 items-center justify-center rounded-full bg-white text-teal-600 shadow-sm transition-transform ${
           oscuro ? 'translate-x-6' : 'translate-x-0'
         }`}
       >

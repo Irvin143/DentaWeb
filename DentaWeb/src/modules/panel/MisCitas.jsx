@@ -16,6 +16,7 @@ import {
 
 import { citasApi } from '../../services/api.js';
 import AgendarCitaView from './AgendarCitaView';
+import UrgenciaView from './UrgenciaView';
 import ModalConfirmacion from '../../components/ModalConfirmacion.jsx';
 import ReagendarCitaModal from './misCita/ModalReagendar.jsx';
 import { ToastContainer } from '../../components/Toast.jsx';
@@ -28,9 +29,11 @@ const FILTROS = [
   { id: 'todas', etiqueta: 'Todas' },
   { id: 'proximas', etiqueta: 'Próximas' },
   { id: 'pasadas', etiqueta: 'Pasadas' },
+  { id: 'canceladas', etiqueta: 'Canceladas' },
 ];
 
 const REGISTROS_POR_PAGINA = 10;
+const MOSTRAR_ACCIONES_PACIENTE = false;
 
 const claseBotonAccion =
   'flex min-w-0 cursor-pointer items-center gap-1.5 rounded-lg border border-outline-variant px-2.5 py-1.5 text-xs font-medium whitespace-normal transition-colors';
@@ -45,6 +48,16 @@ const puedeCancelar = (c) => esPendienteFutura(c);
 
 // Reagendar: pendiente futura y que NO sea de urgencia
 const puedeReagendar = (c) => esPendienteFutura(c) && !c.esUrgencia;
+const esCancelada = (c) => c.estado === 'Cancelada';
+const esNoAsistio = (c) => c.estado === 'No asistió';
+const esPasada = (c, ahoraMs) => c.fecha.getTime() < ahoraMs;
+const esAtenuada = (c, ahoraMs) => esCancelada(c) || esNoAsistio(c) || esPasada(c, ahoraMs);
+const prioridadCita = (c, ahoraMs) => {
+  if (esCancelada(c)) return 3;
+  if (esAtenuada(c, ahoraMs)) return 2;
+  if (c.estado === 'Pendiente') return 0;
+  return 1;
+};
 
 const normalizar = (texto) =>
   String(texto ?? '')
@@ -217,16 +230,24 @@ function EstadoLista({ errorCarga, hayBusqueda, filtro, onReintentar }) {
         <p className="text-sm text-on-surface-variant">
           {filtro === 'pasadas'
             ? 'Las citas que ya pasaron aparecerán aquí.'
-            : 'Agenda una nueva cita para verla aquí.'}
+            : filtro === 'canceladas'
+              ? 'Las citas canceladas aparecerán aquí.'
+              : 'Agenda una nueva cita para verla aquí.'}
         </p>
       )}
     </div>
   );
 }
 
-function TarjetaCita({ cita, onReagendar, onCancelar }) {
+function TarjetaCita({ cita, onReagendar, onCancelar, mostrarAcciones, ahoraMs }) {
+  const claseAtenuada = esCancelada(cita)
+    ? 'opacity-60'
+    : esAtenuada(cita, ahoraMs)
+      ? 'opacity-75'
+      : '';
+
   return (
-    <li className="px-4 py-4">
+    <li className={`px-4 py-4 ${claseAtenuada}`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <p className="font-semibold text-on-surface">{mayuscula(fechaCorta(cita.fecha))}</p>
         <p className="text-sm text-on-surface-variant">{hora(cita.fecha)}</p>
@@ -236,9 +257,11 @@ function TarjetaCita({ cita, onReagendar, onCancelar }) {
       <div className="mt-2">
         <BadgeEstado estado={cita.estado} />
       </div>
-      <div className="mt-3">
-        <AccionesCita cita={cita} onReagendar={onReagendar} onCancelar={onCancelar} />
-      </div>
+      {mostrarAcciones && (
+        <div className="mt-3">
+          <AccionesCita cita={cita} onReagendar={onReagendar} onCancelar={onCancelar} />
+        </div>
+      )}
     </li>
   );
 }
@@ -325,21 +348,29 @@ export default function CitasTablaPage() {
   const ahoraMs = ahora.getTime();
   const conteo = {
     todas: citas.length,
-    proximas: citas.filter((c) => c.fecha.getTime() >= ahoraMs).length,
-    pasadas: citas.filter((c) => c.fecha.getTime() < ahoraMs).length,
+    proximas: citas.filter((c) => !esCancelada(c) && !esPasada(c, ahoraMs)).length,
+    pasadas: citas.filter((c) => !esCancelada(c) && esPasada(c, ahoraMs)).length,
+    canceladas: citas.filter(esCancelada).length,
   };
 
   const filas = useMemo(() => {
     const q = normalizar(busqueda);
     return citas
-      .filter((c) =>
-        filtro === 'todas' ? true : filtro === 'proximas' ? c.fecha.getTime() >= ahoraMs : c.fecha.getTime() < ahoraMs,
-      )
+      .filter((c) => {
+        if (filtro === 'proximas') return !esCancelada(c) && !esPasada(c, ahoraMs);
+        if (filtro === 'pasadas') return !esCancelada(c) && esPasada(c, ahoraMs);
+        if (filtro === 'canceladas') return esCancelada(c);
+        return true;
+      })
       .filter((c) => {
         if (!q) return true;
         return normalizar(c.motivo).includes(q) || normalizar(c.doctor).includes(q);
       })
-      .sort((a, b) => (descendente ? b.fecha - a.fecha : a.fecha - b.fecha));
+      .sort((a, b) => {
+        const prioridad = prioridadCita(a, ahoraMs) - prioridadCita(b, ahoraMs);
+        if (prioridad !== 0) return prioridad;
+        return descendente ? b.fecha - a.fecha : a.fecha - b.fecha;
+      });
   }, [citas, filtro, busqueda, descendente, ahoraMs]);
 
   const totalFilas = filas.length;
@@ -364,6 +395,11 @@ export default function CitasTablaPage() {
     setCargando(true);
     setErrorCarga('');
     cargar();
+  }
+
+    function volverALista() {
+    setVista('lista');
+    reintentar();
   }
 
   async function confirmarCancelacion() {
@@ -391,14 +427,16 @@ export default function CitasTablaPage() {
   const listaVacia = !cargando && (errorCarga || totalFilas === 0);
 
   if (vista === 'agendar') {
-    return (
-      <AgendarCitaView
-        onVolver={() => {
-          setVista('lista');
-          reintentar();
-        }}
-      />
-    );
+  return (
+    <AgendarCitaView
+      onVolver={volverALista}
+      onAbrirUrgencia={() => setVista('urgencia')}
+    />
+  );
+  }
+
+  if (vista === 'urgencia') {
+  return <UrgenciaView onVolver={volverALista} />;
   }
 
   return (
@@ -478,9 +516,11 @@ export default function CitasTablaPage() {
                 <th scope="col" className="w-[14%] min-w-0 px-5 py-3">
                   Estado
                 </th>
-                <th scope="col" className="w-[26%] min-w-0 px-5 py-3 text-right">
-                  Acciones
-                </th>
+                {MOSTRAR_ACCIONES_PACIENTE && (
+                  <th scope="col" className="w-[26%] min-w-0 px-5 py-3 text-right">
+                    Acciones
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -488,7 +528,7 @@ export default function CitasTablaPage() {
                 <FilasCargando />
               ) : listaVacia ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-12">
+                    <td colSpan={MOSTRAR_ACCIONES_PACIENTE ? 6 : 5} className="px-5 py-12">
                     <EstadoLista
                       errorCarga={errorCarga}
                       hayBusqueda={hayBusqueda}
@@ -501,7 +541,9 @@ export default function CitasTablaPage() {
                 datosPagina.map((c) => (
                   <tr
                     key={c.id}
-                    className="group border-b border-outline-variant transition-colors last:border-b-0 hover:bg-surface-container"
+                    className={`group border-b border-outline-variant transition-colors last:border-b-0 hover:bg-surface-container ${
+                      esCancelada(c) ? 'opacity-60' : esAtenuada(c, ahoraMs) ? 'opacity-75' : ''
+                    }`}
                   >
                     <td className="px-5 py-3 font-medium whitespace-nowrap text-on-surface">
                       {mayuscula(fechaCorta(c.fecha))}
@@ -512,13 +554,15 @@ export default function CitasTablaPage() {
                     <td className="min-w-0 px-5 py-3">
                       <BadgeEstado estado={c.estado} />
                     </td>
-                    <td className="min-w-0 px-5 py-3">
-                      <AccionesCita
-                        cita={c}
-                        onReagendar={setPorReagendar}
-                        onCancelar={setPorCancelar}
-                      />
-                    </td>
+                    {MOSTRAR_ACCIONES_PACIENTE && (
+                      <td className="min-w-0 px-5 py-3">
+                        <AccionesCita
+                          cita={c}
+                          onReagendar={setPorReagendar}
+                          onCancelar={setPorCancelar}
+                        />
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -545,6 +589,8 @@ export default function CitasTablaPage() {
                 cita={c}
                 onReagendar={setPorReagendar}
                 onCancelar={setPorCancelar}
+                mostrarAcciones={MOSTRAR_ACCIONES_PACIENTE}
+                ahoraMs={ahoraMs}
               />
             ))
           )}
@@ -582,7 +628,7 @@ export default function CitasTablaPage() {
 function FilasCargando() {
   return Array.from({ length: 4 }, (_, i) => (
     <tr key={i} className="border-b border-outline-variant last:border-b-0" aria-hidden="true">
-      {[24, 16, 36, 24, 20, 28].map((ancho, j) => (
+      {(MOSTRAR_ACCIONES_PACIENTE ? [24, 16, 36, 24, 20, 28] : [24, 16, 36, 24, 20]).map((ancho, j) => (
         <td key={j} className="px-5 py-3">
           <div
             className="h-4 max-w-full animate-pulse rounded bg-surface-container"

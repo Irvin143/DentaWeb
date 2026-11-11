@@ -382,7 +382,7 @@ export function CatalogoPage({
     }
   };
 
-  const botonIcono = 'shrink-0 rounded-lg border border-slate-200 dark:border-outline-variant p-1.5 text-slate-600 dark:text-on-surface-variant transition-colors';
+  const botonIcono = 'catalogo-accion shrink-0 rounded-lg border border-slate-200 dark:border-outline-variant p-1.5 text-slate-600 dark:text-on-surface-variant transition-colors';
   const medidaAcciones =
     anchoAccionesRem > 0
       ? {
@@ -428,7 +428,7 @@ export function CatalogoPage({
               value={busqueda}
               onChange={handleBusqueda}
               placeholder={placeholderBusqueda}
-              className="w-full rounded-xl bg-slate-50 py-2.5 pl-10 pr-4 text-base leading-5 outline-none transition-all focus:ring-2 focus:ring-teal-500/20 dark:bg-surface-container dark:text-on-surface dark:placeholder:text-on-surface-variant"
+              className="catalogo-buscador-input w-full rounded-xl bg-slate-50 py-2.5 pl-10 pr-4 text-base leading-5 outline-none transition-colors hover:bg-transparent focus:ring-2 focus:ring-teal-500/20 dark:bg-surface-container dark:text-on-surface dark:placeholder:text-on-surface-variant dark:hover:bg-transparent"
             />
           </label>
 
@@ -513,7 +513,7 @@ export function CatalogoPage({
                             type="button"
                             onClick={() => ordenarPor(col.key)}
                             aria-label={`${etiquetaColumna(col.label)}, orden ${siguiente}`}
-                            className="flex w-full min-w-0 cursor-pointer items-center gap-1.5 px-5 py-3 text-left whitespace-normal uppercase transition-colors hover:bg-slate-100 dark:hover:bg-surface-container hover:text-slate-700 dark:text-on-surface dark:hover:text-on-surface"
+                            className="catalogo-encabezado-ordenable inline-flex max-w-full min-w-0 cursor-pointer items-center gap-1.5 px-5 py-3 text-left whitespace-normal uppercase transition-colors hover:bg-slate-100 dark:hover:bg-surface-container hover:text-slate-700 dark:text-on-surface dark:hover:text-on-surface"
                           >
                             <span className="min-w-0 break-words">{col.label}</span>
                             <FlechaOrden activa={activa} direccion={orden.direccion} />
@@ -548,8 +548,8 @@ export function CatalogoPage({
                         key={fila.id ?? rowIndex}
                         className={
                           estaInactiva(fila)
-                            ? 'group bg-slate-50 dark:bg-surface-container transition-colors'
-                            : 'group transition-colors hover:bg-slate-50/50 dark:hover:bg-surface-container/50'
+                            ? 'catalogo-fila group bg-slate-50 dark:bg-surface-container transition-colors'
+                            : 'catalogo-fila group transition-colors hover:bg-slate-50/50 dark:hover:bg-surface-container/50'
                         }
                       >
                         <td
@@ -574,7 +574,7 @@ export function CatalogoPage({
                         {hayAcciones && (
                           <td
                             style={medidaAcciones}
-                            className={`sticky right-0 z-10 py-3 pl-2 pr-5 align-top whitespace-nowrap ${
+                            className={`catalogo-fila-acciones sticky right-0 z-10 py-3 pl-2 pr-5 align-top whitespace-nowrap ${
                               estaInactiva(fila)
                                 ? 'bg-slate-50 dark:bg-surface-container'
                                 : 'bg-white transition-colors group-hover:bg-slate-50/50 dark:bg-on-primary dark:group-hover:bg-surface-container/50'
@@ -587,7 +587,7 @@ export function CatalogoPage({
                                   onClick={() => handleEditar(fila)}
                                   title="Editar"
                                   aria-label="Editar"
-                                  className={`${botonIcono} cursor-pointer hover:border-slate-300 hover:bg-slate-100 dark:hover:bg-surface-container hover:text-slate-800 dark:text-on-surface dark:hover:text-on-surface dark:hover:border-outline-variant dark:hover:bg-surface-container dark:hover:text-on-surface`}
+                                  className={`${botonIcono} cursor-pointer hover:border-slate-300 hover:text-slate-800 dark:text-on-surface dark:hover:text-on-surface dark:hover:border-outline-variant`}
                                 >
                                   <Pencil size={16} />
                                 </button>
@@ -609,7 +609,7 @@ export function CatalogoPage({
                                   onClick={() => pedirConfirmacion(fila, 'borrar')}
                                   title="Eliminar permanentemente"
                                   aria-label="Eliminar permanentemente"
-                                  className={`${botonIcono} cursor-pointer hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:hover:border-error dark:hover:bg-error-container dark:hover:text-error`}
+                                  className={`${botonIcono} catalogo-accion-danger cursor-pointer hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:hover:border-error dark:hover:bg-error-container dark:hover:text-error`}
                                 >
                                   <Trash2 size={16} />
                                 </button>
@@ -677,7 +677,7 @@ export function CatalogoPage({
                           <button
                             type="button"
                             onClick={() => handleEditar(fila)}
-                            className={`${botonIcono} flex cursor-pointer items-center gap-1.5 px-3 text-xs font-medium hover:border-slate-300 hover:bg-slate-100 dark:hover:bg-surface-container hover:text-slate-800 dark:text-on-surface dark:hover:text-on-surface dark:hover:border-outline-variant dark:hover:bg-surface-container dark:hover:text-on-surface`}
+                            className={`${botonIcono} flex cursor-pointer items-center gap-1.5 px-3 text-xs font-medium hover:border-slate-300 hover:text-slate-800 dark:text-on-surface dark:hover:text-on-surface dark:hover:border-outline-variant`}
                           >
                             <Pencil size={14} />
                             Editar
@@ -696,7 +696,7 @@ export function CatalogoPage({
                             type="button"
                             onClick={() => pedirConfirmacion(fila, 'borrar')}
                             aria-label="Eliminar permanentemente"
-                            className={`${botonIcono} flex cursor-pointer items-center gap-1.5 px-3 text-xs font-medium hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:hover:border-error dark:hover:bg-error-container dark:hover:text-error`}
+                            className={`${botonIcono} catalogo-accion-danger flex cursor-pointer items-center gap-1.5 px-3 text-xs font-medium hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:hover:border-error dark:hover:bg-error-container dark:hover:text-error`}
                           >
                             <Trash2 size={14} />
                             Eliminar

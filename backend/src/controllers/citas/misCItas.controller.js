@@ -1,5 +1,6 @@
 import {
     cancelarCita,
+    marcarPendientesVencidasComoNoAsistio,
     obtenerCitasPaciente,
     obtenerIdPaciente,
     reagendarCita,
@@ -157,6 +158,8 @@ const idUsuarioDe = (req) => req.usuario?.sub;
 
 export const listarMisCitas = async (req, res) => {
     try {
+        await marcarPendientesVencidasComoNoAsistio();
+
         if (esPersonal(req.usuario)) {
             const citas = await listarCitasDelPersonal(req);
             return res.json(citas);

@@ -12,11 +12,11 @@ function TarjetaServicio({ servicio, activo, onClick, accion }) {
       {...(onClick ? { type: 'button', onClick, 'aria-pressed': activo } : {})}
       className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
         onClick ? 'cursor-pointer' : ''
-      } ${activo ? 'border-teal-600 bg-teal-50 dark:bg-teal-950' : 'border-slate-200 dark:border-outline-variant hover:bg-slate-50 dark:hover:bg-surface-container'}`}
+      } ${activo ? 'border-teal-600 bg-teal-50 dark:bg-teal-950' : 'border-outline-variant hover:bg-surface-container'}`}
     >
       <span
         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-          activo ? 'bg-teal-600 text-white' : 'bg-slate-100 dark:bg-surface-container text-slate-500 dark:text-on-surface-variant'
+          activo ? 'bg-teal-600 text-white' : 'bg-surface-container text-on-surface-variant'
         }`}
       >
         <Icono size={20} />
@@ -102,7 +102,7 @@ export default function SelectorServicio({ catalogo, servicioActivo, idServicio,
             <button
               type="button"
               onClick={() => setCambiando(true)}
-              className="shrink-0 cursor-pointer text-xs font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
+              className="shrink-0 cursor-pointer text-xs font-semibold text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
             >
               Cambiar
             </button>
@@ -128,7 +128,7 @@ export default function SelectorServicio({ catalogo, servicioActivo, idServicio,
                     aria-pressed={activo}
                     onClick={() => setFiltroCategoria(valor)}
                     className={`cursor-pointer rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors ${
-                      activo ? 'bg-white dark:bg-on-primary text-teal-700 dark:text-teal-400 shadow-sm' : 'text-slate-500 dark:text-on-surface-variant hover:text-slate-700 dark:text-on-surface dark:hover:text-on-surface'
+                      activo ? 'bg-on-primary text-teal-700 shadow-sm dark:text-teal-400' : 'text-on-surface-variant hover:text-on-surface'
                     }`}
                   >
                     {etiqueta}
@@ -151,7 +151,7 @@ export default function SelectorServicio({ catalogo, servicioActivo, idServicio,
                 onChange={(e) => setBusqueda(e.target.value)}
                 placeholder="Buscar servicio..."
                 aria-label="Buscar servicio"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-base leading-5 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 dark:border-outline-variant dark:bg-surface-container dark:text-on-surface dark:placeholder:text-on-surface-variant"
+                className="w-full rounded-xl border border-outline-variant bg-surface-container py-2 pl-9 pr-3 text-base leading-5 text-on-surface outline-none placeholder:text-on-surface-variant focus:border-primary focus:ring-1 focus:ring-primary/30"
               />
             </div>
           )}

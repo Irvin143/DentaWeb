@@ -17,28 +17,28 @@ function FilaResumen({ icono: Icono, titulo, valor, detalle, extra, onEditar }) 
     <div className="flex items-start gap-3 py-3">
       <span
         className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-          valor ? 'bg-teal-50 text-teal-600' : 'bg-slate-100 text-slate-400'
+          valor ? 'bg-teal-50 text-teal-600 dark:bg-teal-950 dark:text-teal-400' : 'bg-surface-container text-outline'
         }`}
       >
         <Icono size={16} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{titulo}</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-outline">{titulo}</p>
         {valor ? (
           <>
-            <p className="break-words text-sm font-bold text-slate-800">{valor}</p>
-            {detalle && <p className="break-words text-xs text-slate-500">{detalle}</p>}
+            <p className="break-words text-sm font-bold text-on-surface">{valor}</p>
+            {detalle && <p className="break-words text-xs text-on-surface-variant">{detalle}</p>}
             {extra}
           </>
         ) : (
-          <p className="text-sm text-slate-400">Pendiente</p>
+          <p className="text-sm text-outline">Pendiente</p>
         )}
       </div>
       {onEditar && valor && (
         <button
           type="button"
           onClick={onEditar}
-          className="shrink-0 cursor-pointer text-xs font-semibold text-teal-600 hover:text-teal-700"
+          className="shrink-0 cursor-pointer text-xs font-semibold text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
         >
           Editar
         </button>
@@ -64,9 +64,9 @@ export default function ResumenCita({
   const editar = (paso) => (onEditarPaso ? () => onEditarPaso(paso) : undefined);
 
   return (
-    <aside className="rounded-2xl border border-slate-200 bg-white p-5">
-      <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-slate-500">{titulo}</h2>
-      <div className="divide-y divide-slate-100">
+    <aside className="rounded-2xl border border-outline-variant bg-on-primary p-5">
+      <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-on-surface-variant">{titulo}</h2>
+      <div className="divide-y divide-outline-variant">
         <FilaResumen
           icono={IconoServicio}
           titulo="Servicio"
@@ -110,12 +110,12 @@ export default function ResumenCita({
 export function CitaConfirmada({ resumen, odontologo, cabeceraNueva = false, onVolver }) {
   return (
     <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-6 lg:my-auto">
-      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 text-teal-600">
+      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 text-teal-600 dark:bg-teal-950 dark:text-teal-400">
         <CheckCircle2 size={36} />
       </span>
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-slate-800">¡Tu cita está agendada!</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="text-2xl font-bold text-on-surface">¡Tu cita está agendada!</h1>
+        <p className="mt-1 text-sm text-on-surface-variant">
           Te enviaremos la confirmación por correo.
         </p>
       </div>
@@ -128,7 +128,7 @@ export function CitaConfirmada({ resumen, odontologo, cabeceraNueva = false, onV
         />
       </div>
       {cabeceraNueva && odontologo?.nombre && (
-        <p className="w-full rounded-xl bg-teal-50 p-3 text-center text-sm text-teal-800">
+        <p className="w-full rounded-xl bg-teal-50 p-3 text-center text-sm text-teal-800 dark:bg-teal-950 dark:text-teal-200">
           {odontologo.nombre} quedó como tu odontólogo: en tus próximas consultas solo verás sus
           horarios.
         </p>
