@@ -51,13 +51,13 @@ const SQL_SEDES = `
       AND EXISTS (
             SELECT 1
             FROM clinica_servicio cs
-            JOIN servicios s          ON s.idServicio = cs.idServicio AND s.activo
+            JOIN servicios s           ON s.idServicio = cs.idServicio AND s.activo
             JOIN odontologo_clinica oc ON oc.idClinica = cs.idClinica AND oc.activo
-            JOIN odontologos o        ON o.idOdontologo = oc.idOdontologo
-            JOIN usuarios uo          ON uo.idUsuario = o.idUsuario AND uo.activo
+            JOIN odontologos o         ON o.idOdontologo = oc.idOdontologo
+            JOIN usuarios uo           ON uo.idUsuario = o.idUsuario AND uo.activo
             WHERE cs.idClinica = c.idClinica
               AND cs.activo
-              AND lower(s.categoria) = 'urgencia'
+              AND s.nombre ILIKE '%urgenc%'
               AND (s.idEspecialidad IS NULL
                    OR EXISTS (SELECT 1 FROM espe_odon eo
                               WHERE eo.idOdontologo = o.idOdontologo
@@ -85,7 +85,7 @@ const obtenerServicioUrgencia = async (idSede) => {
         `SELECT cs.idServicio AS id_servicio
          FROM clinica_servicio cs
          JOIN servicios s ON s.idServicio = cs.idServicio AND s.activo
-         WHERE cs.idClinica = $1::int AND cs.activo AND lower(s.categoria) = 'urgencia'
+         WHERE cs.idClinica = $1::int AND cs.activo AND lower(s.nombre) = 'urgencia'
          ORDER BY cs.idClinica_Servicio DESC
          LIMIT 1`,
         [idSede]
