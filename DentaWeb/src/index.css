@@ -209,12 +209,16 @@ html.dark {
   }
 
   html.dark
-    :where(button, select, a, tr, [role='button'], [role='option'], [class*='cursor-pointer']):hover:not(
+    :where(button, select, a, tr, .sede-opcion, [role='button'], [role='option'], [class*='cursor-pointer']):hover:not(
       :disabled
     ) {
     background-image: linear-gradient(
       rgb(42 157 143 / 14%),
       rgb(42 157 143 / 14%)
     );
+  }
+
+  html.dark .sede-opcion:hover > :where(button, a) {
+    background-image: none;
   }
 }

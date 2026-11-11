@@ -188,7 +188,7 @@ function NavegacionPasos({
           type="button"
           onClick={onContinuar}
           disabled={!puedeContinuar}
-          className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-teal-600 px-6 py-3 font-bold text-white shadow-lg transition-all hover:bg-teal-700 hover:shadow-xl disabled:cursor-not-allowed disabled:bg-outline disabled:text-on-surface-variant disabled:shadow-none sm:min-w-48"
+          className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-transparent bg-teal-600 px-6 py-3 font-bold text-white shadow-lg transition-all hover:bg-teal-700 hover:shadow-xl disabled:cursor-not-allowed disabled:border-outline-variant disabled:bg-surface-container-high disabled:text-outline disabled:shadow-none sm:min-w-48"
         >
           Continuar <ArrowRight size={16} />
         </button>
@@ -200,7 +200,7 @@ function NavegacionPasos({
           type="button"
           onClick={onConfirmar}
           disabled={cargando || !puedeConfirmar}
-          className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-teal-600 px-6 py-3.5 font-bold text-white shadow-lg transition-all hover:bg-teal-700 hover:shadow-xl disabled:cursor-not-allowed disabled:bg-outline disabled:text-on-surface-variant disabled:shadow-none sm:min-w-56"
+          className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-transparent bg-teal-600 px-6 py-3.5 font-bold text-white shadow-lg transition-all hover:bg-teal-700 hover:shadow-xl disabled:cursor-not-allowed disabled:border-outline-variant disabled:bg-surface-container-high disabled:text-outline disabled:shadow-none sm:min-w-56"
         >
           {cargando ? (
             <>

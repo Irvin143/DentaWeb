@@ -13,7 +13,7 @@ export function EnlaceMapa({ sede, className = '' }) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`Ver ${sede.nombre} en Google Maps`}
-      className={`inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 ${className}`}
+      className={`inline-flex shrink-0 items-center gap-1 rounded-md text-xs font-semibold text-teal-600 hover:text-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/70 dark:text-teal-400 dark:hover:text-teal-300 ${className}`}
     >
       <MapPin size={14} /> Ver en mapa
     </a>
@@ -82,15 +82,15 @@ export default function SelectorSede({
             // El enlace al mapa va fuera del botón de selección: un enlace dentro de un botón no es HTML válido
             <div
               key={sede.id}
-              className={`flex items-center gap-2 rounded-xl border pr-3 transition-colors ${
-                activa ? 'border-teal-600 bg-teal-50 dark:bg-teal-950' : 'border-outline-variant hover:bg-surface-container'
+              className={`sede-opcion flex items-center gap-2 rounded-xl border pr-3 transition-colors ${
+                activa ? 'sede-opcion-activa border-teal-600 bg-teal-50 dark:bg-teal-950' : 'border-outline-variant hover:bg-surface-container'
               }`}
             >
               <button
                 type="button"
                 aria-pressed={activa}
                 onClick={() => onSeleccionar(sede.id)}
-                className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 p-3 text-left"
+                className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-xl p-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/70"
               >
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-bold text-on-surface">{sede.nombre}</span>
