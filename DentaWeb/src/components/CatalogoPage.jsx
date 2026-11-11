@@ -241,18 +241,21 @@ export function CatalogoPage({
         ? 'No se encontraron resultados.'
         : 'Aún no hay registros.';
   const claseTextoTabla = !cargando && errorCarga ? 'text-red-600 dark:text-error' : 'text-slate-500 dark:text-on-surface-variant';
-  // Botón de ícono 1.875rem, interruptor 2.75rem, hueco 0.5rem, padding derecho 1.25rem.
+  // El ancho incluye el encabezado "Acciones" y evita que se comprima con una sola acción.
   const anchoAccionesRem = hayAcciones
-    ? 0.5 +
-      (onEditar ? 1.875 : 0) +
-      (onEliminar || onReactivar ? 2.75 : 0) +
-      (onBorrar ? 1.875 : 0) +
-      0.5 *
-        ((onEditar ? 1 : 0) +
-          (onEliminar || onReactivar ? 1 : 0) +
-          (onBorrar ? 1 : 0) -
-          1) +
-      1.25
+    ? Math.max(
+        6,
+        0.5 +
+          (onEditar ? 1.875 : 0) +
+          (onEliminar || onReactivar ? 2.75 : 0) +
+          (onBorrar ? 1.875 : 0) +
+          0.5 *
+            ((onEditar ? 1 : 0) +
+              (onEliminar || onReactivar ? 1 : 0) +
+              (onBorrar ? 1 : 0) -
+              1) +
+          1.25
+      )
     : 0;
   const totalPaginas = Math.max(1, Math.ceil(totalRegistros / REGISTROS_POR_PAGINA));
   const paginaActual = Math.min(pagina, totalPaginas);
@@ -400,14 +403,16 @@ export function CatalogoPage({
             <p className="text-sm text-slate-500 dark:text-on-surface-variant">{subtitulo}</p>
           </hgroup>
 
-          <button
-            type="button"
-            onClick={abrirNuevo}
-            className="flex cursor-pointer items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-teal-600/20 transition-colors hover:bg-teal-700"
-          >
-            <Plus size={18} strokeWidth={2.5} />
-            {textoBotonNuevo}
-          </button>
+          {textoBotonNuevo && (
+            <button
+              type="button"
+              onClick={abrirNuevo}
+              className="flex cursor-pointer items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-teal-600/20 transition-colors hover:bg-teal-700"
+            >
+              <Plus size={18} strokeWidth={2.5} />
+              {textoBotonNuevo}
+            </button>
+          )}
         </header>
 
         {/* Buscador y filtros */}
