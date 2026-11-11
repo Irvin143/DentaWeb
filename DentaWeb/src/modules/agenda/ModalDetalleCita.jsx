@@ -88,6 +88,9 @@ const CLASES_PILDORA_ACTIVA = {
 
 const ES_DESTRUCTIVO = { CANCELADA: true, NO_ASISTIO: true };
 
+// Estados que solo se pueden aplicar cuando ya pasó la hora de la cita
+const SOLO_DESPUES_DE_LA_CITA = { ATENDIDA: true, NO_ASISTIO: true };
+
 function InfoFila({ icono, etiqueta, valor }) {
   if (!valor) return null;
   return (
@@ -108,8 +111,8 @@ export default function ModalDetalleCita({ cita, onCerrar, onGuardado }) {
 
   const yaOcurrio = citaYaOcurrio(cita);
   const estadoActual = estadoParaApi(cita?.estado);
-  const noAsistioFutura = estadoActual === 'NO_ASISTIO' && !yaOcurrio;
-  const valorInicial = noAsistioFutura ? '' : (estadoActual ?? '');
+  const estadoInvalidoPorFecha = Boolean(SOLO_DESPUES_DE_LA_CITA[estadoActual]) && !yaOcurrio;
+  const valorInicial = estadoInvalidoPorFecha ? '' : (estadoActual ?? '');
 
   const [estadoElegido, setEstadoElegido] = useState(valorInicial);
   const [guardando, setGuardando] = useState(false);
@@ -142,8 +145,7 @@ export default function ModalDetalleCita({ cita, onCerrar, onGuardado }) {
   const opciones = useMemo(
     () =>
       OPCIONES_ESTADO_CITA.map((opcion) => {
-        const esNoAsistio = opcion.valor === 'NO_ASISTIO';
-        const deshabilitada = esNoAsistio && !yaOcurrio;
+        const deshabilitada = Boolean(SOLO_DESPUES_DE_LA_CITA[opcion.valor]) && !yaOcurrio;
         return {
           ...opcion,
           deshabilitada,
@@ -156,7 +158,7 @@ export default function ModalDetalleCita({ cita, onCerrar, onGuardado }) {
   const puedeGuardar =
     Boolean(estadoElegido) &&
     estadoElegido !== estadoActual &&
-    !(estadoElegido === 'NO_ASISTIO' && !yaOcurrio);
+    !(SOLO_DESPUES_DE_LA_CITA[estadoElegido] && !yaOcurrio);
 
   const confirmarGuardar = () => {
     if (!puedeGuardar || guardando) return;
@@ -356,7 +358,7 @@ export default function ModalDetalleCita({ cita, onCerrar, onGuardado }) {
               {!yaOcurrio && (
                 <p className="mt-2 flex items-center gap-1 text-xs text-on-surface-variant">
                   <AlertTriangle size={11} className="shrink-0 text-yellow-600" aria-hidden="true" />
-                  «No asistió» solo estará disponible cuando haya pasado la hora de la cita.
+                  «Atendida» y «No asistió» solo estarán disponibles cuando haya pasado la hora de la cita.
                 </p>
               )}
 
