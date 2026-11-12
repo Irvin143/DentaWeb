@@ -183,6 +183,7 @@ export const cancelarMiCita = async (req, res) => {
 
         const idPaciente = await obtenerIdPaciente(idUsuarioDe(req));
         const cita = await cancelarCita({ idCita, idPaciente });
+        await notificarCitaPorCorreo(idCita, cancelada = true);
         res.json(cita);
     } catch (error) {
         responderError(res, error);
@@ -205,7 +206,7 @@ export const reagendarMiCita = async (req, res) => {
         if (esPersonal(req.usuario)) {
             const alcance = await alcancePersonal(req.usuario);
             const cita = await agendaPersonal.reagendarCitaPersonal({ idCita, fecha, hora, ...alcance });
-            await notificarCitaPorCorreo(idCita, true); 
+            await notificarCitaPorCorreo(idCita, reagendada = true); 
             return res.json(cita);
         }
 

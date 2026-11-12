@@ -74,15 +74,17 @@ const urlMapa = (direccion) =>
 
 // cita: { correo_paciente, nombre_paciente, servicio, fecha 'AAAA-MM-DD', hora 'HH:mm',
 //         sede, direccion, odontologo }
-export const enviarConfirmacionCita = async (cita, reagendada = false) => {
+export const enviarConfirmacionCita = async (cita, reagendada = false, cancelada = false) => {
     const fecha = fechaLegible(cita.fecha);
     const hora = horaLegible(cita.hora);
     const mapa = urlMapa(cita.direccion);
     const saludo = cita.nombre_paciente ? `Hola ${cita.nombre_paciente},` : 'Hola,';
 
     const asunto = reagendada
-        ? `Tu cita fue reagendada: ${fecha}, ${hora}`
-        : `Tu cita: ${fecha}, ${hora}`;
+        ? 'Tu cita fue reagendada'
+        : cancelada
+        ? 'Tu cita fue cancelada'
+        : 'Tu cita está agendada';
 
     const texto = [
         saludo,
@@ -171,12 +173,12 @@ const obtenerDatosParaCorreo = async (idCita) => {
 
 // Manda al paciente un correo con los datos de su cita. Nunca lanza error: la cita ya está
 // guardada, y si el correo falla solo se registra en la consola.
-export const notificarCitaPorCorreo = async (idCita, reagendada = false) => {
+export const notificarCitaPorCorreo = async (idCita, reagendada = false, cancelada = false) => {
     try {
         if (!correoConfigurado()) return; // sin SMTP configurado no se envía nada
         const datos = await obtenerDatosParaCorreo(idCita);
         if (!datos?.correo_paciente) return;
-        await enviarConfirmacionCita(datos, reagendada);
+        await enviarConfirmacionCita(datos, reagendada, cancelada);
     } catch (err) {
         console.error(`[correo] no se pudo enviar el correo de la cita ${idCita}: ${err.message}`);
     }
