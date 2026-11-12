@@ -1,6 +1,7 @@
 import conexion from '../conexion.js'; // la misma ruta que usas en los demás services
 import { correoConfigurado, enviarCorreo } from './correoServices.js';
-import { crearCita, notificarCitaPorCorreo } from './agendarServices.js';
+import { crearCita } from './agendarServices.js';
+import { notificarCitaPorCorreo } from './correoServices.js';
 
 const errorHttp = (status, mensaje) => {
     const error = new Error(mensaje);

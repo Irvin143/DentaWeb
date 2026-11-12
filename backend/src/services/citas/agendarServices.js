@@ -207,7 +207,6 @@ export const obtenerDiasDisponibles = async ({
          ORDER BY d`,
         [idClinica, dias, idOdontologo, idServicio]
     );
-    console.log('obtenerDiasDisponibles', { idClinica, dias, idOdontologo, idServicio, rows });
     return { dias: rows.map((r) => r.dia) };
 };
 
@@ -555,49 +554,6 @@ export const crearCita = async ({
     }
 };
 
-/* ============================================================
-   CORREO DE CITA AGENDADA
-   ============================================================ */
-
-// Datos de una cita para armar el correo. fecha y hora salen como texto para evitar
-// problemas de zona horaria con el driver.
-const obtenerDatosParaCorreo = async (idCita) => {
-    const { rows } = await conexion.query(
-        `SELECT
-            to_char(c.fecha, 'YYYY-MM-DD') AS fecha,
-            to_char(c.hora, 'HH24:MI') AS hora,
-            u.correo AS correo_paciente,
-            p.nombre AS nombre_paciente,
-            s.nombre AS servicio,
-            cl.nombre AS sede,
-            ${DIRECCION_COMPLETA} AS direccion,
-            CONCAT_WS(' ', o.nombre, o.ape_pat, o.ape_mat) AS odontologo
-         FROM citas c
-         JOIN pacientes p         ON p.idPaciente = c.idPaciente
-         JOIN usuarios u          ON u.idUsuario = p.idUsuario
-         JOIN clinica_servicio cs ON cs.idClinica_Servicio = c.idClinica_Servicio
-         JOIN servicios s         ON s.idServicio = cs.idServicio
-         JOIN clinicas cl         ON cl.idClinica = cs.idClinica
-         LEFT JOIN direcciones d  ON d.idDireccion = cl.idDireccion
-         JOIN odontologos o       ON o.idOdontologo = c.idOdontologo
-         WHERE c.idCita = $1::int`,
-        [idCita]
-    );
-    return rows[0] ?? null;
-};
-
-// Manda al paciente un correo con los datos de su cita. Nunca lanza error: la cita ya está
-// guardada, y si el correo falla solo se registra en la consola.
-export const notificarCitaPorCorreo = async (idCita) => {
-    try {
-        if (!correoConfigurado()) return; // sin SMTP configurado no se envía nada
-        const datos = await obtenerDatosParaCorreo(idCita);
-        if (!datos?.correo_paciente) return;
-        await enviarConfirmacionCita(datos);
-    } catch (err) {
-        console.error(`[correo] no se pudo enviar el correo de la cita ${idCita}: ${err.message}`);
-    }
-};
 
 /* ============================================================
    ODONTÓLOGO PROPUESTO

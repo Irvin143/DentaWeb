@@ -1,5 +1,5 @@
 import conexion from '../conexion.js'; // la misma ruta que usas en los demás services
-
+import { enviarConfirmacionCita } from './correoServices.js';   
 const errorHttp = (status, mensaje) => {
     const error = new Error(mensaje);
     error.status = status;
@@ -161,11 +161,11 @@ export const reagendarCita = async ({ idCita, idPaciente, fecha, hora }) => {
                        AND o.hora < ($4::time + (c.hora_fin - c.hora))
                        AND o.hora_fin > $4::time
                )
-             RETURNING c.idCita AS id,
-                       to_char(c.fecha, 'YYYY-MM-DD') AS fecha,
-                       to_char(c.hora, 'HH24:MI')     AS hora,
-                       to_char(c.hora_fin, 'HH24:MI') AS hora_fin,
-                       c.estado AS estado`,
+                RETURNING c.idCita AS id,
+                        to_char(c.fecha, 'YYYY-MM-DD') AS fecha,
+                        to_char(c.hora, 'HH24:MI')     AS hora,
+                        to_char(c.hora_fin, 'HH24:MI') AS hora_fin,
+                        c.estado AS estado`,
             [idCita, idPaciente, fecha, hora]
         ));
     } catch (err) {
@@ -182,7 +182,39 @@ export const reagendarCita = async ({ idCita, idPaciente, fecha, hora }) => {
         }
         throw err;
     }
-    if (rows[0]) return rows[0];
+    console.log('reagendarCita', { idCita, idPaciente, fecha, hora }, rows);
+    if (rows[0]) {
+        try {
+            const { rows: datos } = await conexion.query(
+                `SELECT p.correo AS correo_paciente,
+                        p.nombre AS nombre_paciente,
+                        s.nombre AS servicio,
+                        cl.nombre AS sede,
+                        cl.direccion,
+                        o.nombre AS odontologo
+                FROM citas c
+                JOIN pacientes p         ON p.idPaciente = c.idPaciente
+                JOIN clinica_servicio cs ON cs.idClinica_Servicio = c.idClinica_Servicio
+                JOIN servicios s         ON s.idServicio = cs.idServicio
+                JOIN clinicas cl         ON cl.idClinica = cs.idClinica
+                JOIN odontologos o       ON o.idOdontologo = c.idOdontologo
+                WHERE c.idCita = $1::int`,
+                [idCita]
+            );
+            console.log('reagendarCita: enviarConfirmacionCita', { ...datos[0], fecha: rows[0].fecha, hora: rows[0].hora }, { reagendada: true });
+            if (!datos[0]) throw new Error('No se encontró la cita para enviar el correo');
+            if (datos[0]) {
+                await enviarConfirmacionCita(
+                    { ...datos[0], fecha: rows[0].fecha, hora: rows[0].hora },
+                    { reagendada: true }
+                );
+            }
+        } catch (errCorreo) {
+            // La cita ya se movió; un fallo del correo no debe tumbar la petición
+            console.error('No se pudo enviar la notificación de reagendado:', errCorreo);
+        }
+        return rows[0];
+    }
 
     // No se actualizó nada: se averigua por qué para dar el mensaje correcto
     const { rows: existente } = await conexion.query(
@@ -223,5 +255,6 @@ export const reagendarCita = async ({ idCita, idPaciente, fecha, hora }) => {
     if (cita.choque_paciente) {
         throw errorHttp(409, 'Ya tienes otra cita en ese horario. Elige otro.');
     }
+
     throw errorHttp(409, 'Ese horario ya no está disponible. Elige otro.');
 };

@@ -1,5 +1,7 @@
 import * as agendarService from '../../services/citas/agendarServices.js';
 
+import  { notificarCitaPorCorreo } from '../../services/citas/correoServices.js';
+
 const responderError = (res, err) => {
     if (err.status) return res.status(err.status).json({ error: err.message });
     console.error(err);
@@ -121,7 +123,6 @@ export const listarDias = async (req, res) => {
         // El de cabecera del paciente manda; si no hay (admin reagendando), se usa el que viene en la URL
         const idOdontologo =
             fijo?.id_odontologo ?? (idodontologo !== undefined ? Number(idodontologo) : null);
-        console.log('listarDias', { idsede, dias, idOdontologo, idservicio });
         res.json(
             await agendarService.obtenerDiasDisponibles({
                 idClinica: Number(idsede),
@@ -212,7 +213,7 @@ export const crear = async (req, res) => {
 
         // Se espera el correo antes de responder: en Vercel, el trabajo posterior a la respuesta
         // puede cortarse. Esta función nunca lanza error.
-        await agendarService.notificarCitaPorCorreo(cita.id_cita);
+        await notificarCitaPorCorreo(cita.id_cita);
 
         res.status(201).json(cita);
     } catch (err) {

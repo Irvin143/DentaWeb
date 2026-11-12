@@ -236,6 +236,7 @@ export async function reagendarCitaPersonal({
         }
         throw err;
     }
+
     if (rows[0]) return rows[0];
 
     // No se actualizó nada: se averigua por qué para dar el mensaje correcto

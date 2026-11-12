@@ -6,6 +6,7 @@ import {
     reagendarCita,
 } from '../../services/citas/misCitasServices.js';
 import * as agendaPersonal from '../../services/citas/agendaPersonalServices.js';
+import  { notificarCitaPorCorreo } from '../../services/citas/correoServices.js';
 
 const FECHA_ISO = /^\d{4}-\d{2}-\d{2}$/;
 const RANGO_MAX_DIAS = 31;
@@ -204,12 +205,16 @@ export const reagendarMiCita = async (req, res) => {
         if (esPersonal(req.usuario)) {
             const alcance = await alcancePersonal(req.usuario);
             const cita = await agendaPersonal.reagendarCitaPersonal({ idCita, fecha, hora, ...alcance });
+            await notificarCitaPorCorreo(idCita, true); 
             return res.json(cita);
         }
 
         // Paciente: solo puede mover sus propias citas
         const idPaciente = await obtenerIdPaciente(idUsuarioDe(req));
         const cita = await reagendarCita({ idCita, idPaciente, fecha, hora });
+
+        await notificarCitaPorCorreo(cita.id_cita, true); // Se espera el correo antes de responder: en Vercel, el trabajo posterior a la respuesta puede cortarse. Esta función nunca lanza error.
+
         res.json(cita);
     } catch (error) {
         responderError(res, error);

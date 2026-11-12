@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import conexion from '../conexion.js';
 
 // Variables de entorno:
 //   SMTP_HOST, SMTP_PORT (587 por defecto), SMTP_SECURE ('true' para el puerto 465),
@@ -73,18 +74,20 @@ const urlMapa = (direccion) =>
 
 // cita: { correo_paciente, nombre_paciente, servicio, fecha 'AAAA-MM-DD', hora 'HH:mm',
 //         sede, direccion, odontologo }
-export const enviarConfirmacionCita = async (cita) => {
+export const enviarConfirmacionCita = async (cita, reagendada = false) => {
     const fecha = fechaLegible(cita.fecha);
     const hora = horaLegible(cita.hora);
     const mapa = urlMapa(cita.direccion);
     const saludo = cita.nombre_paciente ? `Hola ${cita.nombre_paciente},` : 'Hola,';
 
-    const asunto = `Tu cita: ${fecha}, ${hora}`;
+    const asunto = reagendada
+        ? `Tu cita fue reagendada: ${fecha}, ${hora}`
+        : `Tu cita: ${fecha}, ${hora}`;
 
     const texto = [
         saludo,
         '',
-        'Tu cita quedó agendada:',
+        reagendada ? 'Tu cita fue reagendada:' : 'Tu cita quedó agendada:',
         `• Servicio: ${cita.servicio}`,
         `• Fecha: ${fecha}`,
         `• Hora: ${hora}`,
@@ -104,7 +107,7 @@ export const enviarConfirmacionCita = async (cita) => {
 
     const html = `
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;padding:24px;">
-        <h2 style="color:#0f766e;margin:0 0 16px;">Tu cita está agendada</h2>
+        <h2 style="color:#0f766e;margin:0 0 16px;">${reagendada ? 'Tu cita fue reagendada' : 'Tu cita está agendada'}</h2>
         <p style="color:#1e293b;font-size:15px;">${escaparHtml(saludo)}</p>
         <p style="color:#1e293b;font-size:15px;">Estos son los datos de tu cita:</p>
         <table style="border-collapse:collapse;margin:12px 0 20px;">
@@ -126,4 +129,55 @@ export const enviarConfirmacionCita = async (cita) => {
     </div>`;
 
     await enviarCorreo({ para: cita.correo_paciente, asunto, texto, html });
+};
+
+const DIRECCION_COMPLETA = `
+    concat_ws(', ',
+        NULLIF(concat_ws(' ', d.calle, d.numero_exterior,
+               CASE WHEN d.numero_interior IS NOT NULL THEN 'Int. ' || d.numero_interior END), ''),
+        d.colonia,
+        NULLIF(concat_ws(' ', 'CP', d.codigo_postal), 'CP'),
+        d.ciudad,
+        d.estado
+    )
+`;
+
+// Datos de una cita para armar el correo. fecha y hora salen como texto para evitar
+// problemas de zona horaria con el driver.
+const obtenerDatosParaCorreo = async (idCita) => {
+    const { rows } = await conexion.query(
+        `SELECT
+            to_char(c.fecha, 'YYYY-MM-DD') AS fecha,
+            to_char(c.hora, 'HH24:MI') AS hora,
+            u.correo AS correo_paciente,
+            p.nombre AS nombre_paciente,
+            s.nombre AS servicio,
+            cl.nombre AS sede,
+            ${DIRECCION_COMPLETA} AS direccion,
+            CONCAT_WS(' ', o.nombre, o.ape_pat, o.ape_mat) AS odontologo
+         FROM citas c
+         JOIN pacientes p         ON p.idPaciente = c.idPaciente
+         JOIN usuarios u          ON u.idUsuario = p.idUsuario
+         JOIN clinica_servicio cs ON cs.idClinica_Servicio = c.idClinica_Servicio
+         JOIN servicios s         ON s.idServicio = cs.idServicio
+         JOIN clinicas cl         ON cl.idClinica = cs.idClinica
+         LEFT JOIN direcciones d  ON d.idDireccion = cl.idDireccion
+         JOIN odontologos o       ON o.idOdontologo = c.idOdontologo
+         WHERE c.idCita = $1::int`,
+        [idCita]
+    );
+    return rows[0] ?? null;
+};
+
+// Manda al paciente un correo con los datos de su cita. Nunca lanza error: la cita ya está
+// guardada, y si el correo falla solo se registra en la consola.
+export const notificarCitaPorCorreo = async (idCita, reagendada = false) => {
+    try {
+        if (!correoConfigurado()) return; // sin SMTP configurado no se envía nada
+        const datos = await obtenerDatosParaCorreo(idCita);
+        if (!datos?.correo_paciente) return;
+        await enviarConfirmacionCita(datos, reagendada);
+    } catch (err) {
+        console.error(`[correo] no se pudo enviar el correo de la cita ${idCita}: ${err.message}`);
+    }
 };
